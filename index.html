@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AHYPAR | OFFICIAL ARENA</title>
+    <title>AHYPAR | OFFICIAL</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@600;700&display=swap');
 
@@ -45,6 +45,69 @@
 
         .about-wrap { background: var(--panel); padding: 35px; border-radius: 20px; border: 1px solid #222; margin-bottom: 50px; }
         .about-wrap h3 { font-family: 'Bebas Neue'; font-size: 2.2rem; color: var(--magenta); margin-bottom: 15px; }
+                /* TOURNAMENT ANNOUNCEMENT BOX (NEW) */
+        .announcement-box {
+            background: linear-gradient(45deg, rgba(255, 0, 85, 0.1), rgba(0, 242, 255, 0.05));
+            border: 1px solid var(--magenta);
+            border-radius: 20px;
+            overflow: hidden;
+            margin-bottom: 50px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .poster-frame {
+            width: 100%;
+            height: 350px; /* Managed size for mobile */
+            background: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            border-bottom: 1px solid var(--magenta);
+        }
+
+        .poster-frame img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain; /* Keeps poster ratio perfect */
+        }
+
+        .info-content {
+            padding: 25px;
+            text-align: center;
+        }
+
+        .info-content h3 {
+            font-family: 'Bebas Neue';
+            font-size: 2.2rem;
+            color: var(--cyan);
+            margin-bottom: 10px;
+        }
+
+        .badge {
+            display: inline-block;
+            background: var(--magenta);
+            color: white;
+            padding: 5px 15px;
+            font-family: 'Bebas Neue';
+            font-size: 1.2rem;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.05); opacity: 0.8; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .short-details {
+            font-size: 0.95rem;
+            color: #ccc;
+            margin-bottom: 20px;
+        }
 
         /* Updated Game Grid with Side Buttons */
         .game-grid { display: grid; gap: 35px; margin-bottom: 50px; }
@@ -97,6 +160,26 @@
     </header>
 
     <main class="container">
+         <section id="tourney">
+     <h2 class="sec-title">LATEST INTEL</h2>
+     <div class="announcement-box">
+         <div class="poster-frame">
+             <img src="https://lh3.googleusercontent.com/d/1L2qufg7_NLlldHsQNSmGFXO20gb0r8FX" alt="Tournament Poster">
+         </div>
+         <div class="info-content">
+              <class="btn-tournament" style="border-color: var(--magenta); color: var(--magenta);"><h2>
+              COMING SOON</h2>
+            <h3>RISE OF UNDERGODS</h3>
+             <p class="short-details">
+                 🔥 High-Intensity Environment | 💰 Reward-Driven Stakes <br>
+                 Free Fire Max Competitive Tournament by AHYPAR Esports.
+             </p>
+             <a href="https://discord.com/invite/kyv3NZebp3" target="_blank" class="btn-tournament" style="border-color: var(--magenta); color: var(--magenta);">
+                 <span class="badge">READY TO RISE? JOIN DISCORD</span></a>
+         </div>
+     </div>
+ </section>
+        
         <section id="about">
             <h2 class="sec-title">OUR MISSION</h2>
             <div class="about-wrap">
@@ -170,20 +253,46 @@ Under the technical leadership of Shafin Mirza and the guidance of Conor Yadav,S
         <p style="opacity: 0.5;">&copy; 2026 AHYPAR ESPORTS | DESIGNED BY SHAFIN MIRZA</p>
     </footer>
 
-    <script>
-        function sendMail() {
+   <script>
+        async function sendMail() {
             const name = document.getElementById('userName').value;
             const msg = document.getElementById('userMsg').value;
+            const btn = document.querySelector('.btn-submit');
             
             if(name === "" || msg === "") {
                 alert("Please fill in both fields!");
                 return;
             }
 
-            const subject = encodeURIComponent("Advice/Question from " + name);
-            const body = encodeURIComponent("Name: " + name + "\n\nMessage: " + msg);
-            
-            window.location.href = `mailto:shafinmirza59@gmail.com?subject=${subject}&body=${body}`;
+            // Button status update
+            btn.innerText = "SENDING...";
+            btn.disabled = true;
+
+            try {
+                const response = await fetch("https://formspree.io/f/xgorelrw", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        name: name,
+                        message: msg
+                    })
+                });
+
+                if (response.ok) {
+                    alert("Message sent successfully!");
+                    document.getElementById('userName').value = "";
+                    document.getElementById('userMsg').value = "";
+                } else {
+                    alert("Oops! There was a problem submitting your message.");
+                }
+            } catch (error) {
+                alert("Network error. Please try again later.");
+            } finally {
+                btn.innerText = "SUBMIT MESSAGE";
+                btn.disabled = false;
+            }
         }
 
         function joinDiscord() {
