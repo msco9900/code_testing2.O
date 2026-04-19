@@ -1,309 +1,546 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AHYPAR | OFFICIAL</title>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@600;700&display=swap');
+<!DOCTYPE html>  
+<html lang="en">  
+<head>  
+    <meta charset="UTF-8">  
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">  
+    <title>AHYPAR Administration</title>  
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>  
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-analytics-compat.js"></script>
 
+    <style>  
         :root {
-            --cyan: #00f2ff;
-            --magenta: #ff0055;
-            --dark: #050505;
-            --panel: rgba(255, 255, 255, 0.05);
+            --primary-gold: #FFD700;
+            --dark-gold: #B8860B;
+            --bg-black: #0A0B10;
+            --card-bg: rgba(26, 29, 41, 0.9);
+            --text-white: #F0F0F0;
+            --glass-border: rgba(255, 215, 0, 0.2);
+            --danger-red: #FF4B4B;
+            --success-green: #00E676;
+            --black: #23272a;  
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Rajdhani', sans-serif; scroll-behavior: smooth; }
-        body { background: var(--dark); color: white; overflow-x: hidden; line-height: 1.6; }
-
-        /* Navigation */
-        nav { background: #000; padding: 15px; border-bottom: 2px solid var(--cyan); position: sticky; top: 0; z-index: 1000; display: flex; justify-content: center; gap: 15px; }
-        nav a { color: var(--cyan); text-decoration: none; font-family: 'Bebas Neue'; font-size: 1.2rem; }
-
-        /* Hero */
-        .hero {
-            height: 75vh;
-            background: linear-gradient(rgba(0,0,0,0.8), rgba(0,0,0,0.95)), 
-                        url('https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExNHJueW94bmZ6Z3R6Z3R6Z3R6Z3R6Z3R6Z3R6Z3R6Z3R6Z3R6Z3R/l41lTfO3yJjH3R7bi/giphy.gif');
-            background-size: cover; background-position: center;
-            display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;
-        }
-        .hero h1 { font-family: 'Bebas Neue'; font-size: 5.5rem; color: #fff; text-shadow: 0 0 20px var(--cyan); }
-        .hero p { color: var(--cyan); letter-spacing: 4px; font-size: 0.9rem; margin-bottom: 30px; }
-
-        .btn-join {
-            display: inline-block;
-            text-decoration: none;
-            padding: 18px 50px; background: var(--cyan); color: #000; border: none;
-            font-family: 'Bebas Neue'; font-size: 1.8rem; font-weight: bold; cursor: pointer;
-            clip-path: polygon(10% 0, 100% 0, 90% 100%, 0% 100%); transition: 0.3s;
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, sans-serif; }  
+        
+        body {
+            background: radial-gradient(circle at top, #1a1d29 0%, #0a0b10 100%);
+            color: var(--text-white);
+            min-height: 100vh;
         }
 
-        .container { padding: 60px 20px; }
-        .sec-title { font-family: 'Bebas Neue'; font-size: 3.2rem; color: var(--cyan); margin-bottom: 30px; border-left: 8px solid var(--magenta); padding-left: 15px; }
+        .hidden { display: none !important; }  
 
-        .about-wrap { background: var(--panel); padding: 35px; border-radius: 20px; border: 1px solid #222; margin-bottom: 50px; }
-        .about-wrap h3 { font-family: 'Bebas Neue'; font-size: 2.2rem; color: var(--magenta); margin-bottom: 15px; }
-                /* TOURNAMENT ANNOUNCEMENT BOX (NEW) */
-        .announcement-box {
-            background: linear-gradient(45deg, rgba(255, 0, 85, 0.1), rgba(0, 242, 255, 0.05));
-            border: 1px solid var(--magenta);
-            border-radius: 20px;
-            overflow: hidden;
-            margin-bottom: 50px;
+        header {
+            background: rgba(10, 11, 16, 0.95);
+            border-bottom: 1px solid var(--primary-gold);
+            padding: 15px 20px;
             display: flex;
-            flex-direction: column;
-        }
-
-        .poster-frame {
-            width: 100%;
-            height: 350px; /* Managed size for mobile */
-            background: #000;
-            display: flex;
-            justify-content: center;
+            justify-content: space-between;
             align-items: center;
-            overflow: hidden;
-            border-bottom: 1px solid var(--magenta);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
         }
 
-        .poster-frame img {
-            width: 100%;
-            height: 100%;
-            object-fit: contain; /* Keeps poster ratio perfect */
+        .golden-text {
+            background: linear-gradient(to right, #FFD700, #FDB931, #9f7928);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 900;
+            letter-spacing: 1px;
+            text-transform: uppercase;
         }
 
-        .info-content {
-            padding: 25px;
-            text-align: center;
-        }
+        .owner-label { font-size: 10px; color: #aaa; display: block; font-weight: bold; }  
+        .container { padding: 15px; max-width: 500px; margin: auto; }  
 
-        .info-content h3 {
-            font-family: 'Bebas Neue';
-            font-size: 2.2rem;
-            color: var(--cyan);
-            margin-bottom: 10px;
-        }
-
-        .badge {
-            display: inline-block;
-            background: var(--magenta);
-            color: white;
-            padding: 5px 15px;
-            font-family: 'Bebas Neue';
-            font-size: 1.2rem;
-            border-radius: 4px;
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 20px;
             margin-bottom: 15px;
-            animation: pulse 1.5s infinite;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
         }
 
-        @keyframes pulse {
-            0% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(1.05); opacity: 0.8; }
-            100% { transform: scale(1); opacity: 1; }
+        input, select, textarea {
+            width: 100%; 
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid #333;
+            border-radius: 12px;
+            color: white;
+            padding: 12px;
+            margin: 8px 0;
+            font-size: 14px;
+            transition: 0.3s;
         }
 
-        .short-details {
-            font-size: 0.95rem;
-            color: #ccc;
-            margin-bottom: 20px;
+        input:focus {
+            border-color: var(--primary-gold);
+            outline: none;
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.2);
         }
 
-        /* Updated Game Grid with Side Buttons */
-        .game-grid { display: grid; gap: 35px; margin-bottom: 50px; }
-        .game-item { display: flex; flex-direction: column; gap: 15px; background: var(--panel); padding: 15px; border-radius: 20px; border: 1px solid #222; }
-        .game-card { 
-            height: 200px; border-radius: 15px; overflow: hidden; position: relative;
-            background-size: cover; background-position: center; border: 1px solid #333;
+        button {
+            width: 100%;
+            background: linear-gradient(45deg, var(--dark-gold), var(--primary-gold));
+            color: black;
+            font-weight: bold;
+            border-radius: 12px;
+            border: none;
+            padding: 12px;
+            cursor: pointer;
+            text-transform: uppercase;
+            transition: 0.3s ease;
+            margin: 8px 0;
         }
-        .overlay { position: absolute; inset: 0; background: linear-gradient(transparent, rgba(0,0,0,1)); display: flex; flex-direction: column; justify-content: flex-end; padding: 15px; }
-        .overlay h4 { font-family: 'Bebas Neue'; font-size: 2rem; }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 215, 0, 0.4);
+        }
+
+        .menu-overlay { 
+            position: fixed; top: 0; right: 0; width: 85%; max-width: 300px; height: 100%; 
+            background: rgba(10, 11, 16, 0.98);
+            border-left: 2px solid var(--primary-gold);
+            z-index: 2000; transform: translateX(100%); transition: 0.3s; padding: 20px; 
+        }  
+        .menu-overlay.active { transform: translateX(0); }  
         
-        .btn-tournament {
-            text-decoration: none;
-            display: block; text-align: center;
-            padding: 12px; background: transparent; color: var(--cyan); border: 2px solid var(--cyan);
-            font-family: 'Bebas Neue'; font-size: 1.1rem; letter-spacing: 1px; transition: 0.3s;
-            border-radius: 8px;
-        }
-        .btn-tournament:hover { background: var(--cyan); color: #000; }
+        .menu-item { 
+            padding: 16px; 
+            border-bottom: 1px solid rgba(255,215,0,0.1); 
+            font-weight: bold; cursor: pointer; 
+            border-radius: 10px; margin: 5px 0; transition: 0.2s;
+            color: var(--text-white);
+        }  
+        .menu-item:hover { background: rgba(255, 215, 0, 0.1); color: var(--primary-gold); }  
 
-        /* Advice Section */
-        .advice-section { background: var(--panel); padding: 35px; border-radius: 20px; border: 1px solid #333; margin-top: 50px; }
-        .advice-section h2 { font-family: 'Bebas Neue'; font-size: 2.5rem; color: var(--magenta); margin-bottom: 15px; }
-        .advice-form input, .advice-form textarea {
-            width: 100%; background: #000; border: 1px solid #444; color: #fff;
-            padding: 15px; margin-bottom: 15px; border-radius: 10px; font-size: 1rem;
-        }
-        .btn-submit {
-            width: 100%; padding: 15px; background: var(--magenta); color: #fff; border: none;
-            font-family: 'Bebas Neue'; font-size: 1.5rem; cursor: pointer; border-radius: 10px;
-        }
-
-        .mgmt-card { background: var(--panel); padding: 20px; border-radius: 12px; margin-bottom: 15px; border-left: 6px solid var(--cyan); }
-        footer { background: #000; padding: 60px 20px; text-align: center; border-top: 1px solid #222; }
+        .role-btn { width: auto; padding: 5px 10px; font-size: 10px; background: #333; color: #ccc; margin-right: 2px; border:none; border-radius:4px; margin-top: 5px; text-transform: none;}  
+        .active-role { background: var(--primary-gold) !important; color: black !important; }  
+        .btn-del { background: var(--danger-red) !important; color: white !important; width: auto; float: right; padding: 4px 8px; font-size: 10px; margin-top: -30px; }  
+        
+        .rule-box { background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px; border: 1px solid var(--glass-border); white-space: pre-wrap; margin-top: 10px; }  
+        .rule-meta { font-size: 11px; color: #aaa; margin-bottom: 8px; font-style: italic; border-bottom: 1px solid #333; padding-bottom: 5px; }  
+        .tag-span { color: black; padding: 2px 6px; border-radius: 4px; font-size: 10px; margin-left: 5px; vertical-align: middle; font-weight: bold;}  
+        .warn-alert { color: var(--danger-red); font-size: 11px; font-weight: bold; display: block; margin-top: 5px; }
+        
+        .chat-container { display: flex; flex-direction: column; height: calc(100vh - 150px); }
+        .chat-messages { flex-grow: 1; overflow-y: auto; padding: 10px; background: rgba(0,0,0,0.2); border: 1px solid #333; border-radius: 8px; margin-bottom: 10px; display: flex; flex-direction: column; }
+        .msg { margin-bottom: 10px; padding: 10px; border-radius: 12px; max-width: 85%; font-size: 13px; line-height: 1.4; position: relative; color: white;}
+        .msg-self { align-self: flex-end; background: var(--dark-gold); color: black; border-bottom-right-radius: 2px; }
+        .msg-other { align-self: flex-start; background: #2a2d39; color: white; border-bottom-left-radius: 2px; }
+        .msg-meta { font-size: 10px; opacity: 0.8; display: block; margin-bottom: 3px; font-weight: bold; }
+        .chat-input-area { display: flex; gap: 8px; }
+        .chat-input-area input { flex-grow: 1; margin: 0; }
+        .chat-input-area button { width: auto; margin: 0; padding: 0 20px; }
     </style>
-</head>
-<body>
+</head>  
+<body>  
 
-    <nav>
-        <a href="#about">ABOUT</a>
-        <a href="#games">ARENA</a>
-        <a href="#mgmt">TEAM</a>
-        <a href="#contact">CONTACT</a>
-    </nav>
+<div id="login-view" class="container">  
+    <div class="card" style="text-align: center; margin-top: 50px;">  
+        <h2 class="golden-text">Admin Login</h2>  
+        <input type="password" id="login-pass" placeholder="Enter Passcode">  
+        <button onclick="app.login()">Login</button>  
+        <div style="margin-top:20px; border-top:1px solid #333; padding-top:15px">  
+            <p style="color: #aaa; margin-bottom: 10px;">New Staff? Apply</p>  
+            <input id="req-n" placeholder="Name">  
+            <input id="req-lvl" placeholder="Level">  
+            <button style="background: #444; color: white;" onclick="app.requestAccess()">Submit Application</button>  
+        </div>  
+    </div>  
+</div>  
 
-    <header class="hero">
-        <h1>AHYPAR</h1>
-        <p>THE NEXT GEN MOBILE ESPORTS</p>
-        <a href="https://discord.com/invite/kyv3NZebp3" target="_blank" class="btn-join">JOIN DISCORD</a>
-    </header>
+<div id="dashboard-view" class="hidden">  
+    <header>  
+        <div>  
+            <span class="golden-text">OAP.DCA. Shafin_Mirza</span>  
+            <span class="owner-label">Owner of the Project</span>  
+            <small>User: <b id="h-user" style="color: var(--primary-gold);"></b></small>  
+        </div>  
+        <button onclick="app.toggleMenu(true)" style="width:auto; background:none; color:var(--primary-gold); font-size:24px; box-shadow: none; transform: none;">☰</button>  
+    </header>  
 
-    <main class="container">
-         <section id="tourney">
-     <h2 class="sec-title">LATEST INTEL</h2>
-     <div class="announcement-box">
-         <div class="poster-frame">
-             <img src="https://lh3.googleusercontent.com/d/1L2qufg7_NLlldHsQNSmGFXO20gb0r8FX" alt="Tournament Poster">
-         </div>
-         <div class="info-content">
-              <class="btn-tournament" style="border-color: var(--magenta); color: var(--magenta);"><h2>
-              COMING SOON</h2>
-            <h3>RISE OF UNDERGODS</h3>
-             <p class="short-details">
-                 🔥 High-Intensity Environment | 💰 Reward-Driven Stakes <br>
-                 Free Fire Max Competitive Tournament by AHYPAR Esports.
-             </p>
-             <a href="https://discord.com/invite/kyv3NZebp3" target="_blank" class="btn-tournament" style="border-color: var(--magenta); color: var(--magenta);">
-                 <span class="badge">READY TO RISE? JOIN DISCORD</span></a>
-         </div>
-     </div>
- </section>
-        
-        <section id="about">
-            <h2 class="sec-title">OUR MISSION</h2>
-            <div class="about-wrap">
-                <h3>BEYOND JUST GAMING</h3>
-                <p>Welcome to <b>AHYPAR ESPORTS</b>, the most aggressive and professionally managed mobile gaming arena. We build careers for rising E-sports stars. Our platform is dedicated to providing a fair environment for players who want to dominate.</p>
-                <p>By joining our official server, you gain access to <b>Daily Scrims, Weekly Mega Tournaments, and Special Roleplay Events <br>
-                
-               
-              
-       
-     <h3>About Us</h3>
-  AHYPAR ESPORTS is the ultimate battlefield for the next generation of mobile gaming champions. We believe that mobile gaming is not just a hobby but a serious career path for talented players. Our platform provides a professional and fair environment for the entire gaming community, ensuring that skill and dedication are always rewarded.<br>
-  
- <br> We offer a professionally managed arena where transparency and sportsmanship are the highest priorities. Players can engage in various competitive environments including dedicated sections for BGMI, Free Fire, and Grand Mobile. Beyond standard competition, we provide daily scrims and special roleplay events designed to help every player sharpen their tactical abilities and grow as a professional.<br>
-  
-<br>By joining our official Discord server, you become part of a massive community where you can network with top-tier players and form elite teams. Under the technical leadership of Shafin Mirza and the strategic direction of Conor Yadav, AHYPAR ESPORTS is committed to building an ecosystem where talent never goes unnoticed. We are here to transform the mobile e-sports landscape and create opportunities for every gamer to achieve greatness.<br>    
+    <div id="menu-overlay" class="menu-overlay">  
+        <button onclick="app.toggleMenu(false)" style="background:var(--danger-red); margin-bottom:15px; color:white;">Close</button>  
+        <div class="menu-item" onclick="app.nav('profile')">👤 My Profile</div>  
+        <div class="menu-item" onclick="app.nav('rules')">📜 App Rules</div>  
+        <div class="menu-item" onclick="app.nav('curr-admins')">👥 Current Admin</div>  
+        <div class="menu-item section-view hidden" onclick="app.nav('weekly')">📝 Weekly Reports</div>  
+        <div class="menu-item" onclick="app.nav('promo')">🎖️ Leader Board </div>  
+        <div class="menu-item section-view hidden" onclick="app.nav('stored')">📁 Store Files</div>  
+        <div class="menu-item section-hr hidden" onclick="app.nav('access')">🔐 Manage Requests</div>  
+        <div class="menu-item" onclick="app.nav('chat')" style="color:var(--primary-gold); border-top: 1px solid #333;">💬 Chat</div>  
+        <div class="menu-item" onclick="app.logout()" style="color:var(--danger-red)">Logout</div>  
+    </div>  
+    <div class="container" id="screen"></div>  
+</div>  
 
+<script>  
+    const firebaseConfig = {
+      apiKey: "AIzaSyCt-o3cjOqzdTZKudMGTsd54TRnjlTRe8Y",
+      authDomain: "ahypar-admin-0904.firebaseapp.com",
+      databaseURL: "https://ahypar-admin-0904-default-rtdb.firebaseio.com",
+      projectId: "ahypar-admin-0904",
+      storageBucket: "ahypar-admin-0904.firebasestorage.app",
+      messagingSenderId: "33988035579",
+      appId: "1:33988035579:web:f3565dd45db9c0117f415e",
+      measurementId: "G-9KMB0GK6F7"
+    };
 
-            <h3>Our Vision</h3>
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database(); 
 
-Under the technical leadership of Shafin Mirza and the guidance of Conor Yadav,Sanu Rajput we want to establish esports as a career. Our mission is to create an ecosystem where talent is never lost for lack of opportunity.</b>.</p>
-            </div>
-        </section>
+    const app = {  
+        data: { ownerKey: '27052011', admins: [], requests: [], history: [], lbStatus: 'closed', lbFileIndex: -1, activeWeek: null, appRules: "", ruleAuthor: "", ruleDate: "", ownerInfo: {tag: 'OWNER', tagColor: '#d4af37', boxColor: '#fff8dc'} },  
+        user: null,  
 
-        <section id="games">
-            <h2 class="sec-title">ACTIVE ARENAS</h2>
-            <div class="game-grid">
-                <div class="game-item">
-                    <div class="game-card" style="background-image: url('https://lh3.googleusercontent.com/u/0/d/1VDj-42mNDrIy0zZXnl4I2YdJIyqsYyi3=w1000?authuser=0');">
-                        <div class="overlay"><h4>BGMI MOBILE</h4></div>
-                    </div>
-                    <a href="https://discord.com/invite/kyv3NZebp3" target="_blank" class="btn-tournament">JOIN DISCORD FOR ATTEND TOURNAMENT</a>
-                </div>
-
-                <div class="game-item">
-                    <div class="game-card" style="background-image: url('https://lh3.googleusercontent.com/u/0/d/1WXsIdQGFsf6ezCqUCDMtGHxx2Q6jpMsi=w1000?authuser=0');">
-                        <div class="overlay"><h4>FREE FIRE</h4></div>
-                    </div>
-                    <a href="https://discord.com/invite/kyv3NZebp3" target="_blank" class="btn-tournament">JOIN DISCORD FOR ATTEND TOURNAMENT</a>
-                </div>
-
-                <div class="game-item">
-                    <div class="game-card" style="background-image: url('https://lh3.googleusercontent.com/u/0/d/1vbSHA8aKQwCs47Va4LgBVLKzbimg7syg=w1000?authuser=0');">
-                        <div class="overlay"><h4>GRAND MOBILE</h4></div>
-                    </div>
-                    <a href="https://discord.com/invite/kyv3NZebp3" target="_blank" class="btn-tournament">JOIN DISCORD FOR ATTEND TOURNAMENT</a>
-                </div>
-            </div>
-        </section>
-
-        <section id="mgmt">
-            <h2 class="sec-title">LEADERSHIP</h2>
-            <div class="mgmt-card"><span>Founder / Owner</span><h2>Conor Yadav</h2></div>
-            <div class="mgmt-card"><span>Co-Founder</span><h2>Sanu Rajput</h2></div>
-            <div class="mgmt-card" style="border-color: var(--magenta);"><span>Chief Developer / DCA</span><h2>Shafin Mirza</h2></div>
-              
-        </section>
-
-        <section id="contact" class="advice-section">
-            <h2>ADVICE & QUESTIONS</h2>
-            <p style="margin-bottom: 20px; color: #aaa;">Have any suggestions or questions for AHYPAR? Send us a message.</p>
-            <div class="advice-form">
-                <input type="text" id="userName" placeholder="Your Name" required>
-                <textarea id="userMsg" rows="4" placeholder="Type your advice or question here..." required></textarea>
-                <button class="btn-submit" onclick="sendMail()">SUBMIT MESSAGE</button>
-            </div>
-        </section>
-    </main>
-
-    <footer>
-        <p style="opacity: 0.5;">&copy; 2026 AHYPAR ESPORTS | DESIGNED BY SHAFIN MIRZA</p>
-    </footer>
-
-   <script>
-        async function sendMail() {
-            const name = document.getElementById('userName').value;
-            const msg = document.getElementById('userMsg').value;
-            const btn = document.querySelector('.btn-submit');
-            
-            if(name === "" || msg === "") {
-                alert("Please fill in both fields!");
-                return;
-            }
-
-            // Button status update
-            btn.innerText = "SENDING...";
-            btn.disabled = true;
-
-            try {
-                const response = await fetch("https://formspree.io/f/xgorelrw", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({
-                        name: name,
-                        message: msg
-                    })
-                });
-
-                if (response.ok) {
-                    alert("Message sent successfully!");
-                    document.getElementById('userName').value = "";
-                    document.getElementById('userMsg').value = "";
-                } else {
-                    alert("Oops! There was a problem submitting your message.");
+        init() {  
+            db.ref('ahypar_new_data').on('value', (snapshot) => {  
+                const cloud = snapshot.val();  
+                if (cloud) {
+                    this.data = cloud;  
+                    if(!this.data.admins) this.data.admins = [];
+                    if(!this.data.history) this.data.history = [];
+                    if(!this.data.requests) this.data.requests = [];
                 }
-            } catch (error) {
-                alert("Network error. Please try again later.");
-            } finally {
-                btn.innerText = "SUBMIT MESSAGE";
-                btn.disabled = false;
+                if(this.user) this.showDash();  
+            });  
+        },  
+
+        save() { db.ref('ahypar_new_data').set(this.data); },  
+
+        login() {  
+            const val = document.getElementById('login-pass').value;  
+            if (val === this.data.ownerKey) {  
+                this.user = { name: "Shafin_Mirza", role: 'owner', lvl: 'Owner', passcode: this.data.ownerKey };  
+            } else {  
+                const adminsList = this.data.admins || [];  
+                const a = adminsList.find(x => x.passcode === val);  
+                if (!a) return alert("Invalid Passcode");  
+                this.user = a;  
+            }  
+            this.showDash();  
+            this.nav('profile');  
+        },  
+
+        showDash() {  
+            document.getElementById('login-view').classList.add('hidden');  
+            document.getElementById('dashboard-view').classList.remove('hidden');  
+            document.getElementById('h-user').innerText = this.user.name;  
+            const role = this.user.role;  
+            document.querySelectorAll('.menu-item').forEach(el => {  
+                if(el.classList.contains('section-view') || el.classList.contains('section-hr') || el.classList.contains('section-editor')) el.classList.add('hidden');  
+            });  
+            if(['owner', 'editor', 'view', 'hr', 'high_command'].includes(role)) document.querySelectorAll('.section-view').forEach(el => el.classList.remove('hidden'));  
+            if(['owner', 'hr', 'editor', 'high_command'].includes(role)) document.querySelectorAll('.section-hr').forEach(el => el.classList.remove('hidden'));  
+            if(['owner', 'editor', 'high_command'].includes(role)) document.querySelectorAll('.section-editor').forEach(el => el.classList.remove('hidden'));  
+        },  
+
+        nav(page) {  
+            this.toggleMenu(false);  
+            db.ref('staff_chat').off();
+            const area = document.getElementById('screen');  
+            const adminsList = this.data.admins || [];  
+            let html = '';  
+
+            switch(page) {  
+                case 'profile':  
+                    const me = (this.user.role === 'owner') ? this.user : (adminsList.find(x => x.name === this.user.name) || this.user);  
+                    html = `<div class="card" style="text-align:center"><h3>${me.name}</h3><p style="color:var(--primary-gold)">${me.lvl}</p><div style="color:var(--danger-red)">Warn: ${me.warnings || 'None'}</div><hr style="margin:10px 0; opacity:0.2"><small>Bank</small><br><b style="font-size:24px; color:var(--primary-gold)">${me.bank || 0}</b></div>`;  
+                    if(this.user.role === 'owner') {  
+                        html += `<div class="card" style="margin-top:15px; border-top: 2px solid var(--danger-red);">  
+                            <h4>Change Master Key</h4>  
+                            <input type="password" id="new-master" value="${this.data.ownerKey}">  
+                            <button style="background:var(--danger-red); color:white" onclick="app.updateMasterKey()">Update Master Key</button>  
+                        </div>`;  
+                    }  
+                    break;  
+
+                case 'rules':  
+                    html = `<h3>App Rules</h3>`;  
+                    if(['owner', 'editor'].includes(this.user.role)) {  
+                        html += `<textarea id="rule-input" rows="8" placeholder="Write rules here...">${this.data.appRules || ""}</textarea>  
+                                 <button onclick="app.updateRules()">Update & Post Rules</button>`;  
+                    }  
+                    const meta = (this.data.ruleAuthor) ? `<div class="rule-meta">Posted by: ${this.data.ruleAuthor} | Date: ${this.data.ruleDate}</div>` : '';  
+                    html += `<div class="rule-box">${meta}${this.data.appRules || "Rules will appear here."}</div>`;  
+                    break;  
+
+                case 'curr-admins':
+                    html = `<h3>Current Admin</h3>`;
+                    const isOwner = this.user.role === 'owner';
+                    const isEditor = this.user.role === 'editor';
+                    const isHC = this.user.role === 'high_command';
+                    
+                    let oInfo = this.data.ownerInfo || {tag: 'OWNER', tagColor: '#d4af37', boxColor: '#fff8dc'};
+                    html += `<div class="card" style="background:${oInfo.boxColor}; border: 1px solid ${oInfo.tagColor}; color: black;">
+                        <b>Shafin_Mirza</b> <span class="tag-span" style="background:${oInfo.tagColor}">${oInfo.tag}</span>
+                        <br><small>Project Owner</small>`;
+                    if(isOwner) {
+                        html += `<div style="margin-top:10px; border-top:1px solid #ddd; padding-top:10px">
+                            <small>Tag Name:</small> <input id="ow-t" value="${oInfo.tag}" style="width:30%; padding:5px; margin-right:2px; color:black; border:1px solid #999">
+                            <small>Tag Color:</small> <input type="color" id="ow-tc" value="${oInfo.tagColor}" style="width:15%; padding:0; margin-right:2px">
+                            <small>Box Color:</small> <input type="color" id="ow-bc" value="${oInfo.boxColor}" style="width:15%; padding:0">
+                            <button class="role-btn" onclick="app.setOwnerStyle()" style="background:var(--bg-black); color:white">Set Style</button>
+                        </div>`;
+                    }
+                    html += `</div>`;
+
+                    adminsList.forEach((a, i) => {
+                        let aTag = a.tag ? `<span class="tag-span" style="background:${a.tagColor||'#555'}">${a.tag}</span>` : '';
+                        html += `<div class="card" style="background:${a.boxColor || 'var(--card-bg)'}; color: ${a.boxColor ? 'black' : 'white'}">
+                            <b>${a.name}</b> ${aTag} - <small>${a.lvl}</small>`;
+                        
+                        let canViewProfile = isOwner || (isHC && ['admin', 'editor', 'view', 'hr'].includes(a.role));
+                        if(canViewProfile) { 
+                            html += `<button class="role-btn" style="float:right; background:var(--dark-gold); color:black" onclick="app.viewAdminProfile(${i})">👁️ Profile</button>`; 
+                        }
+
+                        html += `<div style="margin-top:10px; border-top:1px solid rgba(255,255,255,0.1); padding-top:10px">`;
+                        if(isOwner || (isEditor && ['admin', 'view', 'hr'].includes(a.role)) || (isHC && ['admin', 'view', 'hr', 'editor'].includes(a.role))) {
+                            if(isOwner) html += `<input id="lvl-up-${i}" placeholder="New Level" style="width:60%; display:inline; padding:5px; color:black"> <button class="role-btn" onclick="app.changeLvl(${i})">Set</button><br>`;
+                            html += `<button class="role-btn ${a.role==='admin'?'active-role':''}" onclick="app.setRole(${i},'admin')">Admin</button>
+                                     <button class="role-btn ${a.role==='view'?'active-role':''}" onclick="app.setRole(${i},'view')">View</button>
+                                     <button class="role-btn ${a.role==='hr'?'active-role':''}" onclick="app.setRole(${i},'hr')">HR</button>
+                                     <button class="role-btn" style="background:var(--danger-red); color:white" onclick="app.kick(${i})">Kick</button>`;
+                            if(isOwner) html += `<button class="role-btn ${a.role==='editor'?'active-role':''}" onclick="app.setRole(${i},'editor')">Editor</button>
+                                         <button class="role-btn ${a.role==='high_command'?'active-role':''}" style="background:var(--primary-gold); color:black" onclick="app.setRole(${i},'high_command')">High Command</button>`;
+                        }
+                        
+                        if(isOwner) {
+                            html += `<div style="margin-top:10px; border-top:1px dashed #777; padding-top:10px">
+                                <small>Tag:</small> <input id="tag-n-${i}" value="${a.tag || ''}" style="width:25%; padding:4px; color:black">
+                                <small>Tag Color:</small> <input type="color" id="tag-c-${i}" value="${a.tagColor || '#555555'}">
+                                <small>Box:</small> <input type="color" id="box-c-${i}" value="${a.boxColor || '#1a1d29'}">
+                                <button class="role-btn" style="background:var(--success-green); color:black" onclick="app.saveAdminStyle(${i})">Save Style</button>
+                            </div>`;
+                        }
+                        
+                        html += `</div></div>`;
+                    });
+                    break;
+
+                case 'weekly':  
+                    html = `<h3>Weekly Reports</h3>`;  
+                    if(['owner', 'editor', 'high_command'].includes(this.user.role)) {  
+                        if(!this.data.activeWeek) { html += `<div class="card"><input id="wt" placeholder="Week Title"><button onclick="app.startW()">Start New Week</button></div>`; } 
+                        else { 
+                            html += `<div class="card">
+                                <p>Working on: <b style="color:var(--primary-gold)">${this.data.activeWeek.title}</b></p>
+                                <label>Admin Name</label>
+                                <select id="sel-n">${adminsList.map(a=>`<option>${a.name}</option>`).join('')}</select>
+                                <label>Date</label>
+                                <input type="date" id="fd">
+                                <label>Tournaments (1 = 5 Pts)</label>
+                                <input type="text" id="ft" placeholder="Number of Tournaments" value="0">
+                                <label>Other Points (Invited Team)</label>
+                                <input type="text" id="fo" placeholder="Other points" value="0">
+                                <label>Extra Points (Good Job)</label>
+                                <input type="text" id="fe" placeholder="Extra points" value="0">
+                                <label>Warning (V1, W2 etc.)</label>
+                                <input type="text" id="fw" placeholder="e.g. V1, W1 or None" value="None">
+                                <button style="background:var(--success-green); color: black" onclick="app.addLog()">Save Entry</button>
+                                <button style="background:var(--danger-red); color: white" onclick="app.finishW()">Finish & Store</button>
+                            </div><div id="live-view"></div>`; 
+                        }  
+                    } else { html += `<div id="live-view"></div>`; }  
+                    break;  
+
+                case 'promo':  
+                    html = `<h3>Leader Board</h3>`;  
+                    if(['owner', 'high_command'].includes(this.user.role)) {  
+                        const history = this.data.history || [];  
+                        html += `<div class="card"><label>Select File:</label><select id="lb-file-select" style="margin-bottom:10px;">${history.map((h, idx) => `<option value="${idx}">${h.title}</option>`).join('')}</select><button style="background:var(--dark-gold); color:black; margin-bottom:5px;" onclick="app.setLBStatus('published_hc')">👁️ Result HC</button><button style="background:var(--success-green); color:black; margin-bottom:5px;" onclick="app.setLBStatus('published_public')">🌍 Result Public</button><button style="background:var(--danger-red); color:white" onclick="app.setLBStatus('closed')">🔒 Close</button></div>`;  
+                    }  
+                    html += `<div id="promo-res"></div>`;  
+                    break;  
+
+                case 'stored':  
+                    html = `<h3>Stored Files</h3>`;  
+                    (this.data.history || []).forEach((h, i) => { html += `<div class="card" onclick="app.viewF(${i})">📂 ${h.title}</div>${this.user.role === 'owner' ? `<button class="btn-del" onclick="app.delF(${i})">Del</button>` : ''}`; });  
+                    break;  
+
+                case 'access':  
+                    html = `<h3>Applications</h3>`;  
+                    (this.data.requests || []).forEach((r, i) => { html += `<div class="card"><b>${r.name}</b> (${r.lvl})<br><button style="background:var(--success-green); color:black; width:48%" onclick="app.approve(${i})">✔</button><button style="background:var(--danger-red); color:white; width:48%" onclick="app.reject(${i})">✖</button></div>`; });  
+                    break;
+                
+                case 'chat':
+                    html = `<h3>Staff Chat</h3><div class="chat-container"><div id="chat-box" class="chat-messages">Loading...</div><div class="chat-input-area"><input type="text" id="chat-input" placeholder="Type message..." onkeypress="if(event.key==='Enter') app.sendChat()"><button onclick="app.sendChat()">Send</button></div></div>`;
+                    area.innerHTML = html;
+                    this.initChat();
+                    return;
+            }  
+            area.innerHTML = html;  
+            if(page === 'promo') this.renderLB();  
+            if(page === 'weekly') this.renderLive();  
+        }, 
+
+        saveAdminStyle(i) {
+            const a = this.data.admins[i];
+            a.tag = document.getElementById(`tag-n-${i}`).value;
+            a.tagColor = document.getElementById(`tag-c-${i}`).value;
+            a.boxColor = document.getElementById(`box-c-${i}`).value;
+            this.save();
+            alert("Admin Style Updated!");
+            this.nav('curr-admins');
+        },
+
+        renderLB() {  
+            const div = document.getElementById('promo-res');  
+            if(!div) return;  
+            if(this.data.lbStatus === 'closed' || this.data.lbFileIndex === -1) { div.innerHTML = "<p style='text-align:center; color:grey;'>Leader Board is closed.</p>"; return; }  
+            
+            const file = this.data.history[this.data.lbFileIndex];  
+            if(!file) return;  
+            
+            const stats = {};  
+            file.logs.forEach(l => {  
+                if(!stats[l.n]) stats[l.n] = { n: l.n, pts: 0, hasWarn: false, lastWarn: '' };  
+                stats[l.n].pts += (parseFloat(l.pts) || 0);  
+                if(l.w && l.w.toLowerCase() !== 'none' && l.w.trim() !== '') {
+                    stats[l.n].hasWarn = true;
+                    stats[l.n].lastWarn = l.w;
+                }
+            });  
+            
+            const sorted = Object.values(stats).sort((a,b)=>b.pts - a.pts);  
+            div.innerHTML = `<h4 style="margin-bottom:10px">Ranking: ${file.title}</h4>` + sorted.map((s,i) => `
+                <div class="card" style="border-left:5px solid ${i===0?'var(--primary-gold)':'var(--success-green)'};">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <b>#${i+1} ${s.n}</b>
+                        <span style="color:var(--primary-gold); font-weight:bold">${s.pts} Pts</span>
+                        ${this.user.role === 'owner' ? `<button class="role-btn" style="background:var(--primary-gold); color:black; margin:0; padding:4px 8px;" onclick="app.editLBPoints('${s.n}')">Edit</button>` : ''}
+                    </div>
+                    ${s.hasWarn ? `<span class="warn-alert">Cancelled due to have warning (${s.lastWarn})</span>` : ''}
+                </div>`).join('');  
+        },
+
+        editLBPoints(adminName) {
+            const file = this.data.history[this.data.lbFileIndex];
+            const currentTotal = file.logs.filter(l => l.n === adminName).reduce((sum, l) => sum + (parseFloat(l.pts) || 0), 0);
+            const newPointsInput = prompt(`Current total for ${adminName}: ${currentTotal}\nEnter NEW total points:`, currentTotal);
+            
+            if (newPointsInput !== null) {
+                const newPoints = parseFloat(newPointsInput) || 0;
+                const diff = newPoints - currentTotal;
+                file.logs.push({ n: adminName, d: new Date().toISOString().split('T')[0], t: "0", pts: diff, w: 'Manual Correction' });
+                this.save(); alert("Points Updated!"); this.renderLB();
             }
-        }
+        },
 
-        function joinDiscord() {
-            window.open("https://discord.com/invite/kyv3NZebp3", "_blank");
-        }
+        renderLive() {  
+            const div = document.getElementById('live-view'); if(!div || !this.data.activeWeek || !this.data.activeWeek.logs) return;  
+            div.innerHTML = "<h4>Live Stats:</h4>" + this.data.activeWeek.logs.slice().reverse().map((l, index) => `
+                <div class="card" style="font-size:11px; border-left:3px solid var(--primary-gold)">
+                ${this.user.role === 'owner' ? `<button class="btn-del" onclick="app.deleteLog(${this.data.activeWeek.logs.length - 1 - index})">Del</button>` : ''}
+                <b>${l.n}</b> | ${l.d} | <b style="color:var(--primary-gold)">${l.pts} Pts</b><br>
+                <small>Tournaments: ${l.t}, Others: ${l.o}, Extra: ${l.e}</small><br>
+                <small style="color:var(--danger-red)">Warning: ${l.w || 'None'}</small>
+                </div>`).join('');  
+        },
 
-        // Auto-fix for all anchor tags
-        document.querySelectorAll('a').forEach(link => {
-            link.setAttribute('target', '_blank');
-            link.setAttribute('rel', 'noopener noreferrer');
-        });
-    </script>
-</body>
+        addLog() {  
+            const n = document.getElementById('sel-n').value, d = document.getElementById('fd').value;
+            if(!d) return alert("Select date!");
+            
+            const t_val = document.getElementById('ft').value || "0";
+            const o_val = document.getElementById('fo').value || "0";
+            const e_val = document.getElementById('fe').value || "0";
+            const w = document.getElementById('fw').value || 'None';
+            
+            const t_num = parseFloat(t_val) || 0;
+            const o_num = parseFloat(o_val) || 0;
+            const e_num = parseFloat(e_val) || 0;
+            const totalPoints = (t_num * 5) + o_num + e_num;
+            
+            if(!this.data.activeWeek.logs) this.data.activeWeek.logs = [];
+            this.data.activeWeek.logs.push({ 
+                n, d, 
+                t: t_val, 
+                o: o_val, 
+                e: e_val, 
+                w, 
+                pts: totalPoints 
+            });
+            this.save(); this.renderLive();
+            
+            document.getElementById('ft').value = '0';
+            document.getElementById('fo').value = '0';
+            document.getElementById('fe').value = '0';
+            document.getElementById('fw').value = 'None';
+        },
+
+        initChat() {
+            db.ref('staff_chat').limitToLast(40).on('value', (snap) => {
+                const box = document.getElementById('chat-box'); if(!box) return;
+                const msgs = snap.val(); if(!msgs) { box.innerHTML = "No messages."; return; }
+                box.innerHTML = Object.values(msgs).map(m => `<div class="msg ${m.user === this.user.name ? 'msg-self' : 'msg-other'}"><span class="msg-meta">${m.user}</span>${m.text}</div>`).join('');
+                box.scrollTop = box.scrollHeight;
+            });
+        },
+
+        sendChat() {
+            const input = document.getElementById('chat-input');
+            const txt = input.value.trim(); if(!txt) return;
+            db.ref('staff_chat').push({ user: this.user.name, text: txt, time: new Date().toLocaleTimeString() });
+            input.value = '';
+        },
+
+        deleteLog(index) { if(confirm("Are you sure?")) { this.data.activeWeek.logs.splice(index, 1); this.save(); this.renderLive(); } },
+        updateMasterKey() { const nk = document.getElementById('new-master').value; if(nk.trim() && confirm("Change Master Key?")) { this.data.ownerKey = nk; this.save(); alert("Updated!"); } },  
+        setOwnerStyle() { this.data.ownerInfo.tag = document.getElementById('ow-t').value; this.data.ownerInfo.tagColor = document.getElementById('ow-tc').value; this.data.ownerInfo.boxColor = document.getElementById('ow-bc').value; this.save(); this.nav('curr-admins'); },  
+        updateRules() { const text = document.getElementById('rule-input').value; this.data.appRules = text; this.data.ruleAuthor = this.user.name; this.data.ruleDate = new Date().toLocaleString(); this.save(); alert("Posted!"); this.nav('rules'); },  
+        startW() { const t = document.getElementById('wt').value; if(t) { this.data.activeWeek = {title:t, logs:[]}; this.save(); this.nav('weekly'); }},  
+        finishW() { 
+            if(confirm("Store and update banks?")) { 
+                if(!this.data.activeWeek) return;
+                this.data.activeWeek.logs.forEach(l => { 
+                    const a = this.data.admins.find(x => x.name === l.n); 
+                    if(a) { 
+                        const p = parseFloat(l.pts) || 0;
+                        a.bank = (parseFloat(a.bank) || 0) + p; 
+                        a.warnings = l.w; 
+                    } 
+                }); 
+                if(!this.data.history) this.data.history = [];
+                this.data.history.push(JSON.parse(JSON.stringify(this.data.activeWeek))); 
+                this.data.activeWeek = null; 
+                this.save(); 
+                this.nav('stored'); 
+            } 
+        },  
+        viewAdminProfile(i) {
+            const a = this.data.admins[i];
+            document.getElementById('screen').innerHTML = `<h3>Profile</h3><div class="card"><label>Name</label><input id="ed-n" value="${a.name}" ${this.user.role !== 'owner' ? 'disabled' : ''}><label>Level</label><input id="ed-l" value="${a.lvl}"><label>Points</label><input type="text" id="ed-b" value="${a.bank || 0}"><label>Warnings</label><input id="ed-w" value="${a.warnings || 'None'}"><label>Passcode</label><input type="text" id="ed-p" value="${a.passcode}"><button onclick="app.updateAdmin(${i})">Save</button><button onclick="app.nav('curr-admins')">Back</button></div>`;
+        },
+        updateAdmin(i) { 
+            const a = this.data.admins[i]; 
+            if(this.user.role === 'owner') a.name = document.getElementById('ed-n').value; 
+            a.lvl = document.getElementById('ed-l').value; 
+            a.bank = document.getElementById('ed-b').value; 
+            a.warnings = document.getElementById('ed-w').value; 
+            a.passcode = document.getElementById('ed-p').value; 
+            this.save(); alert("Updated!"); this.nav('curr-admins'); 
+        },
+        setLBStatus(status) { const idx = document.getElementById('lb-file-select').value; if(idx === "") return; this.data.lbStatus = status; this.data.lbFileIndex = parseInt(idx); this.save(); this.renderLB(); },  
+        viewF(i) { const f = this.data.history[i]; let h = `<h3>${f.title}</h3><button onclick="app.nav('stored')">Back</button><br><br>`; f.logs.forEach(l => { h += `<div class="card"><b>${l.n}</b><br><small>${l.d} - Pts: ${l.pts}</small></div>`; }); document.getElementById('screen').innerHTML = h; },  
+        changeLvl(i) { this.data.admins[i].lvl = document.getElementById(`lvl-up-${i}`).value; this.save(); this.nav('curr-admins'); },  
+        setRole(i, r) { this.data.admins[i].role = r; this.save(); this.nav('curr-admins'); },  
+        kick(i) { if(confirm("Kick?")) { this.data.admins.splice(i,1); this.save(); this.nav('curr-admins'); } },  
+        delF(i) { if(confirm("Delete?")) { this.data.history.splice(i,1); this.save(); this.nav('stored'); }},  
+        approve(i) { const r = this.data.requests[i]; const code = Math.floor(1000 + Math.random()*8999).toString(); this.data.admins.push({ name: r.name, lvl: r.lvl, bank: "0", warnings: 'None', passcode: code, role: 'admin' }); this.data.requests.splice(i, 1); this.save(); alert("Code: " + code); this.nav('access'); },  
+        reject(i) { this.data.requests.splice(i,1); this.save(); this.nav('access'); },  
+        requestAccess() { const n = document.getElementById('req-n').value, l = document.getElementById('req-lvl').value; if(n && l) { if(!this.data.requests) this.data.requests = []; this.data.requests.push({name: n, lvl: l}); this.save(); alert("Sent!"); } },  
+        toggleMenu(s) { document.getElementById('menu-overlay').classList.toggle('active', s); },  
+        logout() { location.reload(); }  
+    };  
+    app.init();  
+</script>  
+</body>  
 </html>
