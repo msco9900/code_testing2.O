@@ -1,1 +1,891 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AHYPAR Administration</title>
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Exo+2:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-analytics-compat.js"></script>
 
+    <style>
+        :root {
+            --primary-gold: #FFD700;
+            --dark-gold: #B8860B;
+            --accent-gold: #FDB931;
+            --bg-black: #07080D;
+            --bg-deep: #0A0B12;
+            --card-bg: rgba(20, 22, 35, 0.92);
+            --card-hover: rgba(26, 29, 46, 0.95);
+            --text-white: #F0F2FF;
+            --text-muted: #8890AA;
+            --glass-border: rgba(255, 215, 0, 0.18);
+            --glass-border-bright: rgba(255, 215, 0, 0.45);
+            --danger-red: #FF3D3D;
+            --danger-soft: rgba(255, 61, 61, 0.15);
+            --success-green: #00E676;
+            --success-soft: rgba(0, 230, 118, 0.12);
+            --info-blue: #4FC3F7;
+            --purple-accent: #9C6FFF;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Exo 2', sans-serif; }
+
+        body {
+            background: var(--bg-black);
+            color: var(--text-white);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Animated BG */
+        body::before {
+            content: '';
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: 
+                radial-gradient(ellipse 80% 50% at 20% 10%, rgba(255,215,0,0.04) 0%, transparent 60%),
+                radial-gradient(ellipse 60% 40% at 80% 80%, rgba(156,111,255,0.03) 0%, transparent 60%),
+                radial-gradient(circle at 50% 50%, #0d0e18 0%, #07080d 100%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .hidden { display: none !important; }
+
+        /* ── HEADER ── */
+        header {
+            background: rgba(7, 8, 13, 0.97);
+            border-bottom: 1px solid var(--glass-border-bright);
+            padding: 12px 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky; top: 0; z-index: 1000;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 4px 30px rgba(0,0,0,0.6), 0 1px 0 rgba(255,215,0,0.1);
+        }
+
+        .header-brand { line-height: 1.2; }
+        .header-brand .brand-name { font-family: 'Rajdhani', sans-serif; font-size: 16px; font-weight: 700; background: linear-gradient(90deg, #FFD700 0%, #FDB931 50%, #9f7928 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: 2px; text-transform: uppercase; }
+        .header-brand .brand-sub { font-size: 9px; color: var(--text-muted); letter-spacing: 1px; text-transform: uppercase; }
+        .header-brand .brand-user { font-size: 11px; color: var(--text-white); margin-top: 1px; }
+        .header-brand .brand-user b { color: var(--primary-gold); }
+
+        .menu-btn { background: none; border: 1px solid var(--glass-border); width: 40px; height: 40px; border-radius: 10px; color: var(--primary-gold); font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; padding: 0; }
+        .menu-btn:hover { background: rgba(255,215,0,0.1); border-color: var(--primary-gold); transform: none; box-shadow: none; }
+
+        /* ── GOLDEN TEXT ── */
+        .golden-text { font-family: 'Rajdhani', sans-serif; background: linear-gradient(135deg, #FFD700 0%, #FDB931 40%, #9f7928 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; }
+
+        /* ── CONTAINER ── */
+        .container { padding: 15px; max-width: 520px; margin: auto; position: relative; z-index: 1; }
+
+        /* ── CARDS ── */
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 18px;
+            margin-bottom: 12px;
+            box-shadow: 0 8px 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.04);
+            transition: border-color 0.2s, box-shadow 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+        .card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(255,215,0,0.3), transparent); }
+        .card:hover { border-color: rgba(255,215,0,0.3); }
+
+        .card-title { font-family: 'Rajdhani', sans-serif; font-size: 13px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 12px; }
+
+        /* ── INPUTS ── */
+        input, select, textarea {
+            width: 100%;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 10px;
+            color: var(--text-white);
+            padding: 11px 14px;
+            margin: 6px 0;
+            font-size: 13px;
+            font-family: 'Exo 2', sans-serif;
+            transition: 0.25s;
+        }
+        input::placeholder { color: var(--text-muted); }
+        input:focus, select:focus, textarea:focus { border-color: var(--primary-gold); outline: none; background: rgba(255,215,0,0.04); box-shadow: 0 0 0 3px rgba(255,215,0,0.08); }
+        select option { background: #1a1d2e; color: white; }
+        label { font-size: 11px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; display: block; margin-top: 8px; }
+
+        /* ── BUTTONS ── */
+        button {
+            width: 100%;
+            background: linear-gradient(135deg, var(--dark-gold) 0%, var(--primary-gold) 100%);
+            color: #0a0b10;
+            font-family: 'Rajdhani', sans-serif;
+            font-weight: 700;
+            border-radius: 10px;
+            border: none;
+            padding: 12px 16px;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 13px;
+            transition: 0.25s;
+            margin: 6px 0;
+            position: relative;
+            overflow: hidden;
+        }
+        button::after { content: ''; position: absolute; inset: 0; background: rgba(255,255,255,0); transition: 0.2s; }
+        button:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(255,215,0,0.35); }
+        button:hover::after { background: rgba(255,255,255,0.08); }
+        button:active { transform: translateY(0); }
+
+        .btn-danger { background: linear-gradient(135deg, #c0392b, var(--danger-red)) !important; color: white !important; }
+        .btn-success { background: linear-gradient(135deg, #00b248, var(--success-green)) !important; color: #0a0b10 !important; }
+        .btn-ghost { background: rgba(255,255,255,0.06) !important; color: var(--text-white) !important; border: 1px solid rgba(255,255,255,0.12) !important; }
+        .btn-ghost:hover { background: rgba(255,255,255,0.1) !important; box-shadow: none; }
+        .btn-sm { width: auto; padding: 5px 10px; font-size: 10px; letter-spacing: 0.5px; margin: 2px; border-radius: 6px; }
+        .btn-del { background: var(--danger-red) !important; color: white !important; width: auto; float: right; padding: 4px 10px; font-size: 10px; margin-top: -28px; border-radius: 6px; }
+        .active-role { background: var(--primary-gold) !important; color: black !important; box-shadow: 0 0 10px rgba(255,215,0,0.4); }
+
+        /* ── MENU OVERLAY ── */
+        .menu-overlay {
+            position: fixed; top: 0; right: 0; width: 82%; max-width: 290px; height: 100%;
+            background: rgba(7, 8, 13, 0.99);
+            border-left: 1px solid var(--glass-border-bright);
+            z-index: 2000; transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+            padding: 20px 15px;
+            overflow-y: auto;
+            box-shadow: -20px 0 60px rgba(0,0,0,0.8);
+        }
+        .menu-overlay.active { transform: translateX(0); }
+        .menu-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 1999; opacity: 0; pointer-events: none; transition: 0.3s; }
+        .menu-backdrop.active { opacity: 1; pointer-events: all; }
+
+        .menu-section-label { font-size: 9px; color: var(--text-muted); letter-spacing: 2px; text-transform: uppercase; padding: 12px 10px 4px; font-weight: 700; }
+        .menu-item { padding: 12px 14px; border-radius: 10px; font-weight: 600; cursor: pointer; transition: 0.18s; color: var(--text-white); font-size: 13px; display: flex; align-items: center; gap: 10px; margin: 2px 0; }
+        .menu-item:hover { background: rgba(255,215,0,0.08); color: var(--primary-gold); }
+        .menu-item.danger { color: var(--danger-red); }
+        .menu-item.danger:hover { background: var(--danger-soft); }
+        .menu-item.chat-item { color: var(--primary-gold); border-top: 1px solid var(--glass-border); margin-top: 8px; padding-top: 16px; }
+
+        /* ── PAGE TITLES ── */
+        .page-title { font-family: 'Rajdhani', sans-serif; font-size: 22px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 15px; color: var(--text-white); display: flex; align-items: center; gap: 8px; }
+        .page-title::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, var(--glass-border-bright), transparent); }
+
+        /* ── BADGES / TAGS ── */
+        .tag-span { color: black; padding: 2px 7px; border-radius: 5px; font-size: 9px; margin-left: 5px; vertical-align: middle; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; }
+        .role-badge { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 9px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; border: 1px solid; }
+        .badge-owner { background: rgba(255,215,0,0.15); color: var(--primary-gold); border-color: rgba(255,215,0,0.4); }
+        .badge-hc { background: rgba(156,111,255,0.15); color: var(--purple-accent); border-color: rgba(156,111,255,0.4); }
+        .badge-editor { background: rgba(79,195,247,0.15); color: var(--info-blue); border-color: rgba(79,195,247,0.4); }
+        .badge-admin { background: rgba(255,255,255,0.08); color: var(--text-muted); border-color: rgba(255,255,255,0.15); }
+
+        /* ── STAT CARDS ── */
+        .stat-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+        .stat-box { background: var(--card-bg); border: 1px solid var(--glass-border); border-radius: 12px; padding: 14px; text-align: center; }
+        .stat-box .val { font-family: 'Rajdhani', sans-serif; font-size: 28px; font-weight: 700; color: var(--primary-gold); line-height: 1; }
+        .stat-box .lbl { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-top: 4px; }
+
+        /* ── WARNINGS / ALERTS ── */
+        .warn-alert { color: var(--danger-red); font-size: 11px; font-weight: 700; display: block; margin-top: 5px; }
+        .alert-box { border-radius: 10px; padding: 12px 14px; font-size: 12px; margin: 8px 0; display: flex; align-items: center; gap: 8px; }
+        .alert-danger { background: var(--danger-soft); border: 1px solid rgba(255,61,61,0.3); color: var(--danger-red); }
+        .alert-success { background: var(--success-soft); border: 1px solid rgba(0,230,118,0.3); color: var(--success-green); }
+        .alert-info { background: rgba(79,195,247,0.1); border: 1px solid rgba(79,195,247,0.3); color: var(--info-blue); }
+
+        /* ── RULES ── */
+        .rule-box { background: rgba(255,255,255,0.03); padding: 16px; border-radius: 10px; border: 1px solid var(--glass-border); white-space: pre-wrap; margin-top: 10px; font-size: 13px; line-height: 1.7; }
+        .rule-meta { font-size: 11px; color: var(--text-muted); margin-bottom: 10px; font-style: italic; border-bottom: 1px solid var(--glass-border); padding-bottom: 8px; }
+
+        /* ── PERMISSION TOGGLES ── */
+        .perm-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 8px; }
+        .perm-toggle { display: flex; align-items: center; justify-content: space-between; padding: 8px 10px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; font-size: 11px; color: var(--text-muted); cursor: pointer; transition: 0.2s; user-select: none; }
+        .perm-toggle.active { background: rgba(255,215,0,0.08); border-color: rgba(255,215,0,0.3); color: var(--primary-gold); }
+        .toggle-dot { width: 28px; height: 16px; border-radius: 20px; background: rgba(255,255,255,0.1); position: relative; transition: 0.2s; flex-shrink: 0; }
+        .toggle-dot::after { content: ''; position: absolute; left: 2px; top: 2px; width: 12px; height: 12px; border-radius: 50%; background: var(--text-muted); transition: 0.2s; }
+        .perm-toggle.active .toggle-dot { background: rgba(255,215,0,0.4); }
+        .perm-toggle.active .toggle-dot::after { left: 14px; background: var(--primary-gold); }
+
+        /* ── LEADERBOARD ── */
+        .lb-card { border-radius: 12px; padding: 14px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--glass-border); background: var(--card-bg); }
+        .lb-rank { font-family: 'Rajdhani', sans-serif; font-size: 20px; font-weight: 700; color: var(--text-muted); width: 30px; }
+        .lb-rank.gold { color: var(--primary-gold); }
+        .lb-rank.silver { color: #C0C0C0; }
+        .lb-rank.bronze { color: #CD7F32; }
+        .lb-info { flex: 1; padding: 0 10px; }
+        .lb-name { font-weight: 600; font-size: 14px; }
+        .lb-pts { font-family: 'Rajdhani', sans-serif; font-size: 22px; font-weight: 700; color: var(--primary-gold); }
+
+        /* ── CHAT ── */
+        .chat-container { display: flex; flex-direction: column; height: calc(100vh - 160px); }
+        .chat-messages { flex-grow: 1; overflow-y: auto; padding: 10px; background: rgba(0,0,0,0.25); border: 1px solid var(--glass-border); border-radius: 12px; margin-bottom: 10px; display: flex; flex-direction: column; gap: 6px; }
+        .msg { padding: 10px 13px; border-radius: 14px; max-width: 82%; font-size: 13px; line-height: 1.45; }
+        .msg-self { align-self: flex-end; background: linear-gradient(135deg, var(--dark-gold), #c9a010); color: black; border-bottom-right-radius: 4px; }
+        .msg-other { align-self: flex-start; background: rgba(30,34,52,0.9); color: var(--text-white); border-bottom-left-radius: 4px; border: 1px solid var(--glass-border); }
+        .msg-meta { font-size: 10px; font-weight: 700; display: block; margin-bottom: 3px; opacity: 0.75; }
+        .chat-input-area { display: flex; gap: 8px; }
+        .chat-input-area input { flex-grow: 1; margin: 0; }
+        .chat-input-area button { width: auto; margin: 0; padding: 0 18px; }
+
+        /* ── DIVIDER ── */
+        .divider { height: 1px; background: linear-gradient(90deg, transparent, var(--glass-border), transparent); margin: 12px 0; }
+
+        /* ── LOGIN SCREEN ── */
+        #login-view {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .login-card { width: 100%; max-width: 400px; }
+        .login-logo { text-align: center; margin-bottom: 30px; }
+        .login-logo .logo-main { font-family: 'Rajdhani', sans-serif; font-size: 36px; font-weight: 700; background: linear-gradient(135deg, #FFD700, #FDB931, #9f7928); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: 4px; }
+        .login-logo .logo-sub { font-size: 11px; color: var(--text-muted); letter-spacing: 3px; text-transform: uppercase; margin-top: 2px; }
+
+        /* ── SPINNER ── */
+        .spinner { width: 18px; height: 18px; border: 2px solid rgba(255,215,0,0.3); border-top-color: var(--primary-gold); border-radius: 50%; animation: spin 0.7s linear infinite; display: inline-block; vertical-align: middle; margin-right: 6px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ── PULSE INDICATOR ── */
+        .live-dot { width: 8px; height: 8px; background: var(--success-green); border-radius: 50%; display: inline-block; margin-right: 5px; animation: pulse 1.5s ease-in-out infinite; }
+        @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(0.8)} }
+
+        /* ── HC STATUS BAR ── */
+        .hc-tag { font-size: 10px; background: rgba(255,61,61,0.2); color: var(--danger-red); border: 1px solid rgba(255,61,61,0.4); border-radius: 4px; padding: 2px 6px; margin-left: 6px; }
+
+        /* ── ADMIN PROFILE CARDS ── */
+        .admin-card-actions { margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.06); }
+        .admin-style-section { margin-top: 10px; padding-top: 10px; border-top: 1px dashed rgba(255,215,0,0.15); }
+        .style-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
+        .style-row label { margin: 0; white-space: nowrap; }
+        .style-row input[type="color"] { width: 36px; height: 30px; padding: 2px; border-radius: 6px; cursor: pointer; flex-shrink: 0; }
+        .style-row input[type="text"] { flex: 1; min-width: 80px; padding: 6px 8px; margin: 0; }
+
+        /* ── SCROLLBAR ── */
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--glass-border-bright); border-radius: 4px; }
+    </style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-view">
+    <div class="login-logo">
+        <div class="logo-main">AHYPAR</div>
+        <div class="logo-sub">Administration Portal</div>
+    </div>
+    <div class="card login-card">
+        <div class="card-title">Staff Login (Evryone can Login using  passcode) (except developer) </div>
+        <input type="email" id="login-email" placeholder="Email  ( Developer only )" autocomplete="off">
+        <input type="password" id="login-pass" placeholder="Passcode (For everyone)" autocomplete="off">
+        <button onclick="app.login()" id="login-btn">Login</button>
+        <div id="login-err" class="hidden alert-box alert-danger" style="margin-top:6px"></div>
+        <div class="divider"></div>
+        <div class="card-title" style="margin-bottom:8px">New Staff Application</div>
+        <input id="req-n" placeholder="Full Name">
+        <input id="req-lvl" placeholder="Position / Level"
+        <button class="btn-ghost" onclick="app.requestAccess()">Submit Application</button>
+    </div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dashboard-view" class="hidden">
+    <div id="menu-backdrop" class="menu-backdrop" onclick="app.toggleMenu(false)"></div>
+    <header>
+        <div class="header-brand">
+            <div class="brand-name">Chief Admin · Shafin_Mirza</div>
+            <div class="brand-sub">Chief Developer</div>
+            <div class="brand-user">Logged in: <b id="h-user"></b></div>
+        </div>
+        <button class="menu-btn" onclick="app.toggleMenu(true)">☰</button>
+    </header>
+
+    <div id="menu-overlay" class="menu-overlay">
+        <button class="btn-danger" onclick="app.toggleMenu(false)" style="margin-bottom:14px">✕ Close</button>
+        <div class="menu-section-label">General</div>
+        <div class="menu-item" onclick="app.nav('profile')">👤 My Profile</div>
+        <div class="menu-item" onclick="app.nav('rules')">📜 App Rules</div>
+        <div class="menu-item" onclick="app.nav('curr-admins')">👥 Current Admins</div>
+        <div class="menu-section-label">Operations</div>
+        <div class="menu-item section-view hidden" onclick="app.nav('weekly')">📝 Weekly Reports</div>
+        <div class="menu-item" onclick="app.nav('promo')">🎖️ Leader Board</div>
+        <div class="menu-item section-view hidden" onclick="app.nav('stored')">📁 Stored Files</div>
+        <div class="menu-section-label">Management</div>
+        <div class="menu-item section-hr hidden" onclick="app.nav('access')">🔐 Manage Requests</div>
+        <div class="menu-item owner-only hidden" onclick="app.nav('permissions')">⚙️ Permissions</div>
+        <div class="menu-item chat-item" onclick="app.nav('chat')">💬 Staff Chat <span class="live-dot" style="margin-left:4px"></span></div>
+        <div class="menu-item danger" onclick="app.logout()" style="margin-top:8px">⏻ Logout</div>
+    </div>
+
+    <div class="container" id="screen"></div>
+</div>
+
+<script>
+const firebaseConfig = {
+    apiKey: "AIzaSyCt-o3cjOqzdTZKudMGTsd54TRnjlTRe8Y",
+    authDomain: "ahypar-admin-0904.firebaseapp.com",
+    databaseURL: "https://ahypar-admin-0904-default-rtdb.firebaseio.com",
+    projectId: "ahypar-admin-0904",
+    storageBucket: "ahypar-admin-0904.firebasestorage.app",
+    messagingSenderId: "33988035579",
+    appId: "1:33988035579:web:f3565dd45db9c0117f415e",
+    measurementId: "G-9KMB0GK6F7"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+const auth = firebase.auth();
+
+// ─────────────────────────────────────────────
+// DEFAULT PERMISSIONS SCHEMA
+// ─────────────────────────────────────────────
+const DEFAULT_PERMS = {
+    owner:        { weekly:true, stored:true, access:true, rules_edit:true, kick:true, set_role:true, leaderboard_manage:true, permissions_manage:true },
+    high_command: { weekly:true, stored:true, access:true, rules_edit:true, kick:true, set_role:true, leaderboard_manage:true, permissions_manage:false },
+    editor:       { weekly:true, stored:true, access:false, rules_edit:true, kick:false, set_role:false, leaderboard_manage:false, permissions_manage:false },
+    hr:           { weekly:false, stored:false, access:true, rules_edit:false, kick:false, set_role:false, leaderboard_manage:false, permissions_manage:false },
+    view:         { weekly:true, stored:true, access:false, rules_edit:false, kick:false, set_role:false, leaderboard_manage:false, permissions_manage:false },
+    admin:        { weekly:false, stored:false, access:false, rules_edit:false, kick:false, set_role:false, leaderboard_manage:false, permissions_manage:false }
+};
+
+const PERM_LABELS = {
+    weekly: 'Weekly Reports', stored: 'Stored Files', access: 'Manage Requests',
+    rules_edit: 'Edit Rules', kick: 'Kick Admins', set_role: 'Set Roles',
+    leaderboard_manage: 'Manage LB', permissions_manage: 'Manage Perms'
+};
+
+const app = {
+    data: { admins:[], requests:[], history:[], lbStatus:'closed', lbFileIndex:-1, activeWeek:null, appRules:"", ruleAuthor:"", ruleDate:"", ownerInfo:{tag:'OWNER',tagColor:'#d4af37',boxColor:'#fff8dc'}, permissions:{} },
+    user: null,
+
+    init() {
+        db.ref('ahypar_new_data').on('value', (snap) => {
+            const cloud = snap.val();
+            if (cloud) {
+                this.data = cloud;
+                if(!this.data.admins) this.data.admins = [];
+                if(!this.data.history) this.data.history = [];
+                if(!this.data.requests) this.data.requests = [];
+                if(!this.data.permissions) this.data.permissions = {};
+            }
+            if(this.user) this.showDash();
+        });
+    },
+
+    save() { db.ref('ahypar_new_data').set(this.data); },
+
+    // ─── GET EFFECTIVE PERMISSIONS FOR A ROLE ───
+    getPerms(role) {
+        const base = DEFAULT_PERMS[role] || DEFAULT_PERMS['admin'];
+        const overrides = (this.data.permissions && this.data.permissions[role]) || {};
+        return { ...base, ...overrides };
+    },
+
+    hasPerm(perm) {
+        if (!this.user) return false;
+        return !!this.getPerms(this.user.role)[perm];
+    },
+
+    // ─── LOGIN ───
+    async login() {
+        const email = document.getElementById('login-email').value.trim();
+        const pass  = document.getElementById('login-pass').value;
+        const btn   = document.getElementById('login-btn');
+        const err   = document.getElementById('login-err');
+        err.classList.add('hidden');
+        btn.innerHTML = '<span class="spinner"></span>Authenticating...';
+        btn.disabled = true;
+
+        try {
+            // 1) Try Firebase Auth for owner
+            if (email === 'shafinmirza59@gmail.com' && pass) {
+                try {
+                    await auth.signInWithEmailAndPassword(email, pass);
+                    this.user = { name: "Shafin_Mirza", role: 'owner', lvl: 'Chief Developer', email };
+                    btn.innerHTML = 'Login'; btn.disabled = false;
+                    this.showDash(); this.nav('profile');
+                    return;
+                } catch(authErr) {
+                    // Fall through to passcode check if email matches but auth fails
+                    if (authErr.code !== 'auth/wrong-password' && authErr.code !== 'auth/user-not-found') {
+                        // For non-auth errors (quota etc.), try passcode fallback
+                    }
+                }
+            }
+
+            // 2) Legacy owner key
+            if (this.data.ownerKey && pass === this.data.ownerKey && !email) {
+                this.user = { name: "Shafin_Mirza", role: 'owner', lvl: 'Chief Developer' };
+                btn.innerHTML = 'Login'; btn.disabled = false;
+                this.showDash(); this.nav('profile');
+                return;
+            }
+
+            // 3) Staff passcode check
+            const adminsList = this.data.admins || [];
+            const a = adminsList.find(x => x.passcode === pass);
+            if (!a) throw new Error('Invalid passcode');
+            this.user = a;
+            btn.innerHTML = 'Login'; btn.disabled = false;
+            this.showDash(); this.nav('profile');
+
+        } catch(e) {
+            btn.innerHTML = 'Login'; btn.disabled = false;
+            err.textContent = '⚠ ' + (e.message || 'Invalid credentials');
+            err.classList.remove('hidden');
+        }
+    },
+
+    showDash() {
+        document.getElementById('login-view').classList.add('hidden');
+        document.getElementById('dashboard-view').classList.remove('hidden');
+        document.getElementById('h-user').innerText = this.user.name;
+
+        // Reset visibility
+        document.querySelectorAll('.section-view,.section-hr,.section-editor,.owner-only').forEach(el => el.classList.add('hidden'));
+
+        const role = this.user.role;
+        const perms = this.getPerms(role);
+
+        if (perms.weekly || perms.stored) document.querySelectorAll('.section-view').forEach(el => el.classList.remove('hidden'));
+        if (perms.access) document.querySelectorAll('.section-hr').forEach(el => el.classList.remove('hidden'));
+        if (role === 'owner') document.querySelectorAll('.owner-only').forEach(el => el.classList.remove('hidden'));
+    },
+
+    nav(page) {
+        this.toggleMenu(false);
+        db.ref('staff_chat').off();
+        const area = document.getElementById('screen');
+        const adminsList = this.data.admins || [];
+        let html = '';
+        const role = this.user.role;
+        const perms = this.getPerms(role);
+
+        switch(page) {
+
+            // ─── PROFILE ───
+            case 'profile':
+                const me = (role === 'owner') ? this.user : (adminsList.find(x => x.name === this.user.name) || this.user);
+                const roleBadge = role === 'owner' ? 'badge-owner' : role === 'high_command' ? 'badge-hc' : role === 'editor' ? 'badge-editor' : 'badge-admin';
+                html = `
+                <div class="page-title">My Profile</div>
+                <div class="card" style="text-align:center; padding:24px">
+                    <div style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,var(--dark-gold),var(--primary-gold));display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:700;color:#000;margin:0 auto 12px;font-family:'Rajdhani',sans-serif">${(me.name||'?').charAt(0).toUpperCase()}</div>
+                    <h2 style="font-family:'Rajdhani',sans-serif; font-size:22px; letter-spacing:1px">${me.name}</h2>
+                    <div style="margin:6px 0"><span class="role-badge ${roleBadge}">${me.lvl || role}</span></div>
+                    <div class="divider"></div>
+                    <div class="stat-row">
+                        <div class="stat-box"><div class="val">${me.bank || 0}</div><div class="lbl">Bank Points</div></div>
+                        <div class="stat-box"><div class="val" style="font-size:16px; color:${me.warnings && me.warnings !== 'None' ? 'var(--danger-red)' : 'var(--success-green)'}">${me.warnings || 'None'}</div><div class="lbl">Warnings</div></div>
+                    </div>
+                </div>`;
+                break;
+
+            // ─── RULES ───
+            case 'rules':
+                html = `<div class="page-title">📜 App Rules</div>`;
+                if (perms.rules_edit) {
+                    html += `<div class="card"><div class="card-title">Edit Rules</div><textarea id="rule-input" rows="8" placeholder="Write rules here...">${this.data.appRules || ""}</textarea><button onclick="app.updateRules()">Post Rules</button></div>`;
+                }
+                const meta = this.data.ruleAuthor ? `<div class="rule-meta">Posted by: ${this.data.ruleAuthor} &nbsp;|&nbsp; ${this.data.ruleDate}</div>` : '';
+                html += `<div class="rule-box">${meta}${this.data.appRules || "Rules will appear here."}</div>`;
+                break;
+
+            // ─── CURRENT ADMINS ───
+            case 'curr-admins':
+                html = `<div class="page-title">👥 Admin List</div>`;
+                const isOwner = role === 'owner';
+                const isEditor = role === 'editor';
+                const isHC = role === 'high_command';
+
+                let oInfo = this.data.ownerInfo || {tag:'OWNER',tagColor:'#d4af37',boxColor:'#fff8dc'};
+                html += `<div class="card" style="background:${oInfo.boxColor}; border:1px solid ${oInfo.tagColor}; color:#000">
+                    <div style="display:flex;justify-content:space-between;align-items:center">
+                        <div><b style="font-family:'Rajdhani',sans-serif;font-size:16px">Shafin_Mirza</b> <span class="tag-span" style="background:${oInfo.tagColor}">${oInfo.tag}</span></div>
+                        <span style="font-size:11px;opacity:0.7">Project Owner</span>
+                    </div>`;
+                if (isOwner) {
+                    html += `<div class="admin-style-section"><div class="style-row">
+                        <label>Tag:</label><input type="text" id="ow-t" value="${oInfo.tag}" style="color:#000;background:rgba(0,0,0,0.1)">
+                        <label>Tag Color:</label><input type="color" id="ow-tc" value="${oInfo.tagColor}">
+                        <label>Box:</label><input type="color" id="ow-bc" value="${oInfo.boxColor}">
+                        <button class="btn-sm" onclick="app.setOwnerStyle()" style="background:var(--dark-gold);color:black">Save</button>
+                    </div></div>`;
+                }
+                html += `</div>`;
+
+                adminsList.forEach((a, i) => {
+                    const aTag = a.tag ? `<span class="tag-span" style="background:${a.tagColor||'#555'}">${a.tag}</span>` : '';
+                    const textColor = a.boxColor && a.boxColor !== '#1a1d29' ? '#000' : 'var(--text-white)';
+                    html += `<div class="card" style="background:${a.boxColor || 'var(--card-bg)'}; color:${textColor}">
+                        <div style="display:flex;justify-content:space-between;align-items:center">
+                            <div><b style="font-family:'Rajdhani',sans-serif;font-size:15px">${a.name}</b> ${aTag}</div>
+                            <small style="opacity:0.7">${a.lvl}</small>
+                        </div>`;
+
+                    const canView = isOwner || (isHC && ['admin','editor','view','hr'].includes(a.role));
+                    if (canView) html += `<button class="btn-sm" style="background:var(--dark-gold);color:black;margin-top:8px" onclick="app.viewAdminProfile(${i})">👁 View Profile</button>`;
+
+                    if (perms.set_role || perms.kick) {
+                        html += `<div class="admin-card-actions">`;
+                        if (isOwner) html += `<div style="display:flex;gap:6px;margin-bottom:8px"><input id="lvl-up-${i}" placeholder="New Level" style="margin:0;padding:7px;color:#000;background:rgba(255,255,255,0.85)"><button class="btn-sm" onclick="app.changeLvl(${i})" style="background:var(--info-blue);color:#000">Set</button></div>`;
+                        html += `<div style="display:flex;flex-wrap:wrap;gap:4px">`;
+                        if (perms.set_role) {
+                            html += `<button class="btn-sm ${a.role==='admin'?'active-role':''}" onclick="app.setRole(${i},'admin')">Admin</button>
+                                     <button class="btn-sm ${a.role==='view'?'active-role':''}" onclick="app.setRole(${i},'view')">View</button>
+                                     <button class="btn-sm ${a.role==='hr'?'active-role':''}" onclick="app.setRole(${i},'hr')">HR</button>`;
+                            if (isOwner) html += `<button class="btn-sm ${a.role==='editor'?'active-role':''}" onclick="app.setRole(${i},'editor')">Editor</button>
+                                     <button class="btn-sm ${a.role==='high_command'?'active-role':''}" style="background:var(--primary-gold);color:black" onclick="app.setRole(${i},'high_command')">High Command</button>`;
+                        }
+                        if (perms.kick) html += `<button class="btn-sm btn-danger" onclick="app.kick(${i})">Kick</button>`;
+                        html += `</div>`;
+                        html += `</div>`;
+                    }
+
+                    if (isOwner) {
+                        html += `<div class="admin-style-section"><div class="style-row">
+                            <label>Tag:</label><input type="text" id="tag-n-${i}" value="${a.tag||''}" style="color:#000;background:rgba(255,255,255,0.85)">
+                            <label>Tag Color:</label><input type="color" id="tag-c-${i}" value="${a.tagColor||'#555555'}">
+                            <label>Box:</label><input type="color" id="box-c-${i}" value="${a.boxColor||'#1a1d29'}">
+                            <button class="btn-sm" style="background:var(--success-green);color:#000" onclick="app.saveAdminStyle(${i})">Save Style</button>
+                        </div></div>`;
+                    }
+                    html += `</div>`;
+                });
+                break;
+
+            // ─── WEEKLY ───
+            case 'weekly':
+                if (!perms.weekly) { html = `<div class="alert-box alert-danger">⚠ You don't have permission to access Weekly Reports.</div>`; break; }
+                html = `<div class="page-title">📝 Weekly Reports</div>`;
+                if (perms.rules_edit || role === 'high_command' || role === 'owner') {
+                    if (!this.data.activeWeek) {
+                        html += `<div class="card"><div class="card-title">Start New Week</div><input id="wt" placeholder="Week Title / Period"><button onclick="app.startW()">Start Week</button></div>`;
+                    } else {
+                        html += `<div class="card">
+                            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+                                <div><span class="live-dot"></span><small style="color:var(--text-muted)">Active Week</small></div>
+                                <b style="color:var(--primary-gold)">${this.data.activeWeek.title}</b>
+                            </div>
+                            <label>Staff Member</label><select id="sel-n">${adminsList.map(a=>`<option>${a.name}</option>`).join('')}</select>
+                            <label>Date</label><input type="TEXT" id="fd">
+                            <label>Tournaments (×5 pts each)</label><input type="number" id="ft" value="0" min="0">
+                            <label>Other Points (Invited Team etc.)</label><input type="number" id="fo" value="0" min="0">
+                            <label>Extra Points (Good Job)</label><input type="number" id="fe" value="0" min="0">
+                            <label>Warning (V1, W2 or None)</label><input type="text" id="fw" value="None">
+                            <button class="btn-success" onclick="app.addLog()">Save Entry</button>
+                            <button class="btn-danger" onclick="app.finishW()">Finish & Store Week</button>
+                        </div><div id="live-view"></div>`;
+                    }
+                } else {
+                    html += `<div id="live-view"></div>`;
+                }
+                break;
+
+            // ─── LEADERBOARD ───
+            case 'promo':
+                html = `<div class="page-title">🎖️ Leader Board</div>`;
+                if (perms.leaderboard_manage) {
+                    const history = this.data.history || [];
+                    html += `<div class="card">
+                        <div class="card-title">Publish Settings</div>
+                        <label>Select Report File</label>
+                        <select id="lb-file-select" style="margin-bottom:10px">${history.map((h,idx)=>`<option value="${idx}">${h.title}</option>`).join('')}</select>
+                        <div style="display:flex;gap:6px">
+                            <button class="btn-sm" style="background:var(--dark-gold);color:#000;flex:1" onclick="app.setLBStatus('published_hc')">👁 HC Only</button>
+                            <button class="btn-sm btn-success" style="flex:1" onclick="app.setLBStatus('published_public')">🌍 Public</button>
+                            <button class="btn-sm btn-danger" style="flex:1" onclick="app.setLBStatus('closed')">🔒 Close</button>
+                        </div>
+                    </div>`;
+                }
+                html += `<div id="promo-res"></div>`;
+                break;
+
+            // ─── STORED FILES ───
+            case 'stored':
+                if (!perms.stored) { html = `<div class="alert-box alert-danger">⚠ No permission to view Stored Files.</div>`; break; }
+                html = `<div class="page-title">📁 Stored Files</div>`;
+                (this.data.history || []).forEach((h, i) => {
+                    html += `<div class="card" style="cursor:pointer" onclick="app.viewF(${i})">
+                        <div style="display:flex;justify-content:space-between;align-items:center">
+                            <div>📂 <b>${h.title}</b></div>
+                            <small style="color:var(--text-muted)">${(h.logs||[]).length} entries</small>
+                        </div>
+                    </div>`;
+                    if (role === 'owner') html += `<button class="btn-del" onclick="app.delF(${i})">Delete</button>`;
+                });
+                break;
+
+            // ─── ACCESS ───
+            case 'access':
+                if (!perms.access) { html = `<div class="alert-box alert-danger">⚠ No permission to manage requests.</div>`; break; }
+                html = `<div class="page-title">🔐 Applications</div>`;
+                if (!(this.data.requests||[]).length) html += `<div class="alert-box alert-info">ℹ No pending applications.</div>`;
+                (this.data.requests || []).forEach((r, i) => {
+                    html += `<div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><div><b>${r.name}</b><br><small style="color:var(--text-muted)">${r.lvl}</small></div><div style="display:flex;gap:6px"><button class="btn-sm btn-success" onclick="app.approve(${i})">✔ Approve</button><button class="btn-sm btn-danger" onclick="app.reject(${i})">✖ Reject</button></div></div></div>`;
+                });
+                break;
+
+            // ─── PERMISSIONS ───
+            case 'permissions':
+                if (role !== 'owner') { html = `<div class="alert-box alert-danger">⚠ Owner only.</div>`; break; }
+                html = `<div class="page-title">⚙️ Permission Manager</div>`;
+                const roles = ['high_command','editor','hr','view','admin'];
+                const roleLabels = { high_command:'High Command', editor:'Editor', hr:'HR', view:'View', admin:'Admin' };
+                roles.forEach(r => {
+                    const current = this.getPerms(r);
+                    html += `<div class="card"><div class="card-title">${roleLabels[r]}</div><div class="perm-grid">`;
+                    Object.keys(PERM_LABELS).forEach(pk => {
+                        const on = !!current[pk];
+                        html += `<div class="perm-toggle ${on?'active':''}" onclick="app.togglePerm('${r}','${pk}',this)">
+                            <span>${PERM_LABELS[pk]}</span>
+                            <div class="toggle-dot"></div>
+                        </div>`;
+                    });
+                    html += `</div></div>`;
+                });
+                html += `<div class="alert-box alert-info" style="margin-top:8px">ℹ Changes take effect immediately for all staff.</div>`;
+                break;
+
+            // ─── CHAT ───
+            case 'chat':
+                html = `<div class="page-title">💬 Staff Chat</div>
+                <div class="chat-container">
+                    <div id="chat-box" class="chat-messages"><div style="text-align:center;color:var(--text-muted);margin:auto">Loading messages...</div></div>
+                    <div class="chat-input-area">
+                        <input type="text" id="chat-input" placeholder="Type a message..." onkeypress="if(event.key==='Enter') app.sendChat()">
+                        <button onclick="app.sendChat()">Send</button>
+                    </div>
+                </div>`;
+                area.innerHTML = html;
+                this.initChat();
+                return;
+        }
+
+        area.innerHTML = html;
+        if (page === 'promo') this.renderLB();
+        if (page === 'weekly') this.renderLive();
+    },
+
+    // ─── PERMISSION TOGGLE ───
+    togglePerm(role, perm, el) {
+        if (!this.data.permissions) this.data.permissions = {};
+        if (!this.data.permissions[role]) this.data.permissions[role] = {};
+        const current = this.getPerms(role)[perm];
+        this.data.permissions[role][perm] = !current;
+        el.classList.toggle('active', !current);
+        this.save();
+        this.showDash(); // refresh menu visibility
+    },
+
+    // ─── LEADERBOARD ───
+    renderLB() {
+        const div = document.getElementById('promo-res'); if (!div) return;
+        const isAuth = ['owner','high_command'].includes(this.user.role);
+
+        if (this.data.lbStatus === 'closed' || this.data.lbFileIndex === -1) {
+            div.innerHTML = `<div class="alert-box" style="background:rgba(255,255,255,0.04);border:1px solid var(--glass-border);color:var(--text-muted);justify-content:center">🔒 Leader Board is currently closed</div>`;
+            return;
+        }
+        if (this.data.lbStatus === 'published_hc' && !isAuth) {
+            div.innerHTML = `<div class="alert-box alert-danger">🔒 This result is only visible to High Command and above.</div>`;
+            return;
+        }
+        const file = this.data.history[this.data.lbFileIndex]; if (!file) return;
+        const stats = {};
+        file.logs.forEach(l => {
+            if (!stats[l.n]) stats[l.n] = { n:l.n, pts:0, hasWarn:false, lastWarn:'' };
+            stats[l.n].pts += (parseFloat(l.pts) || 0);
+            if (l.w && l.w.toLowerCase() !== 'none' && l.w.trim() !== '') { stats[l.n].hasWarn = true; stats[l.n].lastWarn = l.w; }
+        });
+        const sorted = Object.values(stats).sort((a,b) => b.pts - a.pts);
+        const rankClass = ['gold','silver','bronze'];
+        div.innerHTML = `<div style="margin-bottom:12px;display:flex;justify-content:space-between;align-items:center"><b style="font-family:'Rajdhani',sans-serif;font-size:18px">${file.title}</b>${this.data.lbStatus==='published_hc'?'<span class="hc-tag">HC ONLY</span>':''}</div>`
+            + sorted.map((s,i) => `
+            <div class="lb-card" style="border-left:3px solid ${i===0?'var(--primary-gold)':i===1?'#C0C0C0':i===2?'#CD7F32':'var(--glass-border)'}">
+                <div class="lb-rank ${rankClass[i]||''}">#${i+1}</div>
+                <div class="lb-info">
+                    <div class="lb-name">${s.n}</div>
+                    ${s.hasWarn ? `<span class="warn-alert">⚠ Cancelled · Warning (${s.lastWarn})</span>` : ''}
+                </div>
+                <div style="display:flex;align-items:center;gap:8px">
+                    <div class="lb-pts">${s.pts} <small style="font-size:11px;color:var(--text-muted)">pts</small></div>
+                    ${this.user.role==='owner'?`<button class="btn-sm" style="background:var(--dark-gold);color:#000" onclick="app.editLBPoints('${s.n}')">Edit</button>`:''}
+                </div>
+            </div>`).join('');
+    },
+
+    editLBPoints(name) {
+        const file = this.data.history[this.data.lbFileIndex];
+        const cur = file.logs.filter(l => l.n === name).reduce((s,l) => s + (parseFloat(l.pts)||0), 0);
+        const nv = prompt(`${name} — current total: ${cur}\nEnter new total:`, cur);
+        if (nv !== null) {
+            const diff = (parseFloat(nv)||0) - cur;
+            file.logs.push({ n:name, d:new Date().toISOString().split('T')[0], t:'0', pts:diff, w:'Manual Correction' });
+            this.save(); this.renderLB();
+        }
+    },
+
+    renderLive() {
+        const div = document.getElementById('live-view'); if (!div || !this.data.activeWeek || !this.data.activeWeek.logs) return;
+        div.innerHTML = `<div class="card-title" style="margin-top:8px">Live Entries</div>` + this.data.activeWeek.logs.slice().reverse().map((l, ri) => {
+            const idx = this.data.activeWeek.logs.length - 1 - ri;
+            return `<div class="card" style="border-left:3px solid var(--primary-gold);padding:12px 14px">
+                ${this.user.role==='owner'?`<button class="btn-del" onclick="app.deleteLog(${idx})">Del</button>`:''}
+                <b>${l.n}</b> <span style="color:var(--primary-gold);font-family:'Rajdhani',sans-serif;font-size:16px">${l.pts} pts</span>
+                <br><small style="color:var(--text-muted)">${l.d} · T:${l.t} O:${l.o} E:${l.e}</small>
+                <br><small style="color:${l.w&&l.w!=='None'?'var(--danger-red)':'var(--text-muted)'}">Warning: ${l.w||'None'}</small>
+            </div>`;
+        }).join('');
+    },
+
+    addLog() {
+        const n = document.getElementById('sel-n').value, d = document.getElementById('fd').value;
+        if (!d) return alert("Please select a date!");
+        const t = parseFloat(document.getElementById('ft').value)||0;
+        const o = parseFloat(document.getElementById('fo').value)||0;
+        const e = parseFloat(document.getElementById('fe').value)||0;
+        const w = document.getElementById('fw').value || 'None';
+        const pts = (t * 5) + o + e;
+        if (!this.data.activeWeek.logs) this.data.activeWeek.logs = [];
+        this.data.activeWeek.logs.push({ n, d, t, o, e, w, pts });
+        this.save(); this.renderLive();
+        ['ft','fo','fe'].forEach(id => document.getElementById(id).value = '0');
+        document.getElementById('fw').value = 'None';
+    },
+
+    initChat() {
+        db.ref('staff_chat').limitToLast(50).on('value', (snap) => {
+            const box = document.getElementById('chat-box'); if (!box) return;
+            const msgs = snap.val();
+            if (!msgs) { box.innerHTML = `<div style="text-align:center;color:var(--text-muted);margin:auto">No messages yet</div>`; return; }
+            box.innerHTML = Object.values(msgs).map(m =>
+                `<div class="msg ${m.user===this.user.name?'msg-self':'msg-other'}"><span class="msg-meta">${m.user}</span>${m.text}</div>`
+            ).join('');
+            box.scrollTop = box.scrollHeight;
+        });
+    },
+
+    sendChat() {
+        const input = document.getElementById('chat-input');
+        const txt = input.value.trim(); if (!txt) return;
+        db.ref('staff_chat').push({ user: this.user.name, text: txt, time: new Date().toLocaleTimeString() });
+        input.value = '';
+    },
+
+    saveAdminStyle(i) {
+        const a = this.data.admins[i];
+        a.tag = document.getElementById(`tag-n-${i}`).value;
+        a.tagColor = document.getElementById(`tag-c-${i}`).value;
+        a.boxColor = document.getElementById(`box-c-${i}`).value;
+        this.save(); alert("Style saved!"); this.nav('curr-admins');
+    },
+
+    setOwnerStyle() {
+        if (!this.data.ownerInfo) this.data.ownerInfo = {};
+        this.data.ownerInfo.tag = document.getElementById('ow-t').value;
+        this.data.ownerInfo.tagColor = document.getElementById('ow-tc').value;
+        this.data.ownerInfo.boxColor = document.getElementById('ow-bc').value;
+        this.save(); this.nav('curr-admins');
+    },
+
+    updateRules() {
+        const text = document.getElementById('rule-input').value;
+        this.data.appRules = text; this.data.ruleAuthor = this.user.name; this.data.ruleDate = new Date().toLocaleString();
+        this.save(); alert("Rules posted!"); this.nav('rules');
+    },
+
+    startW() {
+        const t = document.getElementById('wt').value.trim();
+        if (t) { this.data.activeWeek = {title:t, logs:[]}; this.save(); this.nav('weekly'); }
+    },
+
+    finishW() {
+        if (!confirm("Finalize week and update staff banks?")) return;
+        if (!this.data.activeWeek) return;
+        this.data.activeWeek.logs.forEach(l => {
+            const a = this.data.admins.find(x => x.name === l.n);
+            if (a) { a.bank = (parseFloat(a.bank)||0) + (parseFloat(l.pts)||0); a.warnings = l.w; }
+        });
+        if (!this.data.history) this.data.history = [];
+        this.data.history.push(JSON.parse(JSON.stringify(this.data.activeWeek)));
+        this.data.activeWeek = null;
+        this.save(); this.nav('stored');
+    },
+
+    viewAdminProfile(i) {
+        const a = this.data.admins[i];
+        const isOwner = this.user.role === 'owner';
+        document.getElementById('screen').innerHTML = `
+        <div class="page-title">Staff Profile</div>
+        <div class="card">
+            <div class="card-title">Edit Information</div>
+            <label>Name</label><input id="ed-n" value="${a.name}" ${!isOwner?'disabled':''}>
+            <label>Level / Position</label><input id="ed-l" value="${a.lvl}">
+            <label>Bank Points</label><input type="number" id="ed-b" value="${a.bank||0}">
+            <label>Warnings</label><input id="ed-w" value="${a.warnings||'None'}">
+            <label>Passcode</label><input type="text" id="ed-p" value="${a.passcode}">
+            <div style="display:flex;gap:8px;margin-top:8px">
+                <button onclick="app.updateAdmin(${i})" style="flex:1">Save Changes</button>
+                <button class="btn-ghost" onclick="app.nav('curr-admins')" style="flex:1">Back</button>
+            </div>
+        </div>`;
+    },
+
+    updateAdmin(i) {
+        const a = this.data.admins[i];
+        if (this.user.role === 'owner') a.name = document.getElementById('ed-n').value;
+        a.lvl = document.getElementById('ed-l').value;
+        a.bank = document.getElementById('ed-b').value;
+        a.warnings = document.getElementById('ed-w').value;
+        a.passcode = document.getElementById('ed-p').value;
+        this.save(); alert("Profile updated!"); this.nav('curr-admins');
+    },
+
+    setLBStatus(status) {
+        const el = document.getElementById('lb-file-select'); if (!el) return;
+        const idx = el.value; if (idx === "") return;
+        this.data.lbStatus = status; this.data.lbFileIndex = parseInt(idx);
+        this.save(); this.renderLB();
+    },
+
+    viewF(i) {
+        const f = this.data.history[i];
+        let h = `<div class="page-title">📂 ${f.title}</div><button class="btn-ghost" onclick="app.nav('stored')">← Back</button><br><br>`;
+        f.logs.forEach(l => { h += `<div class="card"><b>${l.n}</b> <span style="color:var(--primary-gold);font-family:'Rajdhani',sans-serif">${l.pts} pts</span><br><small style="color:var(--text-muted)">${l.d}</small></div>`; });
+        document.getElementById('screen').innerHTML = h;
+    },
+
+    deleteLog(idx) { if (confirm("Delete this entry?")) { this.data.activeWeek.logs.splice(idx,1); this.save(); this.renderLive(); } },
+    changeLvl(i) { this.data.admins[i].lvl = document.getElementById(`lvl-up-${i}`).value; this.save(); this.nav('curr-admins'); },
+    setRole(i, r) { this.data.admins[i].role = r; this.save(); this.nav('curr-admins'); },
+    kick(i) { if (confirm("Remove this admin?")) { this.data.admins.splice(i,1); this.save(); this.nav('curr-admins'); } },
+    delF(i) { if (confirm("Delete this file permanently?")) { this.data.history.splice(i,1); this.save(); this.nav('stored'); } },
+    approve(i) {
+        const r = this.data.requests[i];
+        const code = Math.floor(1000 + Math.random()*8999).toString();
+        this.data.admins.push({ name:r.name, lvl:r.lvl, bank:"0", warnings:'None', passcode:code, role:'admin' });
+        this.data.requests.splice(i,1); this.save(); alert("Approved! Passcode: " + code); this.nav('access');
+    },
+    reject(i) { this.data.requests.splice(i,1); this.save(); this.nav('access'); },
+    requestAccess() {
+        const n = document.getElementById('req-n').value.trim(), l = document.getElementById('req-lvl').value.trim();
+        if (n && l) { if (!this.data.requests) this.data.requests = []; this.data.requests.push({name:n,lvl:l}); this.save(); alert("Application submitted!"); }
+        else alert("Please fill in your name and level.");
+    },
+    toggleMenu(s) {
+        document.getElementById('menu-overlay').classList.toggle('active', s);
+        document.getElementById('menu-backdrop').classList.toggle('active', s);
+    },
+    logout() { auth.signOut().catch(()=>{}); location.reload(); }
+};
+
+app.init();
+</script>
+</body>
+</html>
