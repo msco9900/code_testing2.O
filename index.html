@@ -318,8 +318,9 @@
     <div id="menu-backdrop" class="menu-backdrop" onclick="app.toggleMenu(false)"></div>
     <header>
         <div class="header-brand">
-            <div class="brand-name">Chief Admin · Shafin_Mirza</div>
-            <div class="brand-sub">Chief Developer</div>
+            <!-- CHANGE 1: Updated title from "Chief Admin" to "Server Director / Chief Developer" -->
+            <div class="brand-name">Server Director · Shafin_Mirza</div>
+            <div class="brand-sub">Server Director / Chief Developer</div>
             <div class="brand-user">Logged in: <b id="h-user"></b></div>
         </div>
         <button class="menu-btn" onclick="app.toggleMenu(true)">☰</button>
@@ -423,8 +424,6 @@ const app = {
     getPerms(role, name) {
         const rolePerms = this.getRolePerms(role);
         const indivPerms = name ? this.getIndividualPerms(name) : {};
-        // Individual overrides can only GRANT extra permissions, not remove granted ones
-        // Exception: owner can also revoke individually
         const result = {};
         Object.keys(PERM_LABELS).forEach(pk => {
             result[pk] = !!rolePerms[pk] || !!indivPerms[pk];
@@ -452,7 +451,7 @@ const app = {
             if (email === 'shafinmirza59@gmail.com' && pass) {
                 try {
                     await auth.signInWithEmailAndPassword(email, pass);
-                    this.user = { name: "Shafin_Mirza", role: 'owner', lvl: 'Chief Developer', email };
+                    this.user = { name: "Shafin_Mirza", role: 'owner', lvl: 'Server Director / Chief Developer', email };
                     btn.innerHTML = 'Login'; btn.disabled = false;
                     this.showDash(); this.nav('profile');
                     return;
@@ -461,7 +460,7 @@ const app = {
 
             // 2) Legacy owner key
             if (this.data.ownerKey && pass === this.data.ownerKey && !email) {
-                this.user = { name: "Shafin_Mirza", role: 'owner', lvl: 'Chief Developer' };
+                this.user = { name: "Shafin_Mirza", role: 'owner', lvl: 'Server Director / Chief Developer' };
                 btn.innerHTML = 'Login'; btn.disabled = false;
                 this.showDash(); this.nav('profile');
                 return;
@@ -546,7 +545,7 @@ const app = {
                 html += `<div class="card" style="background:${oInfo.boxColor}; border:1px solid ${oInfo.tagColor}; color:#000">
                     <div style="display:flex;justify-content:space-between;align-items:center">
                         <div><b style="font-family:'Rajdhani',sans-serif;font-size:16px">Shafin_Mirza</b> <span class="tag-span" style="background:${oInfo.tagColor}">${oInfo.tag}</span></div>
-                        <span style="font-size:11px;opacity:0.7">Project Owner</span>
+                        <span style="font-size:11px;opacity:0.7">Server Director / Chief Developer</span>
                     </div>`;
                 if (isOwner) {
                     html += `<div class="admin-style-section"><div class="style-row">
@@ -561,6 +560,11 @@ const app = {
                 adminsList.forEach((a, i) => {
                     const aTag = a.tag ? `<span class="tag-span" style="background:${a.tagColor||'#555'}">${a.tag}</span>` : '';
                     const textColor = a.boxColor && a.boxColor !== '#1a1d29' ? '#000' : 'var(--text-white)';
+
+                    // CHANGE 2: HC cannot kick or set roles for other HC members — only for lower ranks
+                    const targetIsHCOrAbove = (a.role === 'high_command' || a.role === 'owner');
+                    const hcCanActOnThis = isHC && !targetIsHCOrAbove;
+
                     html += `<div class="card" style="background:${a.boxColor || 'var(--card-bg)'}; color:${textColor}">
                         <div style="display:flex;justify-content:space-between;align-items:center">
                             <div><b style="font-family:'Rajdhani',sans-serif;font-size:15px">${a.name}</b> ${aTag}</div>
@@ -570,7 +574,11 @@ const app = {
                     const canView = isOwner || (isHC && ['admin','editor','view','hr'].includes(a.role));
                     if (canView) html += `<button class="btn-sm" style="background:var(--dark-gold);color:black;margin-top:8px" onclick="app.viewAdminProfile(${i})">👁 View Profile</button>`;
 
-                    if (perms.set_role || perms.kick) {
+                    // Show management actions only if:
+                    // - owner always can
+                    // - HC can only if target is NOT HC/owner
+                    const canManage = isOwner || (isHC && hcCanActOnThis && (perms.set_role || perms.kick));
+                    if (canManage) {
                         html += `<div class="admin-card-actions">`;
                         if (isOwner) html += `<div style="display:flex;gap:6px;margin-bottom:8px"><input id="lvl-up-${i}" placeholder="New Level" style="margin:0;padding:7px;color:#000;background:rgba(255,255,255,0.85)"><button class="btn-sm" onclick="app.changeLvl(${i})" style="background:var(--info-blue);color:#000">Set</button></div>`;
                         html += `<div style="display:flex;flex-wrap:wrap;gap:4px">`;
@@ -597,7 +605,6 @@ const app = {
                             const fromRole = !!roleP[pk];
                             const fromIndiv = !!indiv[pk];
                             const isOn = fromIndiv;
-                            // If already granted by role, show as locked (can't double-grant)
                             if (fromRole) {
                                 html += `<div class="indiv-perm-toggle" style="opacity:0.4;cursor:default" title="Already granted by role">
                                     <span>${PERM_LABELS[pk]}</span>
@@ -728,7 +735,8 @@ const app = {
                     html += `<div class="card"><div class="card-title">${roleLabels[r]}</div><div class="perm-grid">`;
                     Object.keys(PERM_LABELS).forEach(pk => {
                         const on = !!current[pk];
-                        html += `<div class="perm-toggle ${on?'active':''}" onclick="app.toggleRolePerm('${r}','${pk}',this)">
+                        // CHANGE 3: Use data attributes so toggle reads live state from DOM, not stale closure
+                        html += `<div class="perm-toggle ${on?'active':''}" data-role="${r}" data-perm="${pk}" onclick="app.toggleRolePerm('${r}','${pk}',this)">
                             <span>${PERM_LABELS[pk]}</span>
                             <div class="toggle-dot"></div>
                         </div>`;
@@ -760,12 +768,17 @@ const app = {
     },
 
     // ─── TOGGLE ROLE-LEVEL PERMISSION ───
+    // CHANGE 3 FIX: Read current state from element class instead of re-fetching from data,
+    // so the toggle correctly reflects what is visually shown and saves the right value.
     toggleRolePerm(role, perm, el) {
         if (!this.data.permissions) this.data.permissions = {};
         if (!this.data.permissions[role]) this.data.permissions[role] = {};
-        const current = this.getRolePerms(role)[perm];
-        this.data.permissions[role][perm] = !current;
-        el.classList.toggle('active', !current);
+        // Read the CURRENT visual state from the element (what the user sees)
+        const currentlyOn = el.classList.contains('active');
+        // Toggle to the opposite
+        const newValue = !currentlyOn;
+        this.data.permissions[role][perm] = newValue;
+        el.classList.toggle('active', newValue);
         this.save();
         this.showDash();
     },
@@ -774,9 +787,11 @@ const app = {
     toggleIndividualPerm(adminName, perm, el) {
         if (!this.data.individualPerms) this.data.individualPerms = {};
         if (!this.data.individualPerms[adminName]) this.data.individualPerms[adminName] = {};
-        const current = !!this.data.individualPerms[adminName][perm];
-        this.data.individualPerms[adminName][perm] = !current;
-        el.classList.toggle('active', !current);
+        // Read the CURRENT visual state from the element (what the user sees)
+        const currentlyOn = el.classList.contains('active');
+        const newValue = !currentlyOn;
+        this.data.individualPerms[adminName][perm] = newValue;
+        el.classList.toggle('active', newValue);
         this.save();
         // If this is the current logged-in user, refresh their menu
         if (this.user && this.user.name === adminName) this.showDash();
