@@ -289,8 +289,8 @@
         <div class="divider"></div>
         <div class="card-title" style="margin-bottom:8px">New Staff Application</div>
         <input id="req-n" placeholder="Full Name">
-        <input id="req-lvl" placeholder="Position / Level"
-        <button class="btn-ghost" onclick="app.requestAccess()">Submit Application</button>
+     <input id="req-lvl" placeholder="Position / Level">
+<button class="btn-ghost" onclick="app.requestAccess()">Submit Application</button>
     </div>
 </div>
 
@@ -873,17 +873,32 @@ const app = {
         this.data.requests.splice(i,1); this.save(); alert("Approved! Passcode: " + code); this.nav('access');
     },
     reject(i) { this.data.requests.splice(i,1); this.save(); this.nav('access'); },
-    requestAccess() {
-        const n = document.getElementById('req-n').value.trim(), l = document.getElementById('req-lvl').value.trim();
-        if (n && l) { if (!this.data.requests) this.data.requests = []; this.data.requests.push({name:n,lvl:l}); this.save(); alert("Application submitted!"); }
-        else alert("Please fill in your name and level.");
-    },
+        
+        requestAccess() {
+        const n = document.getElementById('req-n').value.trim();
+        const l = document.getElementById('req-lvl').value.trim();
+        if (n && l) { 
+            if (!this.data.requests) this.data.requests = []; 
+            this.data.requests.push({name:n, lvl:l}); 
+            this.save(); 
+            alert("Application submitted!"); 
+            // Clear inputs
+            document.getElementById('req-n').value = "";
+            document.getElementById('req-lvl').value = "";
+        }
+        else { alert("Please fill in your name and level."); }
+    }, // End of requestAccess
+
     toggleMenu(s) {
         document.getElementById('menu-overlay').classList.toggle('active', s);
         document.getElementById('menu-backdrop').classList.toggle('active', s);
     },
-    logout() { auth.signOut().catch(()=>{}); location.reload(); }
-};
+
+    logout() { 
+        auth.signOut().catch(()=>{}); 
+        location.reload(); 
+    }
+}; // THIS IS THE CRITICAL BRACE THAT CLOSES THE 'app' OBJECT
 
 app.init();
 </script>
