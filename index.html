@@ -288,6 +288,73 @@
 
         /* ── APPLICATION SUCCESS ── */
         .app-success { background: var(--success-soft); border: 1px solid rgba(0,230,118,0.3); color: var(--success-green); border-radius: 10px; padding: 12px 14px; font-size: 12px; text-align: center; margin-top: 8px; }
+
+        /* ── DRAG & DROP ── */
+        .drag-handle {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            background: rgba(255,215,0,0.08);
+            border: 1px solid rgba(255,215,0,0.2);
+            color: var(--primary-gold);
+            cursor: grab;
+            font-size: 14px;
+            line-height: 1;
+            flex-shrink: 0;
+            transition: background 0.15s, border-color 0.15s;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: none;
+        }
+        .drag-handle:hover {
+            background: rgba(255,215,0,0.18);
+            border-color: rgba(255,215,0,0.5);
+        }
+        .drag-handle:active { cursor: grabbing; }
+
+        .admin-card-draggable {
+            transition: transform 0.15s, box-shadow 0.15s, opacity 0.15s;
+        }
+        .admin-card-draggable.dragging {
+            opacity: 0.45;
+            box-shadow: 0 0 0 2px var(--primary-gold), 0 12px 40px rgba(0,0,0,0.7) !important;
+            transform: scale(0.98);
+            z-index: 100;
+        }
+        .admin-card-draggable.drag-over {
+            border-color: var(--primary-gold) !important;
+            box-shadow: 0 0 0 2px rgba(255,215,0,0.35), 0 8px 30px rgba(0,0,0,0.5) !important;
+        }
+
+        .drag-hint {
+            font-size: 10px;
+            color: var(--primary-gold);
+            opacity: 0.6;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin-bottom: 10px;
+            padding: 7px 10px;
+            background: rgba(255,215,0,0.05);
+            border: 1px dashed rgba(255,215,0,0.2);
+            border-radius: 8px;
+        }
+
+        /* Card header row with drag handle */
+        .admin-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .admin-card-header-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex: 1;
+        }
     </style>
 </head>
 <body>
@@ -318,7 +385,6 @@
     <div id="menu-backdrop" class="menu-backdrop" onclick="app.toggleMenu(false)"></div>
     <header>
         <div class="header-brand">
-            <!-- CHANGE 1: Updated title from "Chief Admin" to "Server Director / Chief Developer" -->
             <div class="brand-name">Server Director · Shafin_Mirza</div>
             <div class="brand-sub">Server Director / Chief Developer</div>
             <div class="brand-user">Logged in: <b id="h-user"></b></div>
@@ -390,6 +456,8 @@ const PERM_LABELS = {
 const app = {
     data: { admins:[], requests:[], history:[], lbStatus:'closed', lbFileIndex:-1, activeWeek:null, appRules:"", ruleAuthor:"", ruleDate:"", ownerInfo:{tag:'OWNER',tagColor:'#d4af37',boxColor:'#fff8dc'}, permissions:{}, individualPerms:{} },
     user: null,
+    // Drag state
+    _drag: { el: null, fromIdx: null },
 
     init() {
         db.ref('ahypar_new_data').on('value', (snap) => {
@@ -408,19 +476,16 @@ const app = {
 
     save() { db.ref('ahypar_new_data').set(this.data); },
 
-    // ─── GET EFFECTIVE PERMISSIONS FOR A ROLE (role-level overrides) ───
     getRolePerms(role) {
         const base = DEFAULT_PERMS[role] || DEFAULT_PERMS['admin'];
         const overrides = (this.data.permissions && this.data.permissions[role]) || {};
         return { ...base, ...overrides };
     },
 
-    // ─── GET INDIVIDUAL PERMS FOR A SPECIFIC ADMIN (by name) ───
     getIndividualPerms(name) {
         return (this.data.individualPerms && this.data.individualPerms[name]) || {};
     },
 
-    // ─── GET EFFECTIVE PERMISSIONS FOR A USER (role + individual overrides) ───
     getPerms(role, name) {
         const rolePerms = this.getRolePerms(role);
         const indivPerms = name ? this.getIndividualPerms(name) : {};
@@ -447,7 +512,6 @@ const app = {
         btn.disabled = true;
 
         try {
-            // 1) Firebase Auth for owner
             if (email === 'shafinmirza59@gmail.com' && pass) {
                 try {
                     await auth.signInWithEmailAndPassword(email, pass);
@@ -458,7 +522,6 @@ const app = {
                 } catch(authErr) {}
             }
 
-            // 2) Legacy owner key
             if (this.data.ownerKey && pass === this.data.ownerKey && !email) {
                 this.user = { name: "Shafin_Mirza", role: 'owner', lvl: 'Server Director / Chief Developer' };
                 btn.innerHTML = 'Login'; btn.disabled = false;
@@ -466,7 +529,6 @@ const app = {
                 return;
             }
 
-            // 3) Staff passcode check
             const adminsList = this.data.admins || [];
             const a = adminsList.find(x => x.passcode === pass);
             if (!a) throw new Error('Invalid passcode');
@@ -557,26 +619,39 @@ const app = {
                 }
                 html += `</div>`;
 
+                // Drag hint for owner only
+                if (isOwner) {
+                    html += `<div class="drag-hint">⠿ Drag the handle on each card to reorder admins — order saves automatically for everyone.</div>`;
+                }
+
+                // Admin cards list container (draggable when owner)
+                html += `<div id="admins-list-container">`;
+
                 adminsList.forEach((a, i) => {
                     const aTag = a.tag ? `<span class="tag-span" style="background:${a.tagColor||'#555'}">${a.tag}</span>` : '';
                     const textColor = a.boxColor && a.boxColor !== '#1a1d29' ? '#000' : 'var(--text-white)';
 
-                    // CHANGE 2: HC cannot kick or set roles for other HC members — only for lower ranks
                     const targetIsHCOrAbove = (a.role === 'high_command' || a.role === 'owner');
                     const hcCanActOnThis = isHC && !targetIsHCOrAbove;
 
-                    html += `<div class="card" style="background:${a.boxColor || 'var(--card-bg)'}; color:${textColor}">
-                        <div style="display:flex;justify-content:space-between;align-items:center">
-                            <div><b style="font-family:'Rajdhani',sans-serif;font-size:15px">${a.name}</b> ${aTag}</div>
-                            <small style="opacity:0.7">${a.lvl}</small>
+                    const draggableAttrs = isOwner
+                        ? `draggable="true" data-idx="${i}" class="card admin-card-draggable"`
+                        : `data-idx="${i}" class="card"`;
+
+                    html += `<div ${draggableAttrs} style="background:${a.boxColor || 'var(--card-bg)'}; color:${textColor}">
+                        <div class="admin-card-header">
+                            <div class="admin-card-header-left">
+                                ${isOwner ? `<span class="drag-handle" title="Drag to reorder">⠿</span>` : ''}
+                                <div>
+                                    <b style="font-family:'Rajdhani',sans-serif;font-size:15px">${a.name}</b> ${aTag}
+                                    <br><small style="opacity:0.7">${a.lvl}</small>
+                                </div>
+                            </div>
                         </div>`;
 
                     const canView = isOwner || (isHC && ['admin','editor','view','hr'].includes(a.role));
                     if (canView) html += `<button class="btn-sm" style="background:var(--dark-gold);color:black;margin-top:8px" onclick="app.viewAdminProfile(${i})">👁 View Profile</button>`;
 
-                    // Show management actions only if:
-                    // - owner always can
-                    // - HC can only if target is NOT HC/owner
                     const canManage = isOwner || (isHC && hcCanActOnThis && (perms.set_role || perms.kick));
                     if (canManage) {
                         html += `<div class="admin-card-actions">`;
@@ -594,7 +669,7 @@ const app = {
                         html += `</div>`;
                     }
 
-                    // ── INDIVIDUAL PERMISSION OVERRIDES (Owner only) ──
+                    // Individual permission overrides (Owner only)
                     if (isOwner) {
                         const indiv = this.getIndividualPerms(a.name);
                         const roleP = this.getRolePerms(a.role);
@@ -630,6 +705,8 @@ const app = {
                     }
                     html += `</div>`;
                 });
+
+                html += `</div>`; // close admins-list-container
                 break;
 
             // ─── WEEKLY ───
@@ -726,7 +803,6 @@ const app = {
                 if (role !== 'owner') { html = `<div class="alert-box alert-danger">⚠ Owner only.</div>`; break; }
                 html = `<div class="page-title">⚙️ Permission Manager</div>`;
 
-                // Role-level permissions
                 html += `<div class="card-title" style="padding:0 0 8px;color:var(--primary-gold)">Role-Level Permissions</div>`;
                 const roles = ['high_command','editor','hr','view','admin'];
                 const roleLabels = { high_command:'High Command', editor:'Editor', hr:'HR', view:'View', admin:'Admin' };
@@ -735,7 +811,6 @@ const app = {
                     html += `<div class="card"><div class="card-title">${roleLabels[r]}</div><div class="perm-grid">`;
                     Object.keys(PERM_LABELS).forEach(pk => {
                         const on = !!current[pk];
-                        // CHANGE 3: Use data attributes so toggle reads live state from DOM, not stale closure
                         html += `<div class="perm-toggle ${on?'active':''}" data-role="${r}" data-perm="${pk}" onclick="app.toggleRolePerm('${r}','${pk}',this)">
                             <span>${PERM_LABELS[pk]}</span>
                             <div class="toggle-dot"></div>
@@ -765,17 +840,148 @@ const app = {
         area.innerHTML = html;
         if (page === 'promo') this.renderLB();
         if (page === 'weekly') this.renderLive();
+        if (page === 'curr-admins' && this.user.role === 'owner') this.initDragDrop();
+    },
+
+    // ─────────────────────────────────────────────
+    // DRAG AND DROP — OWNER ONLY
+    // Supports both mouse (desktop) and touch (mobile)
+    // ─────────────────────────────────────────────
+    initDragDrop() {
+        const container = document.getElementById('admins-list-container');
+        if (!container) return;
+
+        const cards = Array.from(container.querySelectorAll('.admin-card-draggable'));
+        let dragSrcIdx = null;
+        let dragOverIdx = null;
+        let touchCard = null;
+        let touchClone = null;
+        let touchStartY = 0;
+
+        // ── DESKTOP DRAG EVENTS ──
+        cards.forEach((card, idx) => {
+            const handle = card.querySelector('.drag-handle');
+
+            // Only start drag from handle
+            card.addEventListener('dragstart', (e) => {
+                // Check if dragging started from the handle or its vicinity
+                dragSrcIdx = parseInt(card.dataset.idx);
+                card.classList.add('dragging');
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text/plain', dragSrcIdx);
+            });
+
+            card.addEventListener('dragend', () => {
+                card.classList.remove('dragging');
+                cards.forEach(c => c.classList.remove('drag-over'));
+                if (dragSrcIdx !== null && dragOverIdx !== null && dragSrcIdx !== dragOverIdx) {
+                    this._reorderAdmins(dragSrcIdx, dragOverIdx);
+                }
+                dragSrcIdx = null;
+                dragOverIdx = null;
+            });
+
+            card.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+                const overIdx = parseInt(card.dataset.idx);
+                if (overIdx !== dragSrcIdx) {
+                    cards.forEach(c => c.classList.remove('drag-over'));
+                    card.classList.add('drag-over');
+                    dragOverIdx = overIdx;
+                }
+            });
+
+            card.addEventListener('dragleave', () => {
+                card.classList.remove('drag-over');
+            });
+
+            card.addEventListener('drop', (e) => {
+                e.preventDefault();
+                card.classList.remove('drag-over');
+            });
+
+            // ── TOUCH DRAG EVENTS (mobile) ──
+            if (handle) {
+                handle.addEventListener('touchstart', (e) => {
+                    e.preventDefault(); // prevent scroll
+                    touchCard = card;
+                    dragSrcIdx = parseInt(card.dataset.idx);
+                    touchStartY = e.touches[0].clientY;
+
+                    // Create a floating clone for visual feedback
+                    touchClone = card.cloneNode(true);
+                    touchClone.style.cssText = `
+                        position: fixed;
+                        left: 15px; right: 15px;
+                        top: ${card.getBoundingClientRect().top}px;
+                        opacity: 0.85;
+                        z-index: 9999;
+                        pointer-events: none;
+                        border: 2px solid var(--primary-gold);
+                        box-shadow: 0 12px 40px rgba(0,0,0,0.8);
+                        border-radius: 16px;
+                        background: var(--card-bg);
+                        transition: none;
+                    `;
+                    document.body.appendChild(touchClone);
+                    card.classList.add('dragging');
+                }, { passive: false });
+
+                handle.addEventListener('touchmove', (e) => {
+                    e.preventDefault();
+                    const touch = e.touches[0];
+
+                    if (touchClone) {
+                        const dy = touch.clientY - touchStartY;
+                        const origTop = card.getBoundingClientRect().top - (card.classList.contains('dragging') ? 0 : 0);
+                        touchClone.style.top = `${card.getBoundingClientRect().top + dy}px`;
+                    }
+
+                    // Find which card we're hovering over
+                    const el = document.elementFromPoint(touch.clientX, touch.clientY);
+                    const overCard = el ? el.closest('.admin-card-draggable') : null;
+                    cards.forEach(c => c.classList.remove('drag-over'));
+                    if (overCard && overCard !== touchCard) {
+                        overCard.classList.add('drag-over');
+                        dragOverIdx = parseInt(overCard.dataset.idx);
+                    }
+                }, { passive: false });
+
+                handle.addEventListener('touchend', (e) => {
+                    e.preventDefault();
+                    cards.forEach(c => c.classList.remove('drag-over', 'dragging'));
+                    if (touchClone) { document.body.removeChild(touchClone); touchClone = null; }
+                    if (dragSrcIdx !== null && dragOverIdx !== null && dragSrcIdx !== dragOverIdx) {
+                        this._reorderAdmins(dragSrcIdx, dragOverIdx);
+                    }
+                    dragSrcIdx = null;
+                    dragOverIdx = null;
+                    touchCard = null;
+                }, { passive: false });
+            }
+        });
+    },
+
+    // ─── REORDER ADMINS IN DATA AND SAVE ───
+    _reorderAdmins(fromIdx, toIdx) {
+        const admins = this.data.admins;
+        if (!admins || fromIdx < 0 || toIdx < 0 || fromIdx >= admins.length || toIdx >= admins.length) return;
+
+        // Move the item
+        const item = admins.splice(fromIdx, 1)[0];
+        admins.splice(toIdx, 0, item);
+
+        // Save and re-render
+        this.save();
+        this.nav('curr-admins');
     },
 
     // ─── TOGGLE ROLE-LEVEL PERMISSION ───
-    // CHANGE 3 FIX: Read current state from element class instead of re-fetching from data,
-    // so the toggle correctly reflects what is visually shown and saves the right value.
     toggleRolePerm(role, perm, el) {
         if (!this.data.permissions) this.data.permissions = {};
         if (!this.data.permissions[role]) this.data.permissions[role] = {};
-        // Read the CURRENT visual state from the element (what the user sees)
         const currentlyOn = el.classList.contains('active');
-        // Toggle to the opposite
         const newValue = !currentlyOn;
         this.data.permissions[role][perm] = newValue;
         el.classList.toggle('active', newValue);
@@ -787,13 +993,11 @@ const app = {
     toggleIndividualPerm(adminName, perm, el) {
         if (!this.data.individualPerms) this.data.individualPerms = {};
         if (!this.data.individualPerms[adminName]) this.data.individualPerms[adminName] = {};
-        // Read the CURRENT visual state from the element (what the user sees)
         const currentlyOn = el.classList.contains('active');
         const newValue = !currentlyOn;
         this.data.individualPerms[adminName][perm] = newValue;
         el.classList.toggle('active', newValue);
         this.save();
-        // If this is the current logged-in user, refresh their menu
         if (this.user && this.user.name === adminName) this.showDash();
     },
 
@@ -1001,7 +1205,6 @@ const app = {
         }
     },
 
-    // ─── REQUEST ACCESS (from login page) ───
     requestAccess() {
         const n = document.getElementById('req-n').value.trim();
         const l = document.getElementById('req-lvl').value.trim();
@@ -1016,7 +1219,6 @@ const app = {
 
         if (!this.data.requests) this.data.requests = [];
 
-        // Check for duplicate
         const already = this.data.requests.find(x => x.name.toLowerCase() === n.toLowerCase());
         if (already) {
             msgEl.className = 'alert-box alert-danger';
