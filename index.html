@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>AHYPAR Administration</title>
     <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Exo+2:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+
+    <!-- Firebase Compat SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
@@ -309,52 +311,20 @@
             -webkit-user-select: none;
             touch-action: none;
         }
-        .drag-handle:hover {
-            background: rgba(255,215,0,0.18);
-            border-color: rgba(255,215,0,0.5);
-        }
+        .drag-handle:hover { background: rgba(255,215,0,0.18); border-color: rgba(255,215,0,0.5); }
         .drag-handle:active { cursor: grabbing; }
 
-        .admin-card-draggable {
-            transition: transform 0.15s, box-shadow 0.15s, opacity 0.15s;
-        }
-        .admin-card-draggable.dragging {
-            opacity: 0.45;
-            box-shadow: 0 0 0 2px var(--primary-gold), 0 12px 40px rgba(0,0,0,0.7) !important;
-            transform: scale(0.98);
-            z-index: 100;
-        }
-        .admin-card-draggable.drag-over {
-            border-color: var(--primary-gold) !important;
-            box-shadow: 0 0 0 2px rgba(255,215,0,0.35), 0 8px 30px rgba(0,0,0,0.5) !important;
-        }
+        .admin-card-draggable { transition: transform 0.15s, box-shadow 0.15s, opacity 0.15s; }
+        .admin-card-draggable.dragging { opacity: 0.45; box-shadow: 0 0 0 2px var(--primary-gold), 0 12px 40px rgba(0,0,0,0.7) !important; transform: scale(0.98); z-index: 100; }
+        .admin-card-draggable.drag-over { border-color: var(--primary-gold) !important; box-shadow: 0 0 0 2px rgba(255,215,0,0.35), 0 8px 30px rgba(0,0,0,0.5) !important; }
 
-        .drag-hint {
-            font-size: 10px;
-            color: var(--primary-gold);
-            opacity: 0.6;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            margin-bottom: 10px;
-            padding: 7px 10px;
-            background: rgba(255,215,0,0.05);
-            border: 1px dashed rgba(255,215,0,0.2);
-            border-radius: 8px;
-        }
+        .drag-hint { font-size: 10px; color: var(--primary-gold); opacity: 0.6; display: flex; align-items: center; gap: 5px; margin-bottom: 10px; padding: 7px 10px; background: rgba(255,215,0,0.05); border: 1px dashed rgba(255,215,0,0.2); border-radius: 8px; }
 
-        /* Card header row with drag handle */
-        .admin-card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .admin-card-header-left {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            flex: 1;
-        }
+        .admin-card-header { display: flex; justify-content: space-between; align-items: center; }
+        .admin-card-header-left { display: flex; align-items: center; gap: 8px; flex: 1; }
+
+        /* ── APPROVE LOADING ── */
+        .approve-loading { opacity: 0.6; pointer-events: none; }
     </style>
 </head>
 <body>
@@ -413,18 +383,23 @@
 </div>
 
 <script>
+// ─────────────────────────────────────────────
+// FIREBASE INITIALIZATION — YOUR CORRECT DATABASE
+// ─────────────────────────────────────────────
 const firebaseConfig = {
-    apiKey: "AIzaSyCt-o3cjOqzdTZKudMGTsd54TRnjlTRe8Y",
-    authDomain: "ahypar-admin-0904.firebaseapp.com",
-    databaseURL: "https://ahypar-admin-0904-default-rtdb.firebaseio.com",
-    projectId: "ahypar-admin-0904",
-    storageBucket: "ahypar-admin-0904.firebasestorage.app",
-    messagingSenderId: "33988035579",
-    appId: "1:33988035579:web:f3565dd45db9c0117f415e",
-    measurementId: "G-9KMB0GK6F7"
+    apiKey: "AIzaSyDYuIeTuvUlffSrHNdk-opOOdgaxtcs1Gk",
+    authDomain: "ayhapar-adm.firebaseapp.com",
+    databaseURL: "https://ayhapar-adm-default-rtdb.firebaseio.com",
+    projectId: "ayhapar-adm",
+    storageBucket: "ayhapar-adm.firebasestorage.app",
+    messagingSenderId: "507012571591",
+    appId: "1:507012571591:web:aeb4f6d9c3a03671a6f9e2",
+    measurementId: "G-C09MPQ51C6"
 };
+
 firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
+
+const db   = firebase.database();
 const auth = firebase.auth();
 
 // ─────────────────────────────────────────────
@@ -456,7 +431,6 @@ const PERM_LABELS = {
 const app = {
     data: { admins:[], requests:[], history:[], lbStatus:'closed', lbFileIndex:-1, activeWeek:null, appRules:"", ruleAuthor:"", ruleDate:"", ownerInfo:{tag:'OWNER',tagColor:'#d4af37',boxColor:'#fff8dc'}, permissions:{}, individualPerms:{} },
     user: null,
-    // Drag state
     _drag: { el: null, fromIdx: null },
 
     init() {
@@ -464,17 +438,19 @@ const app = {
             const cloud = snap.val();
             if (cloud) {
                 this.data = cloud;
-                if(!this.data.admins) this.data.admins = [];
-                if(!this.data.history) this.data.history = [];
-                if(!this.data.requests) this.data.requests = [];
-                if(!this.data.permissions) this.data.permissions = {};
-                if(!this.data.individualPerms) this.data.individualPerms = {};
+                if (!this.data.admins)          this.data.admins = [];
+                if (!this.data.history)         this.data.history = [];
+                if (!this.data.requests)        this.data.requests = [];
+                if (!this.data.permissions)     this.data.permissions = {};
+                if (!this.data.individualPerms) this.data.individualPerms = {};
             }
-            if(this.user) this.showDash();
+            if (this.user) this.showDash();
         });
     },
 
-    save() { db.ref('ahypar_new_data').set(this.data); },
+    save() {
+        return db.ref('ahypar_new_data').set(this.data);
+    },
 
     getRolePerms(role) {
         const base = DEFAULT_PERMS[role] || DEFAULT_PERMS['admin'];
@@ -519,7 +495,7 @@ const app = {
                     btn.innerHTML = 'Login'; btn.disabled = false;
                     this.showDash(); this.nav('profile');
                     return;
-                } catch(authErr) {}
+                } catch(authErr) { /* fall through */ }
             }
 
             if (this.data.ownerKey && pass === this.data.ownerKey && !email) {
@@ -531,7 +507,7 @@ const app = {
 
             const adminsList = this.data.admins || [];
             const a = adminsList.find(x => x.passcode === pass);
-            if (!a) throw new Error('Invalid passcode');
+            if (!a) throw new Error('Invalid passcode. Please check your credentials.');
             this.user = a;
             btn.innerHTML = 'Login'; btn.disabled = false;
             this.showDash(); this.nav('profile');
@@ -569,7 +545,6 @@ const app = {
 
         switch(page) {
 
-            // ─── PROFILE ───
             case 'profile':
                 const me = (role === 'owner') ? this.user : (adminsList.find(x => x.name === this.user.name) || this.user);
                 const roleBadge = role === 'owner' ? 'badge-owner' : role === 'high_command' ? 'badge-hc' : role === 'editor' ? 'badge-editor' : 'badge-admin';
@@ -587,7 +562,6 @@ const app = {
                 </div>`;
                 break;
 
-            // ─── RULES ───
             case 'rules':
                 html = `<div class="page-title">📜 App Rules</div>`;
                 if (perms.rules_edit) {
@@ -597,7 +571,6 @@ const app = {
                 html += `<div class="rule-box">${meta}${this.data.appRules || "Rules will appear here."}</div>`;
                 break;
 
-            // ─── CURRENT ADMINS ───
             case 'curr-admins':
                 html = `<div class="page-title">👥 Admin List</div>`;
                 const isOwner = role === 'owner';
@@ -619,21 +592,17 @@ const app = {
                 }
                 html += `</div>`;
 
-                // Drag hint for owner only
                 if (isOwner) {
                     html += `<div class="drag-hint">⠿ Drag the handle on each card to reorder admins — order saves automatically for everyone.</div>`;
                 }
 
-                // Admin cards list container (draggable when owner)
                 html += `<div id="admins-list-container">`;
 
                 adminsList.forEach((a, i) => {
                     const aTag = a.tag ? `<span class="tag-span" style="background:${a.tagColor||'#555'}">${a.tag}</span>` : '';
                     const textColor = a.boxColor && a.boxColor !== '#1a1d29' ? '#000' : 'var(--text-white)';
-
                     const targetIsHCOrAbove = (a.role === 'high_command' || a.role === 'owner');
                     const hcCanActOnThis = isHC && !targetIsHCOrAbove;
-
                     const draggableAttrs = isOwner
                         ? `draggable="true" data-idx="${i}" class="card admin-card-draggable"`
                         : `data-idx="${i}" class="card"`;
@@ -665,11 +634,9 @@ const app = {
                                      <button class="btn-sm ${a.role==='high_command'?'active-role':''}" style="background:var(--primary-gold);color:black" onclick="app.setRole(${i},'high_command')">High Command</button>`;
                         }
                         if (perms.kick) html += `<button class="btn-sm btn-danger" onclick="app.kick(${i})">Kick</button>`;
-                        html += `</div>`;
-                        html += `</div>`;
+                        html += `</div></div>`;
                     }
 
-                    // Individual permission overrides (Owner only)
                     if (isOwner) {
                         const indiv = this.getIndividualPerms(a.name);
                         const roleP = this.getRolePerms(a.role);
@@ -706,10 +673,9 @@ const app = {
                     html += `</div>`;
                 });
 
-                html += `</div>`; // close admins-list-container
+                html += `</div>`;
                 break;
 
-            // ─── WEEKLY ───
             case 'weekly':
                 if (!perms.weekly) { html = `<div class="alert-box alert-danger">⚠ You don't have permission to access Weekly Reports.</div>`; break; }
                 html = `<div class="page-title">📝 Weekly Reports</div>`;
@@ -737,7 +703,6 @@ const app = {
                 }
                 break;
 
-            // ─── LEADERBOARD ───
             case 'promo':
                 html = `<div class="page-title">🎖️ Leader Board</div>`;
                 if (perms.leaderboard_manage) {
@@ -756,7 +721,6 @@ const app = {
                 html += `<div id="promo-res"></div>`;
                 break;
 
-            // ─── STORED FILES ───
             case 'stored':
                 if (!perms.stored) { html = `<div class="alert-box alert-danger">⚠ No permission to view Stored Files.</div>`; break; }
                 html = `<div class="page-title">📁 Stored Files</div>`;
@@ -771,7 +735,6 @@ const app = {
                 });
                 break;
 
-            // ─── ACCESS / APPLICATIONS ───
             case 'access':
                 if (!perms.access) { html = `<div class="alert-box alert-danger">⚠ No permission to manage requests.</div>`; break; }
                 html = `<div class="page-title">🔐 Applications</div>`;
@@ -782,7 +745,7 @@ const app = {
                     html += `<div class="alert-box alert-success" style="margin-bottom:8px">📋 ${pending.length} pending application${pending.length>1?'s':''}</div>`;
                 }
                 pending.forEach((r, i) => {
-                    html += `<div class="card">
+                    html += `<div class="card" id="req-card-${i}">
                         <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
                             <div style="flex:1">
                                 <b style="font-size:15px;font-family:'Rajdhani',sans-serif">${r.name}</b>
@@ -790,19 +753,17 @@ const app = {
                                 ${r.submitted ? `<br><small style="color:var(--text-muted);font-size:10px">Applied: ${r.submitted}</small>` : ''}
                             </div>
                             <div style="display:flex;flex-direction:column;gap:6px">
-                                <button class="btn-sm btn-success" onclick="app.approve(${i})">✔ Approve</button>
-                                <button class="btn-sm btn-danger" onclick="app.reject(${i})">✖ Reject</button>
+                                <button class="btn-sm btn-success" id="approve-btn-${i}" onclick="app.approve(${i})">✔ Approve</button>
+                                <button class="btn-sm btn-danger" id="reject-btn-${i}" onclick="app.reject(${i})">✖ Reject</button>
                             </div>
                         </div>
                     </div>`;
                 });
                 break;
 
-            // ─── PERMISSIONS ───
             case 'permissions':
                 if (role !== 'owner') { html = `<div class="alert-box alert-danger">⚠ Owner only.</div>`; break; }
                 html = `<div class="page-title">⚙️ Permission Manager</div>`;
-
                 html += `<div class="card-title" style="padding:0 0 8px;color:var(--primary-gold)">Role-Level Permissions</div>`;
                 const roles = ['high_command','editor','hr','view','admin'];
                 const roleLabels = { high_command:'High Command', editor:'Editor', hr:'HR', view:'View', admin:'Admin' };
@@ -818,11 +779,9 @@ const app = {
                     });
                     html += `</div></div>`;
                 });
-
                 html += `<div class="alert-box alert-info" style="margin-top:4px;margin-bottom:12px">ℹ Role permissions apply to everyone with that role. Individual extra permissions can be set per-admin in the Admin List page.</div>`;
                 break;
 
-            // ─── CHAT ───
             case 'chat':
                 html = `<div class="page-title">💬 Staff Chat</div>
                 <div class="chat-container">
@@ -844,8 +803,7 @@ const app = {
     },
 
     // ─────────────────────────────────────────────
-    // DRAG AND DROP — OWNER ONLY
-    // Supports both mouse (desktop) and touch (mobile)
+    // DRAG AND DROP
     // ─────────────────────────────────────────────
     initDragDrop() {
         const container = document.getElementById('admins-list-container');
@@ -858,13 +816,10 @@ const app = {
         let touchClone = null;
         let touchStartY = 0;
 
-        // ── DESKTOP DRAG EVENTS ──
         cards.forEach((card, idx) => {
             const handle = card.querySelector('.drag-handle');
 
-            // Only start drag from handle
             card.addEventListener('dragstart', (e) => {
-                // Check if dragging started from the handle or its vicinity
                 dragSrcIdx = parseInt(card.dataset.idx);
                 card.classList.add('dragging');
                 e.dataTransfer.effectAllowed = 'move';
@@ -892,38 +847,17 @@ const app = {
                 }
             });
 
-            card.addEventListener('dragleave', () => {
-                card.classList.remove('drag-over');
-            });
+            card.addEventListener('dragleave', () => { card.classList.remove('drag-over'); });
+            card.addEventListener('drop', (e) => { e.preventDefault(); card.classList.remove('drag-over'); });
 
-            card.addEventListener('drop', (e) => {
-                e.preventDefault();
-                card.classList.remove('drag-over');
-            });
-
-            // ── TOUCH DRAG EVENTS (mobile) ──
             if (handle) {
                 handle.addEventListener('touchstart', (e) => {
-                    e.preventDefault(); // prevent scroll
+                    e.preventDefault();
                     touchCard = card;
                     dragSrcIdx = parseInt(card.dataset.idx);
                     touchStartY = e.touches[0].clientY;
-
-                    // Create a floating clone for visual feedback
                     touchClone = card.cloneNode(true);
-                    touchClone.style.cssText = `
-                        position: fixed;
-                        left: 15px; right: 15px;
-                        top: ${card.getBoundingClientRect().top}px;
-                        opacity: 0.85;
-                        z-index: 9999;
-                        pointer-events: none;
-                        border: 2px solid var(--primary-gold);
-                        box-shadow: 0 12px 40px rgba(0,0,0,0.8);
-                        border-radius: 16px;
-                        background: var(--card-bg);
-                        transition: none;
-                    `;
+                    touchClone.style.cssText = `position:fixed;left:15px;right:15px;top:${card.getBoundingClientRect().top}px;opacity:0.85;z-index:9999;pointer-events:none;border:2px solid var(--primary-gold);box-shadow:0 12px 40px rgba(0,0,0,0.8);border-radius:16px;background:var(--card-bg);transition:none;`;
                     document.body.appendChild(touchClone);
                     card.classList.add('dragging');
                 }, { passive: false });
@@ -931,81 +865,56 @@ const app = {
                 handle.addEventListener('touchmove', (e) => {
                     e.preventDefault();
                     const touch = e.touches[0];
-
-                    if (touchClone) {
-                        const dy = touch.clientY - touchStartY;
-                        const origTop = card.getBoundingClientRect().top - (card.classList.contains('dragging') ? 0 : 0);
-                        touchClone.style.top = `${card.getBoundingClientRect().top + dy}px`;
-                    }
-
-                    // Find which card we're hovering over
+                    if (touchClone) { const dy = touch.clientY - touchStartY; touchClone.style.top = `${card.getBoundingClientRect().top + dy}px`; }
                     const el = document.elementFromPoint(touch.clientX, touch.clientY);
                     const overCard = el ? el.closest('.admin-card-draggable') : null;
                     cards.forEach(c => c.classList.remove('drag-over'));
-                    if (overCard && overCard !== touchCard) {
-                        overCard.classList.add('drag-over');
-                        dragOverIdx = parseInt(overCard.dataset.idx);
-                    }
+                    if (overCard && overCard !== touchCard) { overCard.classList.add('drag-over'); dragOverIdx = parseInt(overCard.dataset.idx); }
                 }, { passive: false });
 
                 handle.addEventListener('touchend', (e) => {
                     e.preventDefault();
                     cards.forEach(c => c.classList.remove('drag-over', 'dragging'));
                     if (touchClone) { document.body.removeChild(touchClone); touchClone = null; }
-                    if (dragSrcIdx !== null && dragOverIdx !== null && dragSrcIdx !== dragOverIdx) {
-                        this._reorderAdmins(dragSrcIdx, dragOverIdx);
-                    }
-                    dragSrcIdx = null;
-                    dragOverIdx = null;
-                    touchCard = null;
+                    if (dragSrcIdx !== null && dragOverIdx !== null && dragSrcIdx !== dragOverIdx) { this._reorderAdmins(dragSrcIdx, dragOverIdx); }
+                    dragSrcIdx = null; dragOverIdx = null; touchCard = null;
                 }, { passive: false });
             }
         });
     },
 
-    // ─── REORDER ADMINS IN DATA AND SAVE ───
     _reorderAdmins(fromIdx, toIdx) {
         const admins = this.data.admins;
         if (!admins || fromIdx < 0 || toIdx < 0 || fromIdx >= admins.length || toIdx >= admins.length) return;
-
-        // Move the item
         const item = admins.splice(fromIdx, 1)[0];
         admins.splice(toIdx, 0, item);
-
-        // Save and re-render
         this.save();
         this.nav('curr-admins');
     },
 
-    // ─── TOGGLE ROLE-LEVEL PERMISSION ───
     toggleRolePerm(role, perm, el) {
         if (!this.data.permissions) this.data.permissions = {};
         if (!this.data.permissions[role]) this.data.permissions[role] = {};
-        const currentlyOn = el.classList.contains('active');
-        const newValue = !currentlyOn;
+        const newValue = !el.classList.contains('active');
         this.data.permissions[role][perm] = newValue;
         el.classList.toggle('active', newValue);
         this.save();
         this.showDash();
     },
 
-    // ─── TOGGLE INDIVIDUAL PERMISSION ───
     toggleIndividualPerm(adminName, perm, el) {
         if (!this.data.individualPerms) this.data.individualPerms = {};
         if (!this.data.individualPerms[adminName]) this.data.individualPerms[adminName] = {};
-        const currentlyOn = el.classList.contains('active');
-        const newValue = !currentlyOn;
+        const newValue = !el.classList.contains('active');
         this.data.individualPerms[adminName][perm] = newValue;
         el.classList.toggle('active', newValue);
         this.save();
         if (this.user && this.user.name === adminName) this.showDash();
     },
 
-    // ─── LEADERBOARD ───
     renderLB() {
         const div = document.getElementById('promo-res'); if (!div) return;
         const isAuth = ['owner','high_command'].includes(this.user.role);
-
         if (this.data.lbStatus === 'closed' || this.data.lbFileIndex === -1) {
             div.innerHTML = `<div class="alert-box" style="background:rgba(255,255,255,0.04);border:1px solid var(--glass-border);color:var(--text-muted);justify-content:center">🔒 Leader Board is currently closed</div>`;
             return;
@@ -1027,10 +936,7 @@ const app = {
             + sorted.map((s,i) => `
             <div class="lb-card" style="border-left:3px solid ${i===0?'var(--primary-gold)':i===1?'#C0C0C0':i===2?'#CD7F32':'var(--glass-border)'}">
                 <div class="lb-rank ${rankClass[i]||''}">#${i+1}</div>
-                <div class="lb-info">
-                    <div class="lb-name">${s.n}</div>
-                    ${s.hasWarn ? `<span class="warn-alert">⚠ Cancelled · Warning (${s.lastWarn})</span>` : ''}
-                </div>
+                <div class="lb-info"><div class="lb-name">${s.n}</div>${s.hasWarn ? `<span class="warn-alert">⚠ Cancelled · Warning (${s.lastWarn})</span>` : ''}</div>
                 <div style="display:flex;align-items:center;gap:8px">
                     <div class="lb-pts">${s.pts} <small style="font-size:11px;color:var(--text-muted)">pts</small></div>
                     ${this.user.role==='owner'?`<button class="btn-sm" style="background:var(--dark-gold);color:#000" onclick="app.editLBPoints('${s.n}')">Edit</button>`:''}
@@ -1145,8 +1051,8 @@ const app = {
             <div class="card-title">Edit Information</div>
             <label>Name</label><input id="ed-n" value="${a.name}" ${!isOwner?'disabled':''}>
             <label>Level / Position</label><input id="ed-l" value="${a.lvl}">
-            <label>Bank Points</label><input type="number" id="ed-b" value="${a.bank||0}">
-            <label>Warnings</label><input id="ed-w" value="${a.warnings||'None'}">
+            <label>Bank Points</label><input type="text" id="ed-b" value="${a.bank||0}">
+            <label>Warnings</label><input type="text" id="ed-w" value="${a.warnings||'None'}">
             <label>Passcode</label><input type="text" id="ed-p" value="${a.passcode}">
             <div style="display:flex;gap:8px;margin-top:8px">
                 <button onclick="app.updateAdmin(${i})" style="flex:1">Save Changes</button>
@@ -1185,23 +1091,79 @@ const app = {
     kick(i) { if (confirm("Remove this admin?")) { this.data.admins.splice(i,1); this.save(); this.nav('curr-admins'); } },
     delF(i) { if (confirm("Delete this file permanently?")) { this.data.history.splice(i,1); this.save(); this.nav('stored'); } },
 
-    approve(i) {
-        const r = this.data.requests[i];
-        const code = Math.floor(1000 + Math.random()*8999).toString();
-        if (!this.data.admins) this.data.admins = [];
-        this.data.admins.push({ name:r.name, lvl:r.lvl, bank:"0", warnings:'None', passcode:code, role:'admin' });
-        this.data.requests.splice(i,1);
-        this.save();
-        alert(`✅ Approved!\n\nStaff: ${r.name}\nPasscode: ${code}\n\nShare this passcode with them to login.`);
-        this.nav('access');
+    // ─────────────────────────────────────────────
+    // APPROVE — FIXED: uses Firebase transactions
+    // to safely add to admins and remove from requests
+    // ─────────────────────────────────────────────
+    async approve(i) {
+        const requests = this.data.requests || [];
+        const r = requests[i];
+        if (!r) { alert("Request not found."); return; }
+
+        // Disable buttons to prevent double-click
+        const approveBtn = document.getElementById(`approve-btn-${i}`);
+        const rejectBtn  = document.getElementById(`reject-btn-${i}`);
+        if (approveBtn) { approveBtn.disabled = true; approveBtn.textContent = '⏳ Approving...'; }
+        if (rejectBtn)  { rejectBtn.disabled = true; }
+
+        const code = Math.floor(1000 + Math.random() * 8999).toString();
+        const newAdmin = {
+            name:     r.name,
+            lvl:      r.lvl,
+            bank:     "0",
+            warnings: 'None',
+            passcode: code,
+            role:     'admin'
+        };
+
+        try {
+            // Read fresh data from Firebase, apply changes, write back atomically
+            await db.ref('ahypar_new_data').transaction((currentData) => {
+                if (!currentData) return currentData;
+
+                // Ensure arrays exist
+                if (!currentData.admins)   currentData.admins   = [];
+                if (!currentData.requests) currentData.requests = [];
+
+                // Add new admin
+                currentData.admins.push(newAdmin);
+
+                // Remove this request by name (safer than index in concurrent env)
+                currentData.requests = currentData.requests.filter(
+                    req => !(req.name === r.name && req.lvl === r.lvl)
+                );
+
+                return currentData;
+            });
+
+            // Update local data to stay in sync
+            if (!this.data.admins)   this.data.admins   = [];
+            if (!this.data.requests) this.data.requests = [];
+            this.data.admins.push(newAdmin);
+            this.data.requests = this.data.requests.filter(
+                req => !(req.name === r.name && req.lvl === r.lvl)
+            );
+
+            alert(`✅ Approved!\n\nStaff: ${r.name}\nPasscode: ${code}\n\nShare this passcode with them to login.`);
+            this.nav('access');
+
+        } catch(err) {
+            console.error("Approve failed:", err);
+            alert("❌ Failed to approve. Please try again.\n" + err.message);
+            if (approveBtn) { approveBtn.disabled = false; approveBtn.textContent = '✔ Approve'; }
+            if (rejectBtn)  { rejectBtn.disabled = false; }
+        }
     },
 
     reject(i) {
         const r = this.data.requests[i];
+        if (!r) return;
         if (confirm(`Reject application from ${r.name}?`)) {
-            this.data.requests.splice(i,1);
-            this.save();
-            this.nav('access');
+            this.data.requests.splice(i, 1);
+            // Write only requests to DB for safety
+            db.ref('ahypar_new_data/requests').set(this.data.requests)
+                .then(() => this.nav('access'))
+                .catch(err => { console.error(err); alert("Error rejecting request."); });
         }
     },
 
@@ -1233,7 +1195,7 @@ const app = {
             submitted: new Date().toLocaleString()
         });
 
-        db.ref('ahypar_new_data').update({ requests: this.data.requests });
+        db.ref('ahypar_new_data/requests').set(this.data.requests);
 
         msgEl.className = 'app-success';
         msgEl.innerHTML = `✅ Application submitted!<br><small>Wait for an admin to review your request.</small>`;
