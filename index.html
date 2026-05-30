@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>AHYPAR Administration</title>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Syne:wght@400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Rajdhani:wght@400;500;600;700&family=Fira+Code:wght@300;400;500;600&family=Exo+2:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 
     <!-- Firebase Compat SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -39,19 +39,23 @@
             --radius-sm: 8px;
             --radius-md: 14px;
             --radius-lg: 20px;
+            /* Font stack */
+            --font-display: 'Exo 2', sans-serif;
+            --font-body: 'Space Grotesk', sans-serif;
+            --font-mono: 'Fira Code', monospace;
+            --font-ui: 'Rajdhani', sans-serif;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
-            font-family: 'Syne', sans-serif;
+            font-family: var(--font-body);
             background: var(--bg-void);
             color: var(--text-primary);
             min-height: 100vh;
             overflow-x: hidden;
         }
 
-        /* Grid background texture */
         body::before {
             content: '';
             position: fixed; inset: 0;
@@ -73,7 +77,6 @@
 
         .hidden { display: none !important; }
 
-        /* ─── SCANLINE OVERLAY ─── */
         .scanlines {
             position: fixed; inset: 0; z-index: 9999; pointer-events: none;
             background: repeating-linear-gradient(
@@ -99,7 +102,6 @@
             box-shadow: 0 1px 0 rgba(255,215,0,0.08), 0 8px 40px rgba(0,0,0,0.8);
         }
 
-        /* Animated gold line at top of header */
         header::before {
             content: '';
             position: absolute; top: 0; left: 0; right: 0; height: 2px;
@@ -113,13 +115,13 @@
 
         .header-brand { line-height: 1.25; }
         .brand-name {
-            font-family: 'Orbitron', monospace; font-size: 14px; font-weight: 700;
+            font-family: var(--font-display); font-size: 13px; font-weight: 800;
             background: linear-gradient(90deg, var(--gold-1), var(--gold-2), var(--gold-3));
             -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-            letter-spacing: 3px; text-transform: uppercase;
+            letter-spacing: 2px; text-transform: uppercase;
         }
-        .brand-sub { font-size: 9px; color: var(--text-muted); letter-spacing: 2px; text-transform: uppercase; font-family: 'JetBrains Mono', monospace; }
-        .brand-user { font-size: 11px; color: var(--text-secondary); margin-top: 1px; font-family: 'JetBrains Mono', monospace; }
+        .brand-sub { font-size: 9px; color: var(--text-muted); letter-spacing: 2px; text-transform: uppercase; font-family: var(--font-mono); }
+        .brand-user { font-size: 11px; color: var(--text-secondary); margin-top: 1px; font-family: var(--font-mono); }
         .brand-user b { color: var(--gold-1); }
 
         .menu-btn {
@@ -156,7 +158,7 @@
         .card:hover { border-color: var(--border-mid); }
 
         .card-title {
-            font-family: 'Orbitron', monospace; font-size: 10px; font-weight: 600;
+            font-family: var(--font-display); font-size: 10px; font-weight: 700;
             color: var(--text-muted); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 14px;
         }
 
@@ -170,7 +172,7 @@
             padding: 11px 14px;
             margin: 5px 0;
             font-size: 13px;
-            font-family: 'Syne', sans-serif;
+            font-family: var(--font-body);
             transition: 0.2s;
             outline: none;
         }
@@ -184,7 +186,7 @@
         label {
             font-size: 10px; color: var(--text-muted); font-weight: 700;
             text-transform: uppercase; letter-spacing: 1.2px; display: block; margin-top: 10px;
-            font-family: 'JetBrains Mono', monospace;
+            font-family: var(--font-mono);
         }
 
         /* ─── BUTTONS ─── */
@@ -192,7 +194,7 @@
             width: 100%;
             background: linear-gradient(135deg, var(--gold-3) 0%, var(--gold-1) 100%);
             color: #050608;
-            font-family: 'Orbitron', monospace;
+            font-family: var(--font-display);
             font-weight: 700;
             border-radius: var(--radius-sm);
             border: none;
@@ -226,7 +228,7 @@
         .btn-info { background: linear-gradient(135deg, #0077bb, var(--blue)) !important; color: white !important; }
         .btn-sm {
             width: auto; padding: 5px 11px; font-size: 9px; letter-spacing: 0.8px;
-            margin: 2px; border-radius: 6px; font-family: 'Orbitron', monospace;
+            margin: 2px; border-radius: 6px; font-family: var(--font-display);
         }
         .btn-del {
             background: var(--red) !important; color: white !important; width: auto;
@@ -255,7 +257,7 @@
         .menu-backdrop.active { opacity: 1; pointer-events: all; }
 
         .menu-section-label {
-            font-family: 'JetBrains Mono', monospace;
+            font-family: var(--font-mono);
             font-size: 8px; color: var(--text-muted); letter-spacing: 2.5px;
             text-transform: uppercase; padding: 14px 10px 5px; font-weight: 500;
         }
@@ -263,7 +265,7 @@
             padding: 11px 14px; border-radius: var(--radius-sm); font-weight: 600;
             cursor: pointer; transition: 0.15s; color: var(--text-primary); font-size: 13px;
             display: flex; align-items: center; gap: 10px; margin: 1px 0;
-            font-family: 'Syne', sans-serif;
+            font-family: var(--font-body);
         }
         .menu-item:hover { background: rgba(255,215,0,0.07); color: var(--gold-1); }
         .menu-item.danger { color: var(--red); }
@@ -272,7 +274,7 @@
 
         /* ─── PAGE TITLE ─── */
         .page-title {
-            font-family: 'Orbitron', monospace; font-size: 16px; font-weight: 700;
+            font-family: var(--font-display); font-size: 16px; font-weight: 800;
             letter-spacing: 2px; text-transform: uppercase; margin-bottom: 16px;
             color: var(--text-primary); display: flex; align-items: center; gap: 10px;
         }
@@ -286,13 +288,13 @@
             color: black; padding: 2px 8px; border-radius: 4px;
             font-size: 9px; margin-left: 5px; vertical-align: middle;
             font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase;
-            font-family: 'JetBrains Mono', monospace;
+            font-family: var(--font-mono);
         }
         .role-badge {
             display: inline-block; padding: 2px 9px; border-radius: 20px;
             font-size: 9px; font-weight: 700; letter-spacing: 0.8px;
             text-transform: uppercase; border: 1px solid;
-            font-family: 'JetBrains Mono', monospace;
+            font-family: var(--font-mono);
         }
         .badge-owner { background: rgba(255,215,0,0.15); color: var(--gold-1); border-color: rgba(255,215,0,0.4); }
         .badge-hc { background: rgba(155,110,255,0.15); color: var(--purple); border-color: rgba(155,110,255,0.4); }
@@ -306,12 +308,12 @@
             border-radius: var(--radius-md); padding: 16px; text-align: center;
         }
         .stat-box .val {
-            font-family: 'Orbitron', monospace; font-size: 26px; font-weight: 700;
+            font-family: var(--font-display); font-size: 26px; font-weight: 800;
             color: var(--gold-1); line-height: 1;
         }
         .stat-box .lbl {
             font-size: 9px; color: var(--text-muted); text-transform: uppercase;
-            letter-spacing: 1.5px; margin-top: 5px; font-family: 'JetBrains Mono', monospace;
+            letter-spacing: 1.5px; margin-top: 5px; font-family: var(--font-mono);
         }
 
         /* ─── ALERTS ─── */
@@ -329,11 +331,12 @@
             background: rgba(255,255,255,0.02); padding: 16px; border-radius: 10px;
             border: 1px solid var(--border-dim); white-space: pre-wrap; margin-top: 10px;
             font-size: 13px; line-height: 1.75; color: var(--text-primary);
+            font-family: var(--font-body);
         }
         .rule-meta {
             font-size: 10px; color: var(--text-muted); margin-bottom: 10px;
             font-style: italic; border-bottom: 1px solid var(--border-dim); padding-bottom: 8px;
-            font-family: 'JetBrains Mono', monospace;
+            font-family: var(--font-mono);
         }
 
         /* ─── PERM TOGGLES ─── */
@@ -363,7 +366,7 @@
             font-size: 9px; color: var(--blue); text-transform: uppercase;
             letter-spacing: 1.5px; font-weight: 700; margin-bottom: 8px;
             display: flex; align-items: center; gap: 6px;
-            font-family: 'JetBrains Mono', monospace;
+            font-family: var(--font-mono);
         }
         .indiv-perm-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
         .indiv-perm-toggle {
@@ -387,7 +390,7 @@
         .manual-badge {
             font-size: 8px; background: rgba(0,170,255,0.15); color: var(--blue);
             border: 1px solid rgba(0,170,255,0.35); border-radius: 4px; padding: 1px 5px;
-            font-family: 'JetBrains Mono', monospace;
+            font-family: var(--font-mono);
         }
 
         /* ─── LEADERBOARD ─── */
@@ -396,13 +399,13 @@
             display: flex; justify-content: space-between; align-items: center;
             border: 1px solid var(--border-dim); background: var(--bg-card);
         }
-        .lb-rank { font-family: 'Orbitron', monospace; font-size: 18px; font-weight: 700; color: var(--text-muted); width: 36px; }
+        .lb-rank { font-family: var(--font-display); font-size: 18px; font-weight: 800; color: var(--text-muted); width: 36px; }
         .lb-rank.gold { color: var(--gold-1); }
         .lb-rank.silver { color: #C0C0C0; }
         .lb-rank.bronze { color: #CD7F32; }
         .lb-info { flex: 1; padding: 0 10px; }
-        .lb-name { font-weight: 700; font-size: 14px; }
-        .lb-pts { font-family: 'Orbitron', monospace; font-size: 20px; font-weight: 700; color: var(--gold-1); }
+        .lb-name { font-weight: 700; font-size: 14px; font-family: var(--font-ui); }
+        .lb-pts { font-family: var(--font-display); font-size: 20px; font-weight: 800; color: var(--gold-1); }
 
         /* ─── CHAT ─── */
         .chat-container { display: flex; flex-direction: column; height: calc(100vh - 165px); }
@@ -414,7 +417,7 @@
         }
         .msg {
             padding: 10px 14px; border-radius: 14px; max-width: 82%;
-            font-size: 13px; line-height: 1.45;
+            font-size: 13px; line-height: 1.45; font-family: var(--font-body);
         }
         .msg-self {
             align-self: flex-end;
@@ -426,7 +429,7 @@
             background: rgba(20, 24, 40, 0.95); color: var(--text-primary);
             border-bottom-left-radius: 4px; border: 1px solid var(--border-dim);
         }
-        .msg-meta { font-size: 9px; font-weight: 700; display: block; margin-bottom: 3px; opacity: 0.7; font-family: 'JetBrains Mono', monospace; }
+        .msg-meta { font-size: 9px; font-weight: 700; display: block; margin-bottom: 3px; opacity: 0.7; font-family: var(--font-mono); }
         .chat-input-area { display: flex; gap: 8px; }
         .chat-input-area input { flex-grow: 1; margin: 0; }
         .chat-input-area button { width: auto; margin: 0; padding: 0 18px; }
@@ -446,13 +449,13 @@
         }
         .login-logo { text-align: center; margin-bottom: 32px; }
         .login-logo .logo-main {
-            font-family: 'Orbitron', monospace; font-size: 40px; font-weight: 900;
+            font-family: var(--font-display); font-size: 44px; font-weight: 900;
             background: linear-gradient(135deg, var(--gold-1), var(--gold-2), var(--gold-3));
             -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-            letter-spacing: 6px;
+            letter-spacing: 8px;
         }
         .login-logo .logo-sub {
-            font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--text-muted);
+            font-family: var(--font-mono); font-size: 10px; color: var(--text-muted);
             letter-spacing: 4px; text-transform: uppercase; margin-top: 4px;
         }
         .login-card { width: 100%; max-width: 400px; }
@@ -487,7 +490,7 @@
         .hc-tag {
             font-size: 9px; background: rgba(255,45,85,0.18); color: var(--red);
             border: 1px solid rgba(255,45,85,0.4); border-radius: 4px; padding: 2px 7px;
-            margin-left: 6px; font-family: 'JetBrains Mono', monospace;
+            margin-left: 6px; font-family: var(--font-mono);
         }
 
         /* ─── ADMIN CARD STYLES ─── */
@@ -517,7 +520,7 @@
             display: flex; align-items: center; gap: 5px; margin-bottom: 10px;
             padding: 7px 10px; background: rgba(255,215,0,0.04);
             border: 1px dashed rgba(255,215,0,0.18); border-radius: 8px;
-            font-family: 'JetBrains Mono', monospace;
+            font-family: var(--font-mono);
         }
         .admin-card-header { display: flex; justify-content: space-between; align-items: center; }
         .admin-card-header-left { display: flex; align-items: center; gap: 8px; flex: 1; }
@@ -532,9 +535,9 @@
         .log-entry:hover { border-color: var(--border-mid); }
         .log-icon { font-size: 14px; flex-shrink: 0; margin-top: 1px; }
         .log-body { flex: 1; }
-        .log-actor { font-weight: 700; color: var(--gold-1); font-family: 'JetBrains Mono', monospace; }
+        .log-actor { font-weight: 700; color: var(--gold-1); font-family: var(--font-mono); }
         .log-action { color: var(--text-primary); }
-        .log-time { font-size: 9px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; margin-top: 2px; }
+        .log-time { font-size: 9px; color: var(--text-muted); font-family: var(--font-mono); margin-top: 2px; }
         .log-del-btn { background: var(--red) !important; color: white !important; width: auto; padding: 3px 8px; font-size: 9px; border-radius: 5px; flex-shrink: 0; margin: 0; }
 
         /* ─── APP SUCCESS ─── */
@@ -551,7 +554,7 @@
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             padding: 30px; text-align: center;
         }
-        .session-blocked h2 { font-family: 'Orbitron', monospace; color: var(--red); font-size: 22px; margin-bottom: 14px; }
+        .session-blocked h2 { font-family: var(--font-display); color: var(--red); font-size: 22px; margin-bottom: 14px; }
         .session-blocked p { color: var(--text-secondary); font-size: 13px; line-height: 1.7; }
 
         /* ─── SCROLLBAR ─── */
@@ -559,11 +562,11 @@
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: var(--border-mid); border-radius: 4px; }
 
-        /* ─── ROLE CONFIRM BADGE (for role assignment confirmation) ─── */
+        /* ─── ROLE CONFIRM BADGE ─── */
         .role-confirm-badge {
             display: inline-flex; align-items: center; gap: 5px;
             padding: 3px 9px; border-radius: 6px; font-size: 10px; font-weight: 700;
-            font-family: 'JetBrains Mono', monospace;
+            font-family: var(--font-mono);
             background: rgba(0,229,160,0.12); border: 1px solid rgba(0,229,160,0.35); color: var(--green);
             margin-left: 8px; animation: fadeInBadge 0.3s ease;
         }
@@ -581,7 +584,33 @@
         .loading-overlay {
             display: flex; align-items: center; justify-content: center;
             padding: 30px; color: var(--text-muted); gap: 10px; font-size: 12px;
-            font-family: 'JetBrains Mono', monospace;
+            font-family: var(--font-mono);
+        }
+
+        /* ─── PASSWORD STRENGTH INDICATOR ─── */
+        .pw-strength {
+            height: 4px; border-radius: 2px; margin-top: 4px;
+            background: rgba(255,255,255,0.06); overflow: hidden;
+        }
+        .pw-strength-bar {
+            height: 100%; border-radius: 2px; transition: 0.3s;
+            width: 0%;
+        }
+        .pw-hint {
+            font-size: 10px; color: var(--text-muted); margin-top: 3px;
+            font-family: var(--font-mono);
+        }
+
+        /* ─── SENSITIVE DATA HIDDEN ─── */
+        .owner-only-field {
+            background: rgba(255,215,0,0.04);
+            border: 1px dashed rgba(255,215,0,0.25);
+            border-radius: 8px; padding: 10px 12px; margin-top: 8px;
+        }
+        .owner-only-label {
+            font-size: 9px; color: var(--gold-1); font-family: var(--font-mono);
+            text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 6px;
+            display: flex; align-items: center; gap: 5px;
         }
     </style>
 </head>
@@ -597,13 +626,17 @@
     <div class="card login-card">
         <div class="card-title">Staff Login</div>
         <input type="email" id="login-email" placeholder="Email (Developer only)" autocomplete="off">
-        <input type="password" id="login-pass" placeholder="Passcode (For everyone)" autocomplete="off">
+        <input type="password" id="login-pass" placeholder="Login Passcode" autocomplete="off">
         <button onclick="app.login()" id="login-btn">Login</button>
         <div id="login-err" class="hidden alert-box alert-danger" style="margin-top:6px"></div>
         <div class="divider"></div>
         <div class="card-title" style="margin-bottom:8px">New Staff Application</div>
         <input id="req-n" placeholder="Full Name">
-        <input id="req-lvl" placeholder="Level / Position">
+        <input id="req-lvl" placeholder="Rank / Position">
+        <input type="email" id="req-email" placeholder="Email Address">
+        <input type="password" id="req-pw" placeholder="Security Password (min 8 chars: letters + numbers + symbols)" oninput="app.checkPwStrength(this.value)">
+        <div class="pw-strength"><div class="pw-strength-bar" id="pw-strength-bar"></div></div>
+        <div class="pw-hint" id="pw-hint">Must contain: letters, numbers, and symbols (#,@,!,$ etc.)</div>
         <button class="btn-ghost" onclick="app.requestAccess()" style="margin-top:4px">Submit Application</button>
         <div id="app-msg" class="hidden"></div>
     </div>
@@ -717,6 +750,34 @@ const app = {
 
     save() { return db.ref('ahypar_new_data').set(this.data); },
 
+    // ─── PASSWORD VALIDATION ───
+    validateSecurityPassword(pw) {
+        if (!pw || pw.length < 8) return { ok: false, msg: 'At least 8 characters required' };
+        if (!/[a-zA-Z]/.test(pw)) return { ok: false, msg: 'Must contain letters' };
+        if (!/[0-9]/.test(pw))    return { ok: false, msg: 'Must contain numbers' };
+        if (!/[#@!$%^&*\-_+=?~]/.test(pw)) return { ok: false, msg: 'Must contain symbols (#,@,!,$,% etc.)' };
+        return { ok: true, msg: 'Strong password ✓' };
+    },
+
+    checkPwStrength(pw) {
+        const bar = document.getElementById('pw-strength-bar');
+        const hint = document.getElementById('pw-hint');
+        if (!bar || !hint) return;
+        let score = 0;
+        if (pw.length >= 8) score++;
+        if (/[a-zA-Z]/.test(pw)) score++;
+        if (/[0-9]/.test(pw)) score++;
+        if (/[#@!$%^&*\-_+=?~]/.test(pw)) score++;
+        const colors = ['#FF2D55','#FF6B35','#FDB931','#00E5A0'];
+        const widths = ['25%','50%','75%','100%'];
+        const hints  = ['Too weak','Needs numbers & symbols','Add symbols','Strong ✓'];
+        if (!pw) { bar.style.width='0%'; hint.textContent='Must contain: letters, numbers, and symbols (#,@,!,$ etc.)'; return; }
+        bar.style.width = widths[score-1] || '10%';
+        bar.style.background = colors[score-1] || '#FF2D55';
+        hint.textContent = hints[score-1] || 'Too weak';
+        hint.style.color = colors[score-1] || '#FF2D55';
+    },
+
     // ─── PERMISSION HELPERS ───
     getRolePerms(role) {
         const base = DEFAULT_PERMS[role] || DEFAULT_PERMS['admin'];
@@ -741,27 +802,45 @@ const app = {
     },
     getRoleRank(role) { return ROLE_HIERARCHY.indexOf(role); },
     canActOn(actorRole, targetRole) {
-        // Actor can act on target if actor has higher rank (lower index)
         const actorRank = this.getRoleRank(actorRole);
         const targetRank = this.getRoleRank(targetRole);
         return actorRank < targetRank;
     },
-    canSetRole(actorRole, targetRole, newRole) {
-        // For set_role_mg: can assign up to high_command but not owner
-        const actorRank = this.getRoleRank(actorRole);
-        const targetRank = this.getRoleRank(targetRole);
-        const newRoleRank = this.getRoleRank(newRole);
-        if (actorRank >= targetRank) return false; // can't act on equal or senior
-        if (newRoleRank === 0) return false; // can't assign owner
+
+    // ─── ROLE ASSIGNMENT RULES ───
+    // For set_role (basic): can assign roles STRICTLY BELOW the actor's own rank
+    // e.g. editor (rank 2) can only assign ranks 3,4,5 (hr, view, admin)
+    // Cannot assign their own rank or above
+    canAssignRole(actorRole, targetCurrentRole, newRole) {
+        if (actorRole === 'owner') return true;
+        const actorRank  = this.getRoleRank(actorRole);
+        const targetRank = this.getRoleRank(targetCurrentRole);
+        const newRank    = this.getRoleRank(newRole);
+
+        // Cannot act on equal or senior
+        if (actorRank >= targetRank) return false;
+        // Cannot assign owner
+        if (newRank === 0) return false;
+        // For basic set_role: new role rank must be STRICTLY greater than actor rank
+        // i.e. actor cannot assign their own rank or above
+        if (newRank <= actorRank) return false;
+        return true;
+    },
+    // For set_role_mg (HC+): can assign up to high_command (rank 1) but not owner (rank 0)
+    canAssignRoleMG(actorRole, targetCurrentRole, newRole) {
+        if (actorRole === 'owner') return true;
+        const actorRank  = this.getRoleRank(actorRole);
+        const targetRank = this.getRoleRank(targetCurrentRole);
+        const newRank    = this.getRoleRank(newRole);
+
+        if (actorRank >= targetRank) return false;
+        if (newRank === 0) return false; // no owner
         return true;
     },
 
     // ─── ACTIVITY LOGS ───
     addLog(icon, actor, action, type='normal') {
-        const entry = {
-            icon, actor, action, type,
-            time: new Date().toLocaleString()
-        };
+        const entry = { icon, actor, action, type, time: new Date().toLocaleString() };
         db.ref('ahypar_logs').push(entry);
     },
 
@@ -770,36 +849,23 @@ const app = {
         const token = Date.now() + '-' + Math.random().toString(36).substr(2,9);
         this._sessionToken = token;
         const statusRef = db.ref(`admin_status/${name}`);
-
-        // Check for existing session (single device enforcement)
         statusRef.once('value', (snap) => {
             const existing = snap.val();
             if (existing && existing.online && existing.token !== token) {
-                // Another session active — log it
                 this.addLog('🔒', name, `logged in from a new device while already active`, 'security');
             }
         });
-
-        const statusData = {
-            online: true,
-            token: token,
-            lastSeen: firebase.database.ServerValue.TIMESTAMP
-        };
-        statusRef.set(statusData);
-
-        // Disconnect handler
+        statusRef.set({ online: true, token: token, lastSeen: firebase.database.ServerValue.TIMESTAMP });
         statusRef.onDisconnect().update({ online: false, lastSeen: firebase.database.ServerValue.TIMESTAMP });
     },
 
-    // ─── SESSION ENFORCEMENT ───
     enforceSession(name) {
-        if (name === 'Shafin_Mirza') return; // owner always allowed
+        if (name === 'Shafin_Mirza') return;
         const statusRef = db.ref(`admin_status/${name}`);
         statusRef.on('value', (snap) => {
             const s = snap.val();
             if (!s) return;
             if (s.token && s.token !== this._sessionToken) {
-                // Another login detected
                 this.addLog('⚠️', name, `session conflict detected — multiple device login attempted`, 'security');
                 this.showSessionBlocked();
             }
@@ -857,7 +923,6 @@ const app = {
             this._sessionToken = token;
 
             btn.innerHTML = 'Login'; btn.disabled = false;
-
             this.setOnlineStatus(a.name, a.role);
             this.enforceSession(a.name);
             this.addLog('🔑', a.name, `logged in (Role: ${a.role})`);
@@ -875,7 +940,6 @@ const app = {
         document.getElementById('dashboard-view').classList.remove('hidden');
         document.getElementById('h-user').innerText = this.user.name;
 
-        // Reset all conditional menu items
         document.querySelectorAll('.weekly-menu-item,.stored-menu-item,.access-menu-item,.owner-only,.logs-menu-item').forEach(el => el.classList.add('hidden'));
 
         const perms = this.getPerms(this.user.role, this.user.name);
@@ -907,8 +971,8 @@ const app = {
                 html = `
                 <div class="page-title">My Profile</div>
                 <div class="card" style="text-align:center;padding:24px">
-                    <div style="width:68px;height:68px;border-radius:50%;background:linear-gradient(135deg,var(--gold-3),var(--gold-1));display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;color:#000;margin:0 auto 14px;font-family:'Orbitron',monospace">${(me.name||'?').charAt(0).toUpperCase()}</div>
-                    <h2 style="font-family:'Orbitron',monospace;font-size:20px;letter-spacing:1px">${me.name}</h2>
+                    <div style="width:68px;height:68px;border-radius:50%;background:linear-gradient(135deg,var(--gold-3),var(--gold-1));display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:800;color:#000;margin:0 auto 14px;font-family:var(--font-display)">${(me.name||'?').charAt(0).toUpperCase()}</div>
+                    <h2 style="font-family:var(--font-display);font-size:20px;letter-spacing:1px;font-weight:800">${me.name}</h2>
                     <div style="margin:6px 0"><span class="role-badge ${rbCls}">${me.lvl||role}</span></div>
                     <div class="divider"></div>
                     <div class="stat-row">
@@ -916,7 +980,6 @@ const app = {
                         <div class="stat-box"><div class="val" style="font-size:16px;color:${me.warnings&&me.warnings!=='None'?'var(--red)':'var(--green)'}">${me.warnings||'None'}</div><div class="lbl">Warnings</div></div>
                     </div>`;
 
-                // Online status control for HC+ only
                 if (['owner','high_command'].includes(role)) {
                     html += `<div class="divider"></div>
                     <div class="card-title" style="margin:0 0 8px">Online Status Display</div>
@@ -957,7 +1020,7 @@ const app = {
                     <div style="display:flex;justify-content:space-between;align-items:center">
                         <div style="display:flex;align-items:center;gap:8px">
                             <span id="owner-online-dot" class="online-dot off"></span>
-                            <b style="font-family:'Orbitron',monospace;font-size:14px">Shafin_Mirza</b>
+                            <b style="font-family:var(--font-display);font-size:14px;font-weight:800">Shafin_Mirza</b>
                             <span class="tag-span" style="background:${oInfo.tagColor}">${oInfo.tag}</span>
                         </div>
                         <span style="font-size:11px;opacity:0.7">Server Director / Chief Developer</span>
@@ -988,20 +1051,22 @@ const app = {
                                 ${isOwner?`<span class="drag-handle" title="Drag to reorder">⠿</span>`:''}
                                 <span class="online-dot off" id="dot-${a.name.replace(/\s/g,'_')}"></span>
                                 <div>
-                                    <b style="font-family:'Orbitron',monospace;font-size:13px">${a.name}</b> ${aTag}
+                                    <b style="font-family:var(--font-display);font-size:13px;font-weight:700">${a.name}</b> ${aTag}
                                     <span id="role-label-${i}" class="role-confirm-badge" style="display:none"></span>
                                     <br><small style="opacity:0.7">${a.lvl}</small>
                                 </div>
                             </div>
                         </div>`;
 
-                    // View profile button
                     const canView = isOwner || (isHC && ['admin','editor','view','hr'].includes(a.role));
                     if (canView) html += `<button class="btn-sm" style="background:var(--gold-3);color:black;margin-top:8px" onclick="app.viewAdminProfile(${i})">👁 View Profile</button>`;
 
                     // Management actions
                     const actorCanActOnTarget = this.canActOn(role, a.role);
-                    const canManageBasic = isOwner || ((perms.set_role || perms.kick || perms.set_role_mg) && actorCanActOnTarget);
+                    const hasSetRole   = perms.set_role;
+                    const hasSetRoleMG = perms.set_role_mg;
+                    const hasKick      = perms.kick;
+                    const canManageBasic = isOwner || ((hasSetRole || hasKick || hasSetRoleMG) && actorCanActOnTarget);
 
                     if (canManageBasic) {
                         html += `<div class="admin-card-actions">`;
@@ -1013,21 +1078,33 @@ const app = {
                         }
                         html += `<div style="display:flex;flex-wrap:wrap;gap:4px">`;
 
-                        // Determine which roles can be assigned
-                        if (perms.set_role || perms.set_role_mg) {
-                            const canAssignAdmin  = isOwner || (actorCanActOnTarget && this.canSetRole(role, a.role, 'admin'));
-                            const canAssignView   = isOwner || (actorCanActOnTarget && this.canSetRole(role, a.role, 'view'));
-                            const canAssignHR     = isOwner || (actorCanActOnTarget && this.canSetRole(role, a.role, 'hr'));
-                            const canAssignEditor = isOwner || (perms.set_role_mg && actorCanActOnTarget && this.canSetRole(role, a.role, 'editor'));
-                            const canAssignHC     = isOwner || (perms.set_role_mg && actorCanActOnTarget && this.canSetRole(role, a.role, 'high_command'));
-
-                            if (canAssignAdmin)  html += `<button class="btn-sm ${a.role==='admin'?'active-role':''}" onclick="app.setRole(${i},'admin')">Admin</button>`;
-                            if (canAssignView)   html += `<button class="btn-sm ${a.role==='view'?'active-role':''}" onclick="app.setRole(${i},'view')">View</button>`;
-                            if (canAssignHR)     html += `<button class="btn-sm ${a.role==='hr'?'active-role':''}" onclick="app.setRole(${i},'hr')">HR</button>`;
-                            if (canAssignEditor) html += `<button class="btn-sm ${a.role==='editor'?'active-role':''}" onclick="app.setRole(${i},'editor')">Editor</button>`;
-                            if (canAssignHC)     html += `<button class="btn-sm ${a.role==='high_command'?'active-role':''}" style="background:var(--gold-1);color:black" onclick="app.setRole(${i},'high_command')">High Command</button>`;
+                        if (isOwner) {
+                            // Owner can assign any role (except owner)
+                            html += `<button class="btn-sm ${a.role==='admin'?'active-role':''}" onclick="app.setRole(${i},'admin')">Admin</button>`;
+                            html += `<button class="btn-sm ${a.role==='view'?'active-role':''}" onclick="app.setRole(${i},'view')">View</button>`;
+                            html += `<button class="btn-sm ${a.role==='hr'?'active-role':''}" onclick="app.setRole(${i},'hr')">HR</button>`;
+                            html += `<button class="btn-sm ${a.role==='editor'?'active-role':''}" onclick="app.setRole(${i},'editor')">Editor</button>`;
+                            html += `<button class="btn-sm ${a.role==='high_command'?'active-role':''}" style="background:var(--gold-1);color:black" onclick="app.setRole(${i},'high_command')">High Command</button>`;
+                        } else {
+                            // Non-owner: basic set_role — can only assign roles STRICTLY below actor's rank
+                            if (hasSetRole && actorCanActOnTarget) {
+                                if (this.canAssignRole(role, a.role, 'admin'))
+                                    html += `<button class="btn-sm ${a.role==='admin'?'active-role':''}" onclick="app.setRole(${i},'admin')">Admin</button>`;
+                                if (this.canAssignRole(role, a.role, 'view'))
+                                    html += `<button class="btn-sm ${a.role==='view'?'active-role':''}" onclick="app.setRole(${i},'view')">View</button>`;
+                                if (this.canAssignRole(role, a.role, 'hr'))
+                                    html += `<button class="btn-sm ${a.role==='hr'?'active-role':''}" onclick="app.setRole(${i},'hr')">HR</button>`;
+                            }
+                            // set_role_mg — can assign editor and high_command
+                            if (hasSetRoleMG && actorCanActOnTarget) {
+                                if (this.canAssignRoleMG(role, a.role, 'editor'))
+                                    html += `<button class="btn-sm ${a.role==='editor'?'active-role':''}" onclick="app.setRole(${i},'editor')">Editor</button>`;
+                                if (this.canAssignRoleMG(role, a.role, 'high_command'))
+                                    html += `<button class="btn-sm ${a.role==='high_command'?'active-role':''}" style="background:var(--gold-1);color:black" onclick="app.setRole(${i},'high_command')">High Command</button>`;
+                            }
                         }
-                        if ((perms.kick || perms.set_role_mg) && actorCanActOnTarget) {
+
+                        if ((hasKick || hasSetRoleMG) && actorCanActOnTarget) {
                             html += `<button class="btn-sm btn-danger" onclick="app.kick(${i})">Kick</button>`;
                         }
                         html += `</div></div>`;
@@ -1150,10 +1227,18 @@ const app = {
                     html += `<div class="card" id="req-card-${i}">
                         <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
                             <div style="flex:1">
-                                <b style="font-size:15px;font-family:'Orbitron',monospace">${r.name}</b>
-                                <br><small style="color:var(--text-muted)">Level: ${r.lvl}</small>
-                                ${r.submitted?`<br><small style="color:var(--text-muted);font-size:10px;font-family:'JetBrains Mono',monospace">Applied: ${r.submitted}</small>`:''}
-                            </div>
+                                <b style="font-size:15px;font-family:var(--font-display);font-weight:700">${r.name}</b>
+                                <br><small style="color:var(--text-muted)">Rank: ${r.lvl}</small>
+                                ${r.submitted?`<br><small style="color:var(--text-muted);font-size:10px;font-family:var(--font-mono)">Applied: ${r.submitted}</small>`:''}`;
+                    // Only owner can see email & security password
+                    if (role === 'owner') {
+                        html += `<div class="owner-only-field" style="margin-top:8px">
+                            <div class="owner-only-label">🔐 Sensitive Info (Owner Only)</div>`;
+                        if (r.email) html += `<small style="color:var(--text-muted);font-family:var(--font-mono)">Email: <b style="color:var(--gold-1)">${r.email}</b></small><br>`;
+                        if (r.securityPw) html += `<small style="color:var(--text-muted);font-family:var(--font-mono)">Security PW: <b style="color:var(--blue)">${r.securityPw}</b></small>`;
+                        html += `</div>`;
+                    }
+                    html += `</div>
                             <div style="display:flex;flex-direction:column;gap:6px">
                                 <button class="btn-sm btn-success" id="approve-btn-${i}" onclick="app.approve(${i})">✔ Approve</button>
                                 <button class="btn-sm btn-danger"  id="reject-btn-${i}"  onclick="app.reject(${i})">✖ Reject</button>
@@ -1168,7 +1253,7 @@ const app = {
             case 'permissions': {
                 if (role!=='owner') { html=`<div class="alert-box alert-danger">⚠ Owner only.</div>`; break; }
                 html = `<div class="page-title">⚙️ Permission Manager</div>`;
-                html += `<div style="color:var(--gold-1);font-family:'Orbitron',monospace;font-size:11px;margin-bottom:10px">ROLE-LEVEL PERMISSIONS</div>`;
+                html += `<div style="color:var(--gold-1);font-family:var(--font-display);font-size:11px;font-weight:700;margin-bottom:10px">ROLE-LEVEL PERMISSIONS</div>`;
                 const roles = ['high_command','editor','hr','view','admin'];
                 const roleLabels = { high_command:'High Command', editor:'Editor', hr:'HR', view:'View', admin:'Admin' };
                 roles.forEach(r => {
@@ -1189,7 +1274,7 @@ const app = {
 
             // ─── ACTIVITY LOGS ───
             case 'logs': {
-                const canView   = perms.view_logs || perms.delete_logs_one || perms.delete_logs_all;
+                const canView = perms.view_logs || perms.delete_logs_one || perms.delete_logs_all;
                 if (!canView) { html=`<div class="alert-box alert-danger">⚠ No permission to view logs.</div>`; break; }
                 html = `<div class="page-title">📋 Activity Logs</div>`;
                 if (role==='owner' || perms.delete_logs_all) {
@@ -1233,7 +1318,6 @@ const app = {
         const adminsList = this.data.admins || [];
         const isOwner = this.user.role === 'owner';
 
-        // Owner dot
         db.ref('admin_status/Shafin_Mirza').on('value', (snap) => {
             const el = document.getElementById('owner-online-dot');
             if (!el) return;
@@ -1257,18 +1341,15 @@ const app = {
     _applyStatusDot(el, statusData, pref, isOwner) {
         const realOnline = statusData && statusData.online;
         if (isOwner) {
-            // Owner always sees real status
             el.className = `online-dot ${realOnline ? 'on' : 'off'}`;
             el.title = realOnline ? 'Online' : 'Offline';
         } else {
             if (pref === 'hidden') {
                 el.style.display = 'none';
             } else if (pref === 'always_online') {
-                el.className = 'online-dot on';
-                el.title = 'Online';
+                el.className = 'online-dot on'; el.title = 'Online';
             } else if (pref === 'always_offline') {
-                el.className = 'online-dot off';
-                el.title = 'Offline';
+                el.className = 'online-dot off'; el.title = 'Offline';
             } else {
                 el.className = `online-dot ${realOnline ? 'on' : 'off'}`;
                 el.title = realOnline ? 'Online' : 'Offline';
@@ -1287,7 +1368,6 @@ const app = {
     loadLogs() {
         const perms = this.getPerms(this.user.role, this.user.name);
         const canDeleteOne = this.user.role==='owner' || perms.delete_logs_one;
-        const canDeleteAll = this.user.role==='owner' || perms.delete_logs_all;
 
         db.ref('ahypar_logs').orderByKey().limitToLast(200).once('value', (snap) => {
             const container = document.getElementById('logs-container');
@@ -1347,7 +1427,7 @@ const app = {
         });
         const sorted = Object.values(stats).sort((a,b) => b.pts - a.pts);
         const rankCls = ['gold','silver','bronze'];
-        div.innerHTML = `<div style="margin-bottom:12px;display:flex;justify-content:space-between;align-items:center"><b style="font-family:'Orbitron',monospace;font-size:16px">${file.title}</b>${this.data.lbStatus==='published_hc'?'<span class="hc-tag">HC ONLY</span>':''}</div>`
+        div.innerHTML = `<div style="margin-bottom:12px;display:flex;justify-content:space-between;align-items:center"><b style="font-family:var(--font-display);font-size:16px;font-weight:800">${file.title}</b>${this.data.lbStatus==='published_hc'?'<span class="hc-tag">HC ONLY</span>':''}</div>`
             + sorted.map((s,i) => `
             <div class="lb-card" style="border-left:3px solid ${i===0?'var(--gold-1)':i===1?'#C0C0C0':i===2?'#CD7F32':'var(--border-dim)'}">
                 <div class="lb-rank ${rankCls[i]||''}">#${i+1}</div>
@@ -1382,7 +1462,7 @@ const app = {
                 const idx = this.data.activeWeek.logs.length - 1 - ri;
                 return `<div class="card" style="border-left:3px solid var(--gold-1);padding:12px 14px">
                     ${this.user.role==='owner'?`<button class="btn-del" onclick="app.deleteLog(${idx})">Del</button>`:''}
-                    <b>${l.n}</b> <span style="color:var(--gold-1);font-family:'Orbitron',monospace;font-size:15px">${l.pts} pts</span>
+                    <b>${l.n}</b> <span style="color:var(--gold-1);font-family:var(--font-display);font-size:15px;font-weight:800">${l.pts} pts</span>
                     <br><small style="color:var(--text-muted)">${l.d} · T:${l.t} O:${l.o} E:${l.e}</small>
                     <br><small style="color:${l.w&&l.w!=='None'?'var(--red)':'var(--text-muted)'}">Warning: ${l.w||'None'}</small>
                 </div>`;
@@ -1481,7 +1561,7 @@ const app = {
     viewAdminProfile(i) {
         const a = this.data.admins[i];
         const isOwner = this.user.role==='owner';
-        document.getElementById('screen').innerHTML = `
+        let html = `
         <div class="page-title">Staff Profile</div>
         <div class="card">
             <div class="card-title">Edit Information</div>
@@ -1489,12 +1569,23 @@ const app = {
             <label>Level / Position</label><input id="ed-l" value="${a.lvl}">
             <label>Bank Points</label><input type="text" id="ed-b" value="${a.bank||0}">
             <label>Warnings</label><input type="text" id="ed-w" value="${a.warnings||'None'}">
-            <label>Passcode</label><input type="text" id="ed-p" value="${a.passcode}">
-            <div style="display:flex;gap:8px;margin-top:8px">
+            <label>Login Passcode</label><input type="text" id="ed-p" value="${a.passcode}">`;
+
+        // Only owner can see email and security password
+        if (isOwner) {
+            html += `<div class="owner-only-field" style="margin-top:12px">
+                <div class="owner-only-label">🔐 Sensitive Info (Owner Only)</div>`;
+            if (a.email) html += `<label>Email</label><input type="text" id="ed-email" value="${a.email}">`;
+            if (a.securityPw) html += `<label>Security Password</label><input type="text" id="ed-spw" value="${a.securityPw}">`;
+            html += `</div>`;
+        }
+
+        html += `<div style="display:flex;gap:8px;margin-top:8px">
                 <button onclick="app.updateAdmin(${i})" style="flex:1">Save Changes</button>
                 <button class="btn-ghost" onclick="app.nav('curr-admins')" style="flex:1">Back</button>
             </div>
         </div>`;
+        document.getElementById('screen').innerHTML = html;
     },
 
     updateAdmin(i) {
@@ -1504,6 +1595,13 @@ const app = {
         a.bank     = document.getElementById('ed-b').value;
         a.warnings = document.getElementById('ed-w').value;
         a.passcode = document.getElementById('ed-p').value;
+        // Owner can also update email/securityPw
+        if (this.user.role==='owner') {
+            const emailEl = document.getElementById('ed-email');
+            const spwEl   = document.getElementById('ed-spw');
+            if (emailEl) a.email = emailEl.value;
+            if (spwEl)   a.securityPw = spwEl.value;
+        }
         this.save();
         this.addLog('✏️', this.user.name, `updated profile of ${a.name}`);
         alert('Profile updated!'); this.nav('curr-admins');
@@ -1524,7 +1622,7 @@ const app = {
         const f = this.data.history[i];
         let h = `<div class="page-title">📂 ${f.title}</div><button class="btn-ghost" onclick="app.nav('stored')">← Back</button><br><br>`;
         f.logs.forEach(l => {
-            h += `<div class="card"><b>${l.n}</b> <span style="color:var(--gold-1);font-family:'Orbitron',monospace">${l.pts} pts</span><br><small style="color:var(--text-muted)">${l.d}</small></div>`;
+            h += `<div class="card"><b>${l.n}</b> <span style="color:var(--gold-1);font-family:var(--font-display);font-weight:800">${l.pts} pts</span><br><small style="color:var(--text-muted)">${l.d}</small></div>`;
         });
         document.getElementById('screen').innerHTML = h;
     },
@@ -1548,35 +1646,46 @@ const app = {
     setRole(i, r) {
         const a = this.data.admins[i];
         const oldRole = a.role;
+        const myRole  = this.user.role;
 
-        // Prevent changing own role
-        if (a.name === this.user.name) {
-            alert("⚠ You cannot change your own role.");
-            return;
-        }
-
-        // Prevent acting on equal or senior roles unless owner
-        if (this.user.role !== 'owner' && !this.canActOn(this.user.role, oldRole)) {
-            alert("⚠ You cannot change the role of someone with equal or higher rank.");
-            return;
-        }
-
-        // set_role_mg check for HC role assignment
+        if (a.name === this.user.name) { alert("⚠ You cannot change your own role."); return; }
         if (r === 'owner') { alert("⚠ Owner role cannot be assigned."); return; }
+
+        if (myRole !== 'owner') {
+            const perms = this.getPerms(myRole, this.user.name);
+            const hasMG = perms.set_role_mg;
+            const hasBasic = perms.set_role;
+
+            // Check if actor can act on target at all
+            if (!this.canActOn(myRole, oldRole)) {
+                alert("⚠ You cannot change the role of someone with equal or higher rank."); return;
+            }
+            // For editor/hr/view/admin roles — use basic set_role with strict rank check
+            if (['admin','view','hr'].includes(r)) {
+                if (!hasBasic && !hasMG) { alert("⚠ You don't have role assignment permission."); return; }
+                if (!this.canAssignRole(myRole, oldRole, r)) {
+                    alert(`⚠ You cannot assign the "${r}" role. You can only assign roles below your own rank.`); return;
+                }
+            }
+            // For editor and high_command — require set_role_mg
+            if (['editor','high_command'].includes(r)) {
+                if (!hasMG) { alert("⚠ You need 'Set Role MG' permission to assign Editor or High Command."); return; }
+                if (!this.canAssignRoleMG(myRole, oldRole, r)) {
+                    alert(`⚠ You cannot assign the "${r}" role.`); return;
+                }
+            }
+        }
 
         a.role = r;
         this.save();
         this.addLog('🔄', this.user.name, `changed role of ${a.name} from "${oldRole}" to "${r}"`);
 
-        // Show confirmation badge next to the name
         const badge = document.getElementById(`role-label-${i}`);
         if (badge) {
             badge.textContent = `✓ ${r.toUpperCase()}`;
             badge.style.display = 'inline-flex';
             setTimeout(() => { if (badge) badge.style.display='none'; }, 3000);
         }
-
-        // Re-render after short delay so badge shows
         setTimeout(() => this.nav('curr-admins'), 800);
     },
 
@@ -1584,8 +1693,7 @@ const app = {
         const a = this.data.admins[i];
         if (a.name === this.user.name) { alert("⚠ You cannot kick yourself."); return; }
         if (this.user.role !== 'owner' && !this.canActOn(this.user.role, a.role)) {
-            alert("⚠ You cannot kick someone with equal or higher rank.");
-            return;
+            alert("⚠ You cannot kick someone with equal or higher rank."); return;
         }
         if (confirm(`Remove ${a.name} from the admin list?`)) {
             this.data.admins.splice(i,1);
@@ -1628,7 +1736,7 @@ const app = {
         if (this.user && this.user.name===adminName) this.showDash();
     },
 
-    // ─── APPROVE / REJECT ───
+    // ─── APPROVE — FIXED: uses transaction to prevent duplicates ───
     async approve(i) {
         const requests = this.data.requests||[];
         const r = requests[i];
@@ -1640,25 +1748,49 @@ const app = {
         if (rejectBtn)  { rejectBtn.disabled=true; }
 
         const code = Math.floor(1000+Math.random()*8999).toString();
-        const newAdmin = { name:r.name, lvl:r.lvl, bank:'0', warnings:'None', passcode:code, role:'admin' };
+
+        // Build new admin — include email and securityPw from application
+        const newAdmin = {
+            name:       r.name,
+            lvl:        r.lvl,
+            bank:       '0',
+            warnings:   'None',
+            passcode:   code,
+            role:       'admin',
+            email:      r.email || '',
+            securityPw: r.securityPw || ''
+        };
 
         try {
             await db.ref('ahypar_new_data').transaction((currentData) => {
                 if (!currentData) return currentData;
-                if (!currentData.admins)   currentData.admins=[];
-                if (!currentData.requests) currentData.requests=[];
-                currentData.admins.push(newAdmin);
-                currentData.requests = currentData.requests.filter(req => !(req.name===r.name && req.lvl===r.lvl));
+                if (!currentData.admins)   currentData.admins   = [];
+                if (!currentData.requests) currentData.requests = [];
+
+                // DEDUP FIX: Check if admin with same name already exists before adding
+                const alreadyExists = currentData.admins.some(a => a.name === r.name);
+                if (!alreadyExists) {
+                    currentData.admins.push(newAdmin);
+                }
+
+                // Remove matching request — remove ALL instances to be safe
+                currentData.requests = currentData.requests.filter(
+                    req => !(req.name === r.name && req.lvl === r.lvl)
+                );
                 return currentData;
             });
 
-            if (!this.data.admins)   this.data.admins=[];
-            if (!this.data.requests) this.data.requests=[];
-            this.data.admins.push(newAdmin);
-            this.data.requests = this.data.requests.filter(req => !(req.name===r.name && req.lvl===r.lvl));
+            // Sync local data
+            if (!this.data.admins)   this.data.admins   = [];
+            if (!this.data.requests) this.data.requests = [];
+            const alreadyLocal = this.data.admins.some(a => a.name === r.name);
+            if (!alreadyLocal) this.data.admins.push(newAdmin);
+            this.data.requests = this.data.requests.filter(
+                req => !(req.name === r.name && req.lvl === r.lvl)
+            );
 
-            this.addLog('✅', this.user.name, `approved application from ${r.name} (Level: ${r.lvl}) — passcode assigned`);
-            alert(`✅ Approved!\n\nStaff: ${r.name}\nPasscode: ${code}\n\nShare this passcode with them.`);
+            this.addLog('✅', this.user.name, `approved application from ${r.name} (Rank: ${r.lvl}) — passcode assigned`);
+            alert(`✅ Approved!\n\nStaff: ${r.name}\nLogin Passcode: ${code}\n\nShare this passcode with them.`);
             this.nav('access');
 
         } catch(err) {
@@ -1683,28 +1815,60 @@ const app = {
         }
     },
 
-    // ─── APPLY REQUEST ───
+    // ─── APPLY REQUEST — now with 4 fields + password validation ───
     requestAccess() {
-        const n = document.getElementById('req-n').value.trim();
-        const l = document.getElementById('req-lvl').value.trim();
+        const n   = document.getElementById('req-n').value.trim();
+        const l   = document.getElementById('req-lvl').value.trim();
+        const em  = document.getElementById('req-email').value.trim();
+        const pw  = document.getElementById('req-pw').value;
         const msgEl = document.getElementById('app-msg');
-        if (!n || !l) {
-            msgEl.className='alert-box alert-danger'; msgEl.textContent='⚠ Please fill in your name and level.';
+
+        if (!n || !l || !em || !pw) {
+            msgEl.className='alert-box alert-danger'; msgEl.textContent='⚠ Please fill in all 4 fields: Name, Rank, Email, and Security Password.';
             msgEl.classList.remove('hidden'); return;
         }
+
+        // Basic email validation
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) {
+            msgEl.className='alert-box alert-danger'; msgEl.textContent='⚠ Please enter a valid email address.';
+            msgEl.classList.remove('hidden'); return;
+        }
+
+        // Password validation
+        const pwCheck = this.validateSecurityPassword(pw);
+        if (!pwCheck.ok) {
+            msgEl.className='alert-box alert-danger'; msgEl.textContent='⚠ Security Password: ' + pwCheck.msg;
+            msgEl.classList.remove('hidden'); return;
+        }
+
         if (!this.data.requests) this.data.requests=[];
         const already = this.data.requests.find(x => x.name.toLowerCase()===n.toLowerCase());
         if (already) {
             msgEl.className='alert-box alert-danger'; msgEl.textContent='⚠ An application with this name is already pending.';
             msgEl.classList.remove('hidden'); return;
         }
-        this.data.requests.push({ name:n, lvl:l, submitted:new Date().toLocaleString() });
+
+        this.data.requests.push({
+            name:       n,
+            lvl:        l,
+            email:      em,
+            securityPw: pw,
+            submitted:  new Date().toLocaleString()
+        });
         db.ref('ahypar_new_data/requests').set(this.data.requests);
-        this.addLog('📨', 'Applicant', `new staff application from "${n}" (Level: ${l})`);
-        msgEl.className='app-success'; msgEl.innerHTML=`✅ Application submitted!<br><small>Wait for an admin to review your request.</small>`;
+        this.addLog('📨', 'Applicant', `new staff application from "${n}" (Rank: ${l})`);
+
+        msgEl.className='app-success';
+        msgEl.innerHTML=`✅ Application submitted!<br><small>Wait for an admin to review your request.</small>`;
         msgEl.classList.remove('hidden');
         document.getElementById('req-n').value='';
         document.getElementById('req-lvl').value='';
+        document.getElementById('req-email').value='';
+        document.getElementById('req-pw').value='';
+        const bar = document.getElementById('pw-strength-bar');
+        if (bar) { bar.style.width='0%'; }
+        const hint = document.getElementById('pw-hint');
+        if (hint) { hint.textContent='Must contain: letters, numbers, and symbols (#,@,!,$ etc.)'; hint.style.color=''; }
     },
 
     // ─── DRAG & DROP ───
@@ -1779,7 +1943,6 @@ const app = {
 
     logout() {
         if (this.user) {
-            // Set offline status
             db.ref(`admin_status/${this.user.name}`).update({ online: false, lastSeen: firebase.database.ServerValue.TIMESTAMP });
             this.addLog('🚪', this.user.name, 'logged out');
         }
