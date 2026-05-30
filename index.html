@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>AHYPAR Administration</title>
-    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Exo+2:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Syne:wght@400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
 
     <!-- Firebase Compat SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -14,320 +14,579 @@
 
     <style>
         :root {
-            --primary-gold: #FFD700;
-            --dark-gold: #B8860B;
-            --accent-gold: #FDB931;
-            --bg-black: #07080D;
-            --bg-deep: #0A0B12;
-            --card-bg: rgba(20, 22, 35, 0.92);
-            --card-hover: rgba(26, 29, 46, 0.95);
-            --text-white: #F0F2FF;
-            --text-muted: #8890AA;
-            --glass-border: rgba(255, 215, 0, 0.18);
-            --glass-border-bright: rgba(255, 215, 0, 0.45);
-            --danger-red: #FF3D3D;
-            --danger-soft: rgba(255, 61, 61, 0.15);
-            --success-green: #00E676;
-            --success-soft: rgba(0, 230, 118, 0.12);
-            --info-blue: #4FC3F7;
-            --purple-accent: #9C6FFF;
+            --gold-1: #FFD700;
+            --gold-2: #FDB931;
+            --gold-3: #B8860B;
+            --gold-4: #6B4F00;
+            --bg-void: #04050A;
+            --bg-base: #07080F;
+            --bg-panel: #0C0D18;
+            --bg-card: rgba(14, 16, 26, 0.94);
+            --bg-card-hover: rgba(18, 21, 34, 0.98);
+            --border-dim: rgba(255, 215, 0, 0.10);
+            --border-mid: rgba(255, 215, 0, 0.25);
+            --border-bright: rgba(255, 215, 0, 0.50);
+            --text-primary: #EEF0FF;
+            --text-secondary: #8A8FAA;
+            --text-muted: #4A4F68;
+            --red: #FF2D55;
+            --red-soft: rgba(255, 45, 85, 0.15);
+            --green: #00E5A0;
+            --green-soft: rgba(0, 229, 160, 0.12);
+            --blue: #00AAFF;
+            --blue-soft: rgba(0, 170, 255, 0.12);
+            --purple: #9B6EFF;
+            --radius-sm: 8px;
+            --radius-md: 14px;
+            --radius-lg: 20px;
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Exo 2', sans-serif; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
-            background: var(--bg-black);
-            color: var(--text-white);
+            font-family: 'Syne', sans-serif;
+            background: var(--bg-void);
+            color: var(--text-primary);
             min-height: 100vh;
             overflow-x: hidden;
         }
 
+        /* Grid background texture */
         body::before {
             content: '';
-            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-            background: 
-                radial-gradient(ellipse 80% 50% at 20% 10%, rgba(255,215,0,0.04) 0%, transparent 60%),
-                radial-gradient(ellipse 60% 40% at 80% 80%, rgba(156,111,255,0.03) 0%, transparent 60%),
-                radial-gradient(circle at 50% 50%, #0d0e18 0%, #07080d 100%);
-            pointer-events: none;
-            z-index: 0;
+            position: fixed; inset: 0;
+            background-image:
+                linear-gradient(rgba(255,215,0,0.015) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,215,0,0.015) 1px, transparent 1px);
+            background-size: 40px 40px;
+            pointer-events: none; z-index: 0;
+        }
+
+        body::after {
+            content: '';
+            position: fixed; inset: 0;
+            background:
+                radial-gradient(ellipse 70% 50% at 15% 5%, rgba(255,215,0,0.05) 0%, transparent 55%),
+                radial-gradient(ellipse 50% 40% at 85% 85%, rgba(155,110,255,0.04) 0%, transparent 55%);
+            pointer-events: none; z-index: 0;
         }
 
         .hidden { display: none !important; }
 
-        /* ── HEADER ── */
+        /* ─── SCANLINE OVERLAY ─── */
+        .scanlines {
+            position: fixed; inset: 0; z-index: 9999; pointer-events: none;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 2px,
+                rgba(0,0,0,0.03) 2px,
+                rgba(0,0,0,0.03) 4px
+            );
+        }
+
+        /* ─── HEADER ─── */
         header {
-            background: rgba(7, 8, 13, 0.97);
-            border-bottom: 1px solid var(--glass-border-bright);
-            padding: 12px 18px;
+            background: rgba(4, 5, 10, 0.96);
+            border-bottom: 1px solid var(--border-mid);
+            padding: 0 18px;
+            height: 58px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             position: sticky; top: 0; z-index: 1000;
-            backdrop-filter: blur(20px);
-            box-shadow: 0 4px 30px rgba(0,0,0,0.6), 0 1px 0 rgba(255,215,0,0.1);
+            backdrop-filter: blur(24px);
+            box-shadow: 0 1px 0 rgba(255,215,0,0.08), 0 8px 40px rgba(0,0,0,0.8);
         }
 
-        .header-brand { line-height: 1.2; }
-        .header-brand .brand-name { font-family: 'Rajdhani', sans-serif; font-size: 16px; font-weight: 700; background: linear-gradient(90deg, #FFD700 0%, #FDB931 50%, #9f7928 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: 2px; text-transform: uppercase; }
-        .header-brand .brand-sub { font-size: 9px; color: var(--text-muted); letter-spacing: 1px; text-transform: uppercase; }
-        .header-brand .brand-user { font-size: 11px; color: var(--text-white); margin-top: 1px; }
-        .header-brand .brand-user b { color: var(--primary-gold); }
+        /* Animated gold line at top of header */
+        header::before {
+            content: '';
+            position: absolute; top: 0; left: 0; right: 0; height: 2px;
+            background: linear-gradient(90deg, transparent, var(--gold-1), transparent);
+            animation: headerLine 4s ease-in-out infinite;
+        }
+        @keyframes headerLine {
+            0%,100% { opacity: 0.4; }
+            50% { opacity: 1; }
+        }
 
-        .menu-btn { background: none; border: 1px solid var(--glass-border); width: 40px; height: 40px; border-radius: 10px; color: var(--primary-gold); font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; padding: 0; }
-        .menu-btn:hover { background: rgba(255,215,0,0.1); border-color: var(--primary-gold); }
+        .header-brand { line-height: 1.25; }
+        .brand-name {
+            font-family: 'Orbitron', monospace; font-size: 14px; font-weight: 700;
+            background: linear-gradient(90deg, var(--gold-1), var(--gold-2), var(--gold-3));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            letter-spacing: 3px; text-transform: uppercase;
+        }
+        .brand-sub { font-size: 9px; color: var(--text-muted); letter-spacing: 2px; text-transform: uppercase; font-family: 'JetBrains Mono', monospace; }
+        .brand-user { font-size: 11px; color: var(--text-secondary); margin-top: 1px; font-family: 'JetBrains Mono', monospace; }
+        .brand-user b { color: var(--gold-1); }
 
-        .golden-text { font-family: 'Rajdhani', sans-serif; background: linear-gradient(135deg, #FFD700 0%, #FDB931 40%, #9f7928 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; }
+        .menu-btn {
+            background: rgba(255,215,0,0.06);
+            border: 1px solid var(--border-mid);
+            width: 40px; height: 40px; border-radius: var(--radius-sm);
+            color: var(--gold-1); font-size: 18px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: 0.2s;
+        }
+        .menu-btn:hover { background: rgba(255,215,0,0.14); border-color: var(--border-bright); }
 
-        .container { padding: 15px; max-width: 520px; margin: auto; position: relative; z-index: 1; }
+        /* ─── CONTAINER ─── */
+        .container { padding: 16px; max-width: 540px; margin: auto; position: relative; z-index: 1; }
 
-        /* ── CARDS ── */
+        /* ─── CARDS ─── */
         .card {
-            background: var(--card-bg);
-            backdrop-filter: blur(12px);
-            border: 1px solid var(--glass-border);
-            border-radius: 16px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-dim);
+            border-radius: var(--radius-md);
             padding: 18px;
             margin-bottom: 12px;
-            box-shadow: 0 8px 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.04);
+            box-shadow: 0 4px 24px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.03);
+            position: relative; overflow: hidden;
             transition: border-color 0.2s, box-shadow 0.2s;
-            position: relative;
-            overflow: hidden;
         }
-        .card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(255,215,0,0.3), transparent); }
-        .card:hover { border-color: rgba(255,215,0,0.3); }
+        .card::after {
+            content: '';
+            position: absolute; top: 0; left: 0; right: 0; height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255,215,0,0.2), transparent);
+            opacity: 0; transition: opacity 0.2s;
+        }
+        .card:hover::after { opacity: 1; }
+        .card:hover { border-color: var(--border-mid); }
 
-        .card-title { font-family: 'Rajdhani', sans-serif; font-size: 13px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 12px; }
+        .card-title {
+            font-family: 'Orbitron', monospace; font-size: 10px; font-weight: 600;
+            color: var(--text-muted); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 14px;
+        }
 
-        /* ── INPUTS ── */
+        /* ─── INPUTS ─── */
         input, select, textarea {
             width: 100%;
-            background: rgba(255,255,255,0.04);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 10px;
-            color: var(--text-white);
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: var(--radius-sm);
+            color: var(--text-primary);
             padding: 11px 14px;
-            margin: 6px 0;
+            margin: 5px 0;
             font-size: 13px;
-            font-family: 'Exo 2', sans-serif;
-            transition: 0.25s;
+            font-family: 'Syne', sans-serif;
+            transition: 0.2s;
+            outline: none;
         }
         input::placeholder { color: var(--text-muted); }
-        input:focus, select:focus, textarea:focus { border-color: var(--primary-gold); outline: none; background: rgba(255,215,0,0.04); box-shadow: 0 0 0 3px rgba(255,215,0,0.08); }
-        select option { background: #1a1d2e; color: white; }
-        label { font-size: 11px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; display: block; margin-top: 8px; }
+        input:focus, select:focus, textarea:focus {
+            border-color: var(--border-bright);
+            background: rgba(255,215,0,0.03);
+            box-shadow: 0 0 0 3px rgba(255,215,0,0.07);
+        }
+        select option { background: #0c0d18; color: white; }
+        label {
+            font-size: 10px; color: var(--text-muted); font-weight: 700;
+            text-transform: uppercase; letter-spacing: 1.2px; display: block; margin-top: 10px;
+            font-family: 'JetBrains Mono', monospace;
+        }
 
-        /* ── BUTTONS ── */
+        /* ─── BUTTONS ─── */
         button {
             width: 100%;
-            background: linear-gradient(135deg, var(--dark-gold) 0%, var(--primary-gold) 100%);
-            color: #0a0b10;
-            font-family: 'Rajdhani', sans-serif;
+            background: linear-gradient(135deg, var(--gold-3) 0%, var(--gold-1) 100%);
+            color: #050608;
+            font-family: 'Orbitron', monospace;
             font-weight: 700;
-            border-radius: 10px;
+            border-radius: var(--radius-sm);
             border: none;
             padding: 12px 16px;
             cursor: pointer;
             text-transform: uppercase;
-            letter-spacing: 1px;
-            font-size: 13px;
-            transition: 0.25s;
-            margin: 6px 0;
+            letter-spacing: 1.5px;
+            font-size: 11px;
+            transition: 0.2s;
+            margin: 5px 0;
             position: relative;
             overflow: hidden;
         }
-        button::after { content: ''; position: absolute; inset: 0; background: rgba(255,255,255,0); transition: 0.2s; }
-        button:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(255,215,0,0.35); }
-        button:hover::after { background: rgba(255,255,255,0.08); }
+        button::before {
+            content: '';
+            position: absolute; inset: 0;
+            background: rgba(255,255,255,0);
+            transition: 0.2s;
+        }
+        button:hover { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(255,215,0,0.30); }
+        button:hover::before { background: rgba(255,255,255,0.08); }
         button:active { transform: translateY(0); }
 
-        .btn-danger { background: linear-gradient(135deg, #c0392b, var(--danger-red)) !important; color: white !important; }
-        .btn-success { background: linear-gradient(135deg, #00b248, var(--success-green)) !important; color: #0a0b10 !important; }
-        .btn-ghost { background: rgba(255,255,255,0.06) !important; color: var(--text-white) !important; border: 1px solid rgba(255,255,255,0.12) !important; }
-        .btn-ghost:hover { background: rgba(255,255,255,0.1) !important; box-shadow: none; }
-        .btn-sm { width: auto; padding: 5px 10px; font-size: 10px; letter-spacing: 0.5px; margin: 2px; border-radius: 6px; }
-        .btn-del { background: var(--danger-red) !important; color: white !important; width: auto; float: right; padding: 4px 10px; font-size: 10px; margin-top: -28px; border-radius: 6px; }
-        .active-role { background: var(--primary-gold) !important; color: black !important; box-shadow: 0 0 10px rgba(255,215,0,0.4); }
+        .btn-danger { background: linear-gradient(135deg, #c0392b, var(--red)) !important; color: white !important; }
+        .btn-success { background: linear-gradient(135deg, #00a87a, var(--green)) !important; color: #050608 !important; }
+        .btn-ghost {
+            background: rgba(255,255,255,0.04) !important; color: var(--text-secondary) !important;
+            border: 1px solid rgba(255,255,255,0.1) !important; box-shadow: none;
+        }
+        .btn-ghost:hover { background: rgba(255,255,255,0.08) !important; box-shadow: none !important; transform: none !important; }
+        .btn-info { background: linear-gradient(135deg, #0077bb, var(--blue)) !important; color: white !important; }
+        .btn-sm {
+            width: auto; padding: 5px 11px; font-size: 9px; letter-spacing: 0.8px;
+            margin: 2px; border-radius: 6px; font-family: 'Orbitron', monospace;
+        }
+        .btn-del {
+            background: var(--red) !important; color: white !important; width: auto;
+            float: right; padding: 4px 10px; font-size: 9px; margin-top: -28px; border-radius: 6px;
+        }
+        .active-role {
+            background: var(--gold-1) !important; color: black !important;
+            box-shadow: 0 0 12px rgba(255,215,0,0.4) !important;
+        }
 
-        /* ── MENU OVERLAY ── */
+        /* ─── MENU OVERLAY ─── */
         .menu-overlay {
-            position: fixed; top: 0; right: 0; width: 82%; max-width: 290px; height: 100%;
-            background: rgba(7, 8, 13, 0.99);
-            border-left: 1px solid var(--glass-border-bright);
-            z-index: 2000; transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
-            padding: 20px 15px;
-            overflow-y: auto;
-            box-shadow: -20px 0 60px rgba(0,0,0,0.8);
+            position: fixed; top: 0; right: 0; width: 80%; max-width: 280px; height: 100%;
+            background: rgba(4, 5, 10, 0.99);
+            border-left: 1px solid var(--border-mid);
+            z-index: 2000; transform: translateX(100%);
+            transition: transform 0.28s cubic-bezier(0.4,0,0.2,1);
+            padding: 16px 14px; overflow-y: auto;
+            box-shadow: -24px 0 80px rgba(0,0,0,0.9);
         }
         .menu-overlay.active { transform: translateX(0); }
-        .menu-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 1999; opacity: 0; pointer-events: none; transition: 0.3s; }
+        .menu-backdrop {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+            z-index: 1999; opacity: 0; pointer-events: none; transition: 0.28s;
+        }
         .menu-backdrop.active { opacity: 1; pointer-events: all; }
 
-        .menu-section-label { font-size: 9px; color: var(--text-muted); letter-spacing: 2px; text-transform: uppercase; padding: 12px 10px 4px; font-weight: 700; }
-        .menu-item { padding: 12px 14px; border-radius: 10px; font-weight: 600; cursor: pointer; transition: 0.18s; color: var(--text-white); font-size: 13px; display: flex; align-items: center; gap: 10px; margin: 2px 0; }
-        .menu-item:hover { background: rgba(255,215,0,0.08); color: var(--primary-gold); }
-        .menu-item.danger { color: var(--danger-red); }
-        .menu-item.danger:hover { background: var(--danger-soft); }
-        .menu-item.chat-item { color: var(--primary-gold); border-top: 1px solid var(--glass-border); margin-top: 8px; padding-top: 16px; }
+        .menu-section-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 8px; color: var(--text-muted); letter-spacing: 2.5px;
+            text-transform: uppercase; padding: 14px 10px 5px; font-weight: 500;
+        }
+        .menu-item {
+            padding: 11px 14px; border-radius: var(--radius-sm); font-weight: 600;
+            cursor: pointer; transition: 0.15s; color: var(--text-primary); font-size: 13px;
+            display: flex; align-items: center; gap: 10px; margin: 1px 0;
+            font-family: 'Syne', sans-serif;
+        }
+        .menu-item:hover { background: rgba(255,215,0,0.07); color: var(--gold-1); }
+        .menu-item.danger { color: var(--red); }
+        .menu-item.danger:hover { background: var(--red-soft); }
+        .menu-item.chat-item { color: var(--gold-1); border-top: 1px solid var(--border-dim); margin-top: 8px; padding-top: 14px; }
 
-        /* ── PAGE TITLES ── */
-        .page-title { font-family: 'Rajdhani', sans-serif; font-size: 22px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 15px; color: var(--text-white); display: flex; align-items: center; gap: 8px; }
-        .page-title::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, var(--glass-border-bright), transparent); }
+        /* ─── PAGE TITLE ─── */
+        .page-title {
+            font-family: 'Orbitron', monospace; font-size: 16px; font-weight: 700;
+            letter-spacing: 2px; text-transform: uppercase; margin-bottom: 16px;
+            color: var(--text-primary); display: flex; align-items: center; gap: 10px;
+        }
+        .page-title::after {
+            content: ''; flex: 1; height: 1px;
+            background: linear-gradient(90deg, var(--border-bright), transparent);
+        }
 
-        /* ── BADGES / TAGS ── */
-        .tag-span { color: black; padding: 2px 7px; border-radius: 5px; font-size: 9px; margin-left: 5px; vertical-align: middle; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; }
-        .role-badge { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 9px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; border: 1px solid; }
-        .badge-owner { background: rgba(255,215,0,0.15); color: var(--primary-gold); border-color: rgba(255,215,0,0.4); }
-        .badge-hc { background: rgba(156,111,255,0.15); color: var(--purple-accent); border-color: rgba(156,111,255,0.4); }
-        .badge-editor { background: rgba(79,195,247,0.15); color: var(--info-blue); border-color: rgba(79,195,247,0.4); }
-        .badge-admin { background: rgba(255,255,255,0.08); color: var(--text-muted); border-color: rgba(255,255,255,0.15); }
+        /* ─── BADGES ─── */
+        .tag-span {
+            color: black; padding: 2px 8px; border-radius: 4px;
+            font-size: 9px; margin-left: 5px; vertical-align: middle;
+            font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .role-badge {
+            display: inline-block; padding: 2px 9px; border-radius: 20px;
+            font-size: 9px; font-weight: 700; letter-spacing: 0.8px;
+            text-transform: uppercase; border: 1px solid;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .badge-owner { background: rgba(255,215,0,0.15); color: var(--gold-1); border-color: rgba(255,215,0,0.4); }
+        .badge-hc { background: rgba(155,110,255,0.15); color: var(--purple); border-color: rgba(155,110,255,0.4); }
+        .badge-editor { background: rgba(0,170,255,0.15); color: var(--blue); border-color: rgba(0,170,255,0.4); }
+        .badge-admin { background: rgba(255,255,255,0.06); color: var(--text-secondary); border-color: rgba(255,255,255,0.12); }
 
-        /* ── STAT CARDS ── */
+        /* ─── STAT CARDS ─── */
         .stat-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
-        .stat-box { background: var(--card-bg); border: 1px solid var(--glass-border); border-radius: 12px; padding: 14px; text-align: center; }
-        .stat-box .val { font-family: 'Rajdhani', sans-serif; font-size: 28px; font-weight: 700; color: var(--primary-gold); line-height: 1; }
-        .stat-box .lbl { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-top: 4px; }
+        .stat-box {
+            background: var(--bg-card); border: 1px solid var(--border-dim);
+            border-radius: var(--radius-md); padding: 16px; text-align: center;
+        }
+        .stat-box .val {
+            font-family: 'Orbitron', monospace; font-size: 26px; font-weight: 700;
+            color: var(--gold-1); line-height: 1;
+        }
+        .stat-box .lbl {
+            font-size: 9px; color: var(--text-muted); text-transform: uppercase;
+            letter-spacing: 1.5px; margin-top: 5px; font-family: 'JetBrains Mono', monospace;
+        }
 
-        /* ── WARNINGS / ALERTS ── */
-        .warn-alert { color: var(--danger-red); font-size: 11px; font-weight: 700; display: block; margin-top: 5px; }
-        .alert-box { border-radius: 10px; padding: 12px 14px; font-size: 12px; margin: 8px 0; display: flex; align-items: center; gap: 8px; }
-        .alert-danger { background: var(--danger-soft); border: 1px solid rgba(255,61,61,0.3); color: var(--danger-red); }
-        .alert-success { background: var(--success-soft); border: 1px solid rgba(0,230,118,0.3); color: var(--success-green); }
-        .alert-info { background: rgba(79,195,247,0.1); border: 1px solid rgba(79,195,247,0.3); color: var(--info-blue); }
+        /* ─── ALERTS ─── */
+        .warn-alert { color: var(--red); font-size: 11px; font-weight: 700; display: block; margin-top: 4px; }
+        .alert-box {
+            border-radius: var(--radius-sm); padding: 12px 14px; font-size: 12px;
+            margin: 8px 0; display: flex; align-items: center; gap: 8px;
+        }
+        .alert-danger { background: var(--red-soft); border: 1px solid rgba(255,45,85,0.3); color: var(--red); }
+        .alert-success { background: var(--green-soft); border: 1px solid rgba(0,229,160,0.3); color: var(--green); }
+        .alert-info { background: var(--blue-soft); border: 1px solid rgba(0,170,255,0.3); color: var(--blue); }
 
-        /* ── RULES ── */
-        .rule-box { background: rgba(255,255,255,0.03); padding: 16px; border-radius: 10px; border: 1px solid var(--glass-border); white-space: pre-wrap; margin-top: 10px; font-size: 13px; line-height: 1.7; }
-        .rule-meta { font-size: 11px; color: var(--text-muted); margin-bottom: 10px; font-style: italic; border-bottom: 1px solid var(--glass-border); padding-bottom: 8px; }
+        /* ─── RULES ─── */
+        .rule-box {
+            background: rgba(255,255,255,0.02); padding: 16px; border-radius: 10px;
+            border: 1px solid var(--border-dim); white-space: pre-wrap; margin-top: 10px;
+            font-size: 13px; line-height: 1.75; color: var(--text-primary);
+        }
+        .rule-meta {
+            font-size: 10px; color: var(--text-muted); margin-bottom: 10px;
+            font-style: italic; border-bottom: 1px solid var(--border-dim); padding-bottom: 8px;
+            font-family: 'JetBrains Mono', monospace;
+        }
 
-        /* ── PERMISSION TOGGLES ── */
+        /* ─── PERM TOGGLES ─── */
         .perm-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 8px; }
-        .perm-toggle { display: flex; align-items: center; justify-content: space-between; padding: 8px 10px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; font-size: 11px; color: var(--text-muted); cursor: pointer; transition: 0.2s; user-select: none; }
-        .perm-toggle.active { background: rgba(255,215,0,0.08); border-color: rgba(255,215,0,0.3); color: var(--primary-gold); }
-        .toggle-dot { width: 28px; height: 16px; border-radius: 20px; background: rgba(255,255,255,0.1); position: relative; transition: 0.2s; flex-shrink: 0; }
-        .toggle-dot::after { content: ''; position: absolute; left: 2px; top: 2px; width: 12px; height: 12px; border-radius: 50%; background: var(--text-muted); transition: 0.2s; }
-        .perm-toggle.active .toggle-dot { background: rgba(255,215,0,0.4); }
-        .perm-toggle.active .toggle-dot::after { left: 14px; background: var(--primary-gold); }
+        .perm-toggle {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 9px 11px; background: rgba(255,255,255,0.025);
+            border: 1px solid rgba(255,255,255,0.07); border-radius: var(--radius-sm);
+            font-size: 10px; color: var(--text-muted); cursor: pointer;
+            transition: 0.2s; user-select: none;
+        }
+        .perm-toggle.active { background: rgba(255,215,0,0.07); border-color: rgba(255,215,0,0.3); color: var(--gold-1); }
+        .toggle-dot {
+            width: 28px; height: 15px; border-radius: 20px;
+            background: rgba(255,255,255,0.08); position: relative; transition: 0.2s; flex-shrink: 0;
+        }
+        .toggle-dot::after {
+            content: ''; position: absolute; left: 2px; top: 2px; width: 11px; height: 11px;
+            border-radius: 50%; background: var(--text-muted); transition: 0.2s;
+        }
+        .perm-toggle.active .toggle-dot { background: rgba(255,215,0,0.35); }
+        .perm-toggle.active .toggle-dot::after { left: 15px; background: var(--gold-1); }
 
-        /* Manual override permissions - blue tint */
-        .perm-toggle.manual-on { background: rgba(79,195,247,0.1); border-color: rgba(79,195,247,0.4); color: var(--info-blue); }
-        .perm-toggle.manual-on .toggle-dot { background: rgba(79,195,247,0.4); }
-        .perm-toggle.manual-on .toggle-dot::after { left: 14px; background: var(--info-blue); }
-        .manual-badge { font-size: 8px; background: rgba(79,195,247,0.2); color: var(--info-blue); border: 1px solid rgba(79,195,247,0.4); border-radius: 4px; padding: 1px 4px; margin-left: 4px; vertical-align: middle; }
+        /* ─── INDIVIDUAL PERMS ─── */
+        .indiv-perms-section { margin-top: 12px; padding-top: 12px; border-top: 1px dashed rgba(0,170,255,0.2); }
+        .indiv-perms-title {
+            font-size: 9px; color: var(--blue); text-transform: uppercase;
+            letter-spacing: 1.5px; font-weight: 700; margin-bottom: 8px;
+            display: flex; align-items: center; gap: 6px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .indiv-perm-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
+        .indiv-perm-toggle {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 7px 10px; background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.06); border-radius: 7px;
+            font-size: 9px; color: var(--text-muted); cursor: pointer;
+            transition: 0.2s; user-select: none;
+        }
+        .indiv-perm-toggle.active { background: rgba(0,170,255,0.09); border-color: rgba(0,170,255,0.4); color: var(--blue); }
+        .indiv-toggle-dot {
+            width: 24px; height: 13px; border-radius: 20px;
+            background: rgba(255,255,255,0.07); position: relative; transition: 0.2s; flex-shrink: 0;
+        }
+        .indiv-toggle-dot::after {
+            content: ''; position: absolute; left: 2px; top: 1.5px; width: 10px; height: 10px;
+            border-radius: 50%; background: var(--text-muted); transition: 0.2s;
+        }
+        .indiv-perm-toggle.active .indiv-toggle-dot { background: rgba(0,170,255,0.35); }
+        .indiv-perm-toggle.active .indiv-toggle-dot::after { left: 12px; background: var(--blue); }
+        .manual-badge {
+            font-size: 8px; background: rgba(0,170,255,0.15); color: var(--blue);
+            border: 1px solid rgba(0,170,255,0.35); border-radius: 4px; padding: 1px 5px;
+            font-family: 'JetBrains Mono', monospace;
+        }
 
-        /* ── LEADERBOARD ── */
-        .lb-card { border-radius: 12px; padding: 14px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--glass-border); background: var(--card-bg); }
-        .lb-rank { font-family: 'Rajdhani', sans-serif; font-size: 20px; font-weight: 700; color: var(--text-muted); width: 30px; }
-        .lb-rank.gold { color: var(--primary-gold); }
+        /* ─── LEADERBOARD ─── */
+        .lb-card {
+            border-radius: var(--radius-md); padding: 14px 16px; margin-bottom: 8px;
+            display: flex; justify-content: space-between; align-items: center;
+            border: 1px solid var(--border-dim); background: var(--bg-card);
+        }
+        .lb-rank { font-family: 'Orbitron', monospace; font-size: 18px; font-weight: 700; color: var(--text-muted); width: 36px; }
+        .lb-rank.gold { color: var(--gold-1); }
         .lb-rank.silver { color: #C0C0C0; }
         .lb-rank.bronze { color: #CD7F32; }
         .lb-info { flex: 1; padding: 0 10px; }
-        .lb-name { font-weight: 600; font-size: 14px; }
-        .lb-pts { font-family: 'Rajdhani', sans-serif; font-size: 22px; font-weight: 700; color: var(--primary-gold); }
+        .lb-name { font-weight: 700; font-size: 14px; }
+        .lb-pts { font-family: 'Orbitron', monospace; font-size: 20px; font-weight: 700; color: var(--gold-1); }
 
-        /* ── CHAT ── */
-        .chat-container { display: flex; flex-direction: column; height: calc(100vh - 160px); }
-        .chat-messages { flex-grow: 1; overflow-y: auto; padding: 10px; background: rgba(0,0,0,0.25); border: 1px solid var(--glass-border); border-radius: 12px; margin-bottom: 10px; display: flex; flex-direction: column; gap: 6px; }
-        .msg { padding: 10px 13px; border-radius: 14px; max-width: 82%; font-size: 13px; line-height: 1.45; }
-        .msg-self { align-self: flex-end; background: linear-gradient(135deg, var(--dark-gold), #c9a010); color: black; border-bottom-right-radius: 4px; }
-        .msg-other { align-self: flex-start; background: rgba(30,34,52,0.9); color: var(--text-white); border-bottom-left-radius: 4px; border: 1px solid var(--glass-border); }
-        .msg-meta { font-size: 10px; font-weight: 700; display: block; margin-bottom: 3px; opacity: 0.75; }
+        /* ─── CHAT ─── */
+        .chat-container { display: flex; flex-direction: column; height: calc(100vh - 165px); }
+        .chat-messages {
+            flex-grow: 1; overflow-y: auto; padding: 12px;
+            background: rgba(0,0,0,0.3); border: 1px solid var(--border-dim);
+            border-radius: var(--radius-md); margin-bottom: 10px;
+            display: flex; flex-direction: column; gap: 7px;
+        }
+        .msg {
+            padding: 10px 14px; border-radius: 14px; max-width: 82%;
+            font-size: 13px; line-height: 1.45;
+        }
+        .msg-self {
+            align-self: flex-end;
+            background: linear-gradient(135deg, var(--gold-3), #c9a010);
+            color: black; border-bottom-right-radius: 4px;
+        }
+        .msg-other {
+            align-self: flex-start;
+            background: rgba(20, 24, 40, 0.95); color: var(--text-primary);
+            border-bottom-left-radius: 4px; border: 1px solid var(--border-dim);
+        }
+        .msg-meta { font-size: 9px; font-weight: 700; display: block; margin-bottom: 3px; opacity: 0.7; font-family: 'JetBrains Mono', monospace; }
         .chat-input-area { display: flex; gap: 8px; }
         .chat-input-area input { flex-grow: 1; margin: 0; }
         .chat-input-area button { width: auto; margin: 0; padding: 0 18px; }
 
-        /* ── DIVIDER ── */
-        .divider { height: 1px; background: linear-gradient(90deg, transparent, var(--glass-border), transparent); margin: 12px 0; }
+        /* ─── DIVIDER ─── */
+        .divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--border-mid), transparent);
+            margin: 14px 0;
+        }
 
-        /* ── LOGIN SCREEN ── */
+        /* ─── LOGIN ─── */
         #login-view {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            padding: 20px;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            min-height: 100vh; padding: 20px; position: relative; z-index: 1;
+        }
+        .login-logo { text-align: center; margin-bottom: 32px; }
+        .login-logo .logo-main {
+            font-family: 'Orbitron', monospace; font-size: 40px; font-weight: 900;
+            background: linear-gradient(135deg, var(--gold-1), var(--gold-2), var(--gold-3));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            letter-spacing: 6px;
+        }
+        .login-logo .logo-sub {
+            font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--text-muted);
+            letter-spacing: 4px; text-transform: uppercase; margin-top: 4px;
         }
         .login-card { width: 100%; max-width: 400px; }
-        .login-logo { text-align: center; margin-bottom: 30px; }
-        .login-logo .logo-main { font-family: 'Rajdhani', sans-serif; font-size: 36px; font-weight: 700; background: linear-gradient(135deg, #FFD700, #FDB931, #9f7928); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: 4px; }
-        .login-logo .logo-sub { font-size: 11px; color: var(--text-muted); letter-spacing: 3px; text-transform: uppercase; margin-top: 2px; }
 
-        /* ── SPINNER ── */
-        .spinner { width: 18px; height: 18px; border: 2px solid rgba(255,215,0,0.3); border-top-color: var(--primary-gold); border-radius: 50%; animation: spin 0.7s linear infinite; display: inline-block; vertical-align: middle; margin-right: 6px; }
+        /* ─── SPINNER ─── */
+        .spinner {
+            width: 15px; height: 15px; border: 2px solid rgba(255,215,0,0.25);
+            border-top-color: var(--gold-1); border-radius: 50%;
+            animation: spin 0.65s linear infinite; display: inline-block;
+            vertical-align: middle; margin-right: 6px;
+        }
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        /* ── PULSE INDICATOR ── */
-        .live-dot { width: 8px; height: 8px; background: var(--success-green); border-radius: 50%; display: inline-block; margin-right: 5px; animation: pulse 1.5s ease-in-out infinite; }
-        @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(0.8)} }
+        /* ─── PULSE DOT ─── */
+        .live-dot {
+            width: 7px; height: 7px; background: var(--green);
+            border-radius: 50%; display: inline-block; margin-right: 5px;
+            animation: pulse 1.8s ease-in-out infinite;
+        }
+        @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.4;transform:scale(0.75)} }
 
-        /* ── HC STATUS BAR ── */
-        .hc-tag { font-size: 10px; background: rgba(255,61,61,0.2); color: var(--danger-red); border: 1px solid rgba(255,61,61,0.4); border-radius: 4px; padding: 2px 6px; margin-left: 6px; }
+        /* ─── ONLINE STATUS ─── */
+        .online-dot {
+            width: 8px; height: 8px; border-radius: 50%; display: inline-block;
+            flex-shrink: 0; transition: 0.3s;
+        }
+        .online-dot.on { background: var(--green); box-shadow: 0 0 6px var(--green); animation: pulse 2s ease-in-out infinite; }
+        .online-dot.off { background: var(--text-muted); }
+        .online-dot.hidden-status { background: var(--gold-3); }
 
-        /* ── ADMIN PROFILE CARDS ── */
-        .admin-card-actions { margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.06); }
-        .admin-style-section { margin-top: 10px; padding-top: 10px; border-top: 1px dashed rgba(255,215,0,0.15); }
+        /* ─── HC STATUS ─── */
+        .hc-tag {
+            font-size: 9px; background: rgba(255,45,85,0.18); color: var(--red);
+            border: 1px solid rgba(255,45,85,0.4); border-radius: 4px; padding: 2px 7px;
+            margin-left: 6px; font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* ─── ADMIN CARD STYLES ─── */
+        .admin-card-actions { margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.05); }
+        .admin-style-section { margin-top: 10px; padding-top: 10px; border-top: 1px dashed rgba(255,215,0,0.12); }
         .style-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
         .style-row label { margin: 0; white-space: nowrap; }
         .style-row input[type="color"] { width: 36px; height: 30px; padding: 2px; border-radius: 6px; cursor: pointer; flex-shrink: 0; }
         .style-row input[type="text"] { flex: 1; min-width: 80px; padding: 6px 8px; margin: 0; }
 
-        /* ── INDIVIDUAL PERMS SECTION ── */
-        .indiv-perms-section { margin-top: 10px; padding-top: 10px; border-top: 1px dashed rgba(79,195,247,0.2); }
-        .indiv-perms-title { font-size: 10px; color: var(--info-blue); text-transform: uppercase; letter-spacing: 1px; font-weight: 700; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
-        .indiv-perms-title::before { content: '⚡'; }
-        .indiv-perm-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
-        .indiv-perm-toggle { display: flex; align-items: center; justify-content: space-between; padding: 6px 9px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.07); border-radius: 7px; font-size: 10px; color: var(--text-muted); cursor: pointer; transition: 0.2s; user-select: none; }
-        .indiv-perm-toggle.active { background: rgba(79,195,247,0.1); border-color: rgba(79,195,247,0.4); color: var(--info-blue); }
-        .indiv-toggle-dot { width: 24px; height: 14px; border-radius: 20px; background: rgba(255,255,255,0.08); position: relative; transition: 0.2s; flex-shrink: 0; }
-        .indiv-toggle-dot::after { content: ''; position: absolute; left: 2px; top: 2px; width: 10px; height: 10px; border-radius: 50%; background: var(--text-muted); transition: 0.2s; }
-        .indiv-perm-toggle.active .indiv-toggle-dot { background: rgba(79,195,247,0.4); }
-        .indiv-perm-toggle.active .indiv-toggle-dot::after { left: 12px; background: var(--info-blue); }
-
-        /* ── SCROLLBAR ── */
-        ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: var(--glass-border-bright); border-radius: 4px; }
-
-        /* ── APPLICATION SUCCESS ── */
-        .app-success { background: var(--success-soft); border: 1px solid rgba(0,230,118,0.3); color: var(--success-green); border-radius: 10px; padding: 12px 14px; font-size: 12px; text-align: center; margin-top: 8px; }
-
-        /* ── DRAG & DROP ── */
+        /* ─── DRAG & DROP ─── */
         .drag-handle {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 28px;
-            height: 28px;
-            border-radius: 6px;
-            background: rgba(255,215,0,0.08);
-            border: 1px solid rgba(255,215,0,0.2);
-            color: var(--primary-gold);
-            cursor: grab;
-            font-size: 14px;
-            line-height: 1;
-            flex-shrink: 0;
-            transition: background 0.15s, border-color 0.15s;
-            user-select: none;
-            -webkit-user-select: none;
-            touch-action: none;
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 28px; height: 28px; border-radius: 6px;
+            background: rgba(255,215,0,0.06); border: 1px solid rgba(255,215,0,0.18);
+            color: var(--gold-1); cursor: grab; font-size: 14px; line-height: 1;
+            flex-shrink: 0; transition: 0.15s; user-select: none;
+            -webkit-user-select: none; touch-action: none;
         }
-        .drag-handle:hover { background: rgba(255,215,0,0.18); border-color: rgba(255,215,0,0.5); }
+        .drag-handle:hover { background: rgba(255,215,0,0.15); border-color: rgba(255,215,0,0.45); }
         .drag-handle:active { cursor: grabbing; }
-
-        .admin-card-draggable { transition: transform 0.15s, box-shadow 0.15s, opacity 0.15s; }
-        .admin-card-draggable.dragging { opacity: 0.45; box-shadow: 0 0 0 2px var(--primary-gold), 0 12px 40px rgba(0,0,0,0.7) !important; transform: scale(0.98); z-index: 100; }
-        .admin-card-draggable.drag-over { border-color: var(--primary-gold) !important; box-shadow: 0 0 0 2px rgba(255,215,0,0.35), 0 8px 30px rgba(0,0,0,0.5) !important; }
-
-        .drag-hint { font-size: 10px; color: var(--primary-gold); opacity: 0.6; display: flex; align-items: center; gap: 5px; margin-bottom: 10px; padding: 7px 10px; background: rgba(255,215,0,0.05); border: 1px dashed rgba(255,215,0,0.2); border-radius: 8px; }
-
+        .admin-card-draggable { transition: opacity 0.15s, box-shadow 0.15s; }
+        .admin-card-draggable.dragging { opacity: 0.45; box-shadow: 0 0 0 2px var(--gold-1), 0 12px 40px rgba(0,0,0,0.7) !important; }
+        .admin-card-draggable.drag-over { border-color: var(--gold-1) !important; box-shadow: 0 0 0 2px rgba(255,215,0,0.3) !important; }
+        .drag-hint {
+            font-size: 10px; color: var(--gold-1); opacity: 0.6;
+            display: flex; align-items: center; gap: 5px; margin-bottom: 10px;
+            padding: 7px 10px; background: rgba(255,215,0,0.04);
+            border: 1px dashed rgba(255,215,0,0.18); border-radius: 8px;
+            font-family: 'JetBrains Mono', monospace;
+        }
         .admin-card-header { display: flex; justify-content: space-between; align-items: center; }
         .admin-card-header-left { display: flex; align-items: center; gap: 8px; flex: 1; }
 
-        /* ── APPROVE LOADING ── */
-        .approve-loading { opacity: 0.6; pointer-events: none; }
+        /* ─── LOGS CHANNEL ─── */
+        .log-entry {
+            background: rgba(255,255,255,0.02); border: 1px solid var(--border-dim);
+            border-radius: var(--radius-sm); padding: 10px 13px; margin-bottom: 7px;
+            font-size: 11px; display: flex; align-items: flex-start; gap: 10px;
+            transition: border-color 0.2s;
+        }
+        .log-entry:hover { border-color: var(--border-mid); }
+        .log-icon { font-size: 14px; flex-shrink: 0; margin-top: 1px; }
+        .log-body { flex: 1; }
+        .log-actor { font-weight: 700; color: var(--gold-1); font-family: 'JetBrains Mono', monospace; }
+        .log-action { color: var(--text-primary); }
+        .log-time { font-size: 9px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; margin-top: 2px; }
+        .log-del-btn { background: var(--red) !important; color: white !important; width: auto; padding: 3px 8px; font-size: 9px; border-radius: 5px; flex-shrink: 0; margin: 0; }
+
+        /* ─── APP SUCCESS ─── */
+        .app-success {
+            background: var(--green-soft); border: 1px solid rgba(0,229,160,0.3);
+            color: var(--green); border-radius: 10px; padding: 12px 14px;
+            font-size: 12px; text-align: center; margin-top: 8px;
+        }
+
+        /* ─── SESSION WARNING ─── */
+        .session-blocked {
+            position: fixed; inset: 0; z-index: 9000;
+            background: rgba(4,5,10,0.97);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            padding: 30px; text-align: center;
+        }
+        .session-blocked h2 { font-family: 'Orbitron', monospace; color: var(--red); font-size: 22px; margin-bottom: 14px; }
+        .session-blocked p { color: var(--text-secondary); font-size: 13px; line-height: 1.7; }
+
+        /* ─── SCROLLBAR ─── */
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--border-mid); border-radius: 4px; }
+
+        /* ─── ROLE CONFIRM BADGE (for role assignment confirmation) ─── */
+        .role-confirm-badge {
+            display: inline-flex; align-items: center; gap: 5px;
+            padding: 3px 9px; border-radius: 6px; font-size: 10px; font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            background: rgba(0,229,160,0.12); border: 1px solid rgba(0,229,160,0.35); color: var(--green);
+            margin-left: 8px; animation: fadeInBadge 0.3s ease;
+        }
+        @keyframes fadeInBadge { from { opacity: 0; transform: scale(0.8); } to { opacity: 1; transform: scale(1); } }
+
+        /* ─── STATUS HIDE/SHOW ─── */
+        .status-control { display: flex; align-items: center; gap: 8px; margin-top: 10px; }
+        .status-control select { padding: 6px 10px; font-size: 11px; margin: 0; }
+
+        /* ─── SECURITY ALERT IN LOGS ─── */
+        .log-entry.security { border-color: rgba(255,45,85,0.35); background: rgba(255,45,85,0.04); }
+        .log-entry.security .log-actor { color: var(--red); }
+
+        /* ─── LOADING STATE ─── */
+        .loading-overlay {
+            display: flex; align-items: center; justify-content: center;
+            padding: 30px; color: var(--text-muted); gap: 10px; font-size: 12px;
+            font-family: 'JetBrains Mono', monospace;
+        }
     </style>
 </head>
 <body>
+<div class="scanlines"></div>
 
 <!-- LOGIN -->
 <div id="login-view">
@@ -336,7 +595,7 @@
         <div class="logo-sub">Administration Portal</div>
     </div>
     <div class="card login-card">
-        <div class="card-title">Staff Login (Everyone can login using passcode)</div>
+        <div class="card-title">Staff Login</div>
         <input type="email" id="login-email" placeholder="Email (Developer only)" autocomplete="off">
         <input type="password" id="login-pass" placeholder="Passcode (For everyone)" autocomplete="off">
         <button onclick="app.login()" id="login-btn">Login</button>
@@ -369,12 +628,13 @@
         <div class="menu-item" onclick="app.nav('rules')">📜 App Rules</div>
         <div class="menu-item" onclick="app.nav('curr-admins')">👥 Current Admins</div>
         <div class="menu-section-label">Operations</div>
-        <div class="menu-item section-view hidden" onclick="app.nav('weekly')">📝 Weekly Reports</div>
+        <div class="menu-item weekly-menu-item hidden" onclick="app.nav('weekly')">📝 Weekly Reports</div>
         <div class="menu-item" onclick="app.nav('promo')">🎖️ Leader Board</div>
-        <div class="menu-item section-view hidden" onclick="app.nav('stored')">📁 Stored Files</div>
+        <div class="menu-item stored-menu-item hidden" onclick="app.nav('stored')">📁 Stored Files</div>
         <div class="menu-section-label">Management</div>
-        <div class="menu-item section-hr hidden" onclick="app.nav('access')">🔐 Manage Requests</div>
+        <div class="menu-item access-menu-item hidden" onclick="app.nav('access')">🔐 Manage Requests</div>
         <div class="menu-item owner-only hidden" onclick="app.nav('permissions')">⚙️ Permissions</div>
+        <div class="menu-item logs-menu-item hidden" onclick="app.nav('logs')">📋 Activity Logs</div>
         <div class="menu-item chat-item" onclick="app.nav('chat')">💬 Staff Chat <span class="live-dot" style="margin-left:4px"></span></div>
         <div class="menu-item danger" onclick="app.logout()" style="margin-top:8px">⏻ Logout</div>
     </div>
@@ -384,7 +644,7 @@
 
 <script>
 // ─────────────────────────────────────────────
-// FIREBASE INITIALIZATION — YOUR CORRECT DATABASE
+// FIREBASE INITIALIZATION
 // ─────────────────────────────────────────────
 const firebaseConfig = {
     apiKey: "AIzaSyDYuIeTuvUlffSrHNdk-opOOdgaxtcs1Gk",
@@ -396,42 +656,49 @@ const firebaseConfig = {
     appId: "1:507012571591:web:aeb4f6d9c3a03671a6f9e2",
     measurementId: "G-C09MPQ51C6"
 };
-
 firebase.initializeApp(firebaseConfig);
-
 const db   = firebase.database();
 const auth = firebase.auth();
 
 // ─────────────────────────────────────────────
-// DEFAULT PERMISSIONS SCHEMA
+// PERMISSION SCHEMA
 // ─────────────────────────────────────────────
 const DEFAULT_PERMS = {
-    owner:        { weekly:true, stored:true, access:true, rules_edit:true, kick:true, set_role:true, leaderboard_manage:true, permissions_manage:true, chat:true, view_admins:true, view_profile:true },
-    high_command: { weekly:true, stored:true, access:true, rules_edit:true, kick:true, set_role:true, leaderboard_manage:true, permissions_manage:false, chat:true, view_admins:true, view_profile:true },
-    editor:       { weekly:true, stored:true, access:false, rules_edit:true, kick:false, set_role:false, leaderboard_manage:false, permissions_manage:false, chat:true, view_admins:true, view_profile:false },
-    hr:           { weekly:false, stored:false, access:true, rules_edit:false, kick:false, set_role:false, leaderboard_manage:false, permissions_manage:false, chat:true, view_admins:true, view_profile:false },
-    view:         { weekly:true, stored:true, access:false, rules_edit:false, kick:false, set_role:false, leaderboard_manage:false, permissions_manage:false, chat:true, view_admins:true, view_profile:false },
-    admin:        { weekly:false, stored:false, access:false, rules_edit:false, kick:false, set_role:false, leaderboard_manage:false, permissions_manage:false, chat:true, view_admins:true, view_profile:false }
+    owner:        { weekly:true, stored:true, access:true, rules_edit:true, kick:true, set_role:true, leaderboard_manage:true, permissions_manage:true, chat:true, view_admins:true, view_profile:true, weekly_mg:true, stored_mg:true, set_role_mg:true, view_logs:true, delete_logs_one:true, delete_logs_all:true },
+    high_command: { weekly:true, stored:true, access:true, rules_edit:true, kick:true, set_role:true, leaderboard_manage:true, permissions_manage:false, chat:true, view_admins:true, view_profile:true, weekly_mg:false, stored_mg:false, set_role_mg:false, view_logs:false, delete_logs_one:false, delete_logs_all:false },
+    editor:       { weekly:true, stored:true, access:false, rules_edit:true, kick:false, set_role:false, leaderboard_manage:false, permissions_manage:false, chat:true, view_admins:true, view_profile:false, weekly_mg:false, stored_mg:false, set_role_mg:false, view_logs:false, delete_logs_one:false, delete_logs_all:false },
+    hr:           { weekly:false, stored:false, access:true, rules_edit:false, kick:false, set_role:false, leaderboard_manage:false, permissions_manage:false, chat:true, view_admins:true, view_profile:false, weekly_mg:false, stored_mg:false, set_role_mg:false, view_logs:false, delete_logs_one:false, delete_logs_all:false },
+    view:         { weekly:true, stored:true, access:false, rules_edit:false, kick:false, set_role:false, leaderboard_manage:false, permissions_manage:false, chat:true, view_admins:true, view_profile:false, weekly_mg:false, stored_mg:false, set_role_mg:false, view_logs:false, delete_logs_one:false, delete_logs_all:false },
+    admin:        { weekly:false, stored:false, access:false, rules_edit:false, kick:false, set_role:false, leaderboard_manage:false, permissions_manage:false, chat:true, view_admins:true, view_profile:false, weekly_mg:false, stored_mg:false, set_role_mg:false, view_logs:false, delete_logs_one:false, delete_logs_all:false }
 };
 
 const PERM_LABELS = {
-    weekly: 'Weekly Reports',
-    stored: 'Stored Files',
+    weekly: 'Weekly Reports (View)',
+    stored: 'Stored Files (View)',
     access: 'Manage Requests',
     rules_edit: 'Edit Rules',
     kick: 'Kick Admins',
-    set_role: 'Set Roles',
+    set_role: 'Set Roles (Basic)',
     leaderboard_manage: 'Manage LB',
     permissions_manage: 'Manage Perms',
     chat: 'Staff Chat',
     view_admins: 'View Admin List',
-    view_profile: 'View Profiles'
+    view_profile: 'View Profiles',
+    weekly_mg: 'Weekly MG (Edit)',
+    stored_mg: 'Stored MG (Edit)',
+    set_role_mg: 'Set Role MG (HC+)',
+    view_logs: 'View Logs',
+    delete_logs_one: 'Delete Log (One)',
+    delete_logs_all: 'Delete Logs (All)'
 };
+
+// Roles in hierarchy order (lower index = higher rank)
+const ROLE_HIERARCHY = ['owner','high_command','editor','hr','view','admin'];
 
 const app = {
     data: { admins:[], requests:[], history:[], lbStatus:'closed', lbFileIndex:-1, activeWeek:null, appRules:"", ruleAuthor:"", ruleDate:"", ownerInfo:{tag:'OWNER',tagColor:'#d4af37',boxColor:'#fff8dc'}, permissions:{}, individualPerms:{} },
     user: null,
-    _drag: { el: null, fromIdx: null },
+    _sessionToken: null,
 
     init() {
         db.ref('ahypar_new_data').on('value', (snap) => {
@@ -448,20 +715,17 @@ const app = {
         });
     },
 
-    save() {
-        return db.ref('ahypar_new_data').set(this.data);
-    },
+    save() { return db.ref('ahypar_new_data').set(this.data); },
 
+    // ─── PERMISSION HELPERS ───
     getRolePerms(role) {
         const base = DEFAULT_PERMS[role] || DEFAULT_PERMS['admin'];
         const overrides = (this.data.permissions && this.data.permissions[role]) || {};
         return { ...base, ...overrides };
     },
-
     getIndividualPerms(name) {
         return (this.data.individualPerms && this.data.individualPerms[name]) || {};
     },
-
     getPerms(role, name) {
         const rolePerms = this.getRolePerms(role);
         const indivPerms = name ? this.getIndividualPerms(name) : {};
@@ -471,10 +735,88 @@ const app = {
         });
         return result;
     },
-
     hasPerm(perm) {
         if (!this.user) return false;
         return !!this.getPerms(this.user.role, this.user.name)[perm];
+    },
+    getRoleRank(role) { return ROLE_HIERARCHY.indexOf(role); },
+    canActOn(actorRole, targetRole) {
+        // Actor can act on target if actor has higher rank (lower index)
+        const actorRank = this.getRoleRank(actorRole);
+        const targetRank = this.getRoleRank(targetRole);
+        return actorRank < targetRank;
+    },
+    canSetRole(actorRole, targetRole, newRole) {
+        // For set_role_mg: can assign up to high_command but not owner
+        const actorRank = this.getRoleRank(actorRole);
+        const targetRank = this.getRoleRank(targetRole);
+        const newRoleRank = this.getRoleRank(newRole);
+        if (actorRank >= targetRank) return false; // can't act on equal or senior
+        if (newRoleRank === 0) return false; // can't assign owner
+        return true;
+    },
+
+    // ─── ACTIVITY LOGS ───
+    addLog(icon, actor, action, type='normal') {
+        const entry = {
+            icon, actor, action, type,
+            time: new Date().toLocaleString()
+        };
+        db.ref('ahypar_logs').push(entry);
+    },
+
+    // ─── ONLINE STATUS ───
+    setOnlineStatus(name, role) {
+        const token = Date.now() + '-' + Math.random().toString(36).substr(2,9);
+        this._sessionToken = token;
+        const statusRef = db.ref(`admin_status/${name}`);
+
+        // Check for existing session (single device enforcement)
+        statusRef.once('value', (snap) => {
+            const existing = snap.val();
+            if (existing && existing.online && existing.token !== token) {
+                // Another session active — log it
+                this.addLog('🔒', name, `logged in from a new device while already active`, 'security');
+            }
+        });
+
+        const statusData = {
+            online: true,
+            token: token,
+            lastSeen: firebase.database.ServerValue.TIMESTAMP
+        };
+        statusRef.set(statusData);
+
+        // Disconnect handler
+        statusRef.onDisconnect().update({ online: false, lastSeen: firebase.database.ServerValue.TIMESTAMP });
+    },
+
+    // ─── SESSION ENFORCEMENT ───
+    enforceSession(name) {
+        if (name === 'Shafin_Mirza') return; // owner always allowed
+        const statusRef = db.ref(`admin_status/${name}`);
+        statusRef.on('value', (snap) => {
+            const s = snap.val();
+            if (!s) return;
+            if (s.token && s.token !== this._sessionToken) {
+                // Another login detected
+                this.addLog('⚠️', name, `session conflict detected — multiple device login attempted`, 'security');
+                this.showSessionBlocked();
+            }
+        });
+    },
+
+    showSessionBlocked() {
+        const el = document.createElement('div');
+        el.className = 'session-blocked';
+        el.innerHTML = `
+            <h2>⚠ Session Conflict</h2>
+            <p>Your account was logged in from another device.<br>
+            This event has been recorded in the system logs.<br><br>
+            Only one active session is allowed per account.</p>
+            <button onclick="location.reload()" style="width:auto;padding:12px 32px;margin-top:24px">Return to Login</button>
+        `;
+        document.body.appendChild(el);
     },
 
     // ─── LOGIN ───
@@ -491,25 +833,34 @@ const app = {
             if (email === 'shafinmirza59@gmail.com' && pass) {
                 try {
                     await auth.signInWithEmailAndPassword(email, pass);
-                    this.user = { name: "Shafin_Mirza", role: 'owner', lvl: 'Server Director / Chief Developer', email };
+                    this.user = { name:"Shafin_Mirza", role:'owner', lvl:'Server Director / Chief Developer', email };
                     btn.innerHTML = 'Login'; btn.disabled = false;
-                    this.showDash(); this.nav('profile');
-                    return;
+                    this.setOnlineStatus('Shafin_Mirza', 'owner');
+                    this.addLog('🔑', 'Shafin_Mirza', 'logged in (Developer)');
+                    this.showDash(); this.nav('profile'); return;
                 } catch(authErr) { /* fall through */ }
             }
 
             if (this.data.ownerKey && pass === this.data.ownerKey && !email) {
-                this.user = { name: "Shafin_Mirza", role: 'owner', lvl: 'Server Director / Chief Developer' };
+                this.user = { name:"Shafin_Mirza", role:'owner', lvl:'Server Director / Chief Developer' };
                 btn.innerHTML = 'Login'; btn.disabled = false;
-                this.showDash(); this.nav('profile');
-                return;
+                this.setOnlineStatus('Shafin_Mirza', 'owner');
+                this.addLog('🔑', 'Shafin_Mirza', 'logged in via passcode');
+                this.showDash(); this.nav('profile'); return;
             }
 
-            const adminsList = this.data.admins || [];
-            const a = adminsList.find(x => x.passcode === pass);
+            const a = (this.data.admins || []).find(x => x.passcode === pass);
             if (!a) throw new Error('Invalid passcode. Please check your credentials.');
+
             this.user = a;
+            const token = Date.now() + '-' + Math.random().toString(36).substr(2,9);
+            this._sessionToken = token;
+
             btn.innerHTML = 'Login'; btn.disabled = false;
+
+            this.setOnlineStatus(a.name, a.role);
+            this.enforceSession(a.name);
+            this.addLog('🔑', a.name, `logged in (Role: ${a.role})`);
             this.showDash(); this.nav('profile');
 
         } catch(e) {
@@ -524,16 +875,19 @@ const app = {
         document.getElementById('dashboard-view').classList.remove('hidden');
         document.getElementById('h-user').innerText = this.user.name;
 
-        document.querySelectorAll('.section-view,.section-hr,.section-editor,.owner-only').forEach(el => el.classList.add('hidden'));
+        // Reset all conditional menu items
+        document.querySelectorAll('.weekly-menu-item,.stored-menu-item,.access-menu-item,.owner-only,.logs-menu-item').forEach(el => el.classList.add('hidden'));
 
-        const role = this.user.role;
-        const perms = this.getPerms(role, this.user.name);
+        const perms = this.getPerms(this.user.role, this.user.name);
 
-        if (perms.weekly || perms.stored) document.querySelectorAll('.section-view').forEach(el => el.classList.remove('hidden'));
-        if (perms.access) document.querySelectorAll('.section-hr').forEach(el => el.classList.remove('hidden'));
-        if (role === 'owner') document.querySelectorAll('.owner-only').forEach(el => el.classList.remove('hidden'));
+        if (perms.weekly || perms.weekly_mg) document.querySelectorAll('.weekly-menu-item').forEach(e => e.classList.remove('hidden'));
+        if (perms.stored || perms.stored_mg) document.querySelectorAll('.stored-menu-item').forEach(e => e.classList.remove('hidden'));
+        if (perms.access) document.querySelectorAll('.access-menu-item').forEach(e => e.classList.remove('hidden'));
+        if (this.user.role === 'owner') document.querySelectorAll('.owner-only').forEach(e => e.classList.remove('hidden'));
+        if (perms.view_logs || perms.delete_logs_one || perms.delete_logs_all) document.querySelectorAll('.logs-menu-item').forEach(e => e.classList.remove('hidden'));
     },
 
+    // ─── NAVIGATION ───
     nav(page) {
         this.toggleMenu(false);
         db.ref('staff_chat').off();
@@ -545,41 +899,67 @@ const app = {
 
         switch(page) {
 
-            case 'profile':
+            // ─── PROFILE ───
+            case 'profile': {
                 const me = (role === 'owner') ? this.user : (adminsList.find(x => x.name === this.user.name) || this.user);
-                const roleBadge = role === 'owner' ? 'badge-owner' : role === 'high_command' ? 'badge-hc' : role === 'editor' ? 'badge-editor' : 'badge-admin';
+                const rbCls = role==='owner'?'badge-owner':role==='high_command'?'badge-hc':role==='editor'?'badge-editor':'badge-admin';
+                const statusPref = (this.data.statusPrefs && this.data.statusPrefs[this.user.name]) || 'real';
                 html = `
                 <div class="page-title">My Profile</div>
-                <div class="card" style="text-align:center; padding:24px">
-                    <div style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,var(--dark-gold),var(--primary-gold));display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:700;color:#000;margin:0 auto 12px;font-family:'Rajdhani',sans-serif">${(me.name||'?').charAt(0).toUpperCase()}</div>
-                    <h2 style="font-family:'Rajdhani',sans-serif; font-size:22px; letter-spacing:1px">${me.name}</h2>
-                    <div style="margin:6px 0"><span class="role-badge ${roleBadge}">${me.lvl || role}</span></div>
+                <div class="card" style="text-align:center;padding:24px">
+                    <div style="width:68px;height:68px;border-radius:50%;background:linear-gradient(135deg,var(--gold-3),var(--gold-1));display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;color:#000;margin:0 auto 14px;font-family:'Orbitron',monospace">${(me.name||'?').charAt(0).toUpperCase()}</div>
+                    <h2 style="font-family:'Orbitron',monospace;font-size:20px;letter-spacing:1px">${me.name}</h2>
+                    <div style="margin:6px 0"><span class="role-badge ${rbCls}">${me.lvl||role}</span></div>
                     <div class="divider"></div>
                     <div class="stat-row">
-                        <div class="stat-box"><div class="val">${me.bank || 0}</div><div class="lbl">Bank Points</div></div>
-                        <div class="stat-box"><div class="val" style="font-size:16px; color:${me.warnings && me.warnings !== 'None' ? 'var(--danger-red)' : 'var(--success-green)'}">${me.warnings || 'None'}</div><div class="lbl">Warnings</div></div>
-                    </div>
-                </div>`;
-                break;
+                        <div class="stat-box"><div class="val">${me.bank||0}</div><div class="lbl">Bank Points</div></div>
+                        <div class="stat-box"><div class="val" style="font-size:16px;color:${me.warnings&&me.warnings!=='None'?'var(--red)':'var(--green)'}">${me.warnings||'None'}</div><div class="lbl">Warnings</div></div>
+                    </div>`;
 
-            case 'rules':
+                // Online status control for HC+ only
+                if (['owner','high_command'].includes(role)) {
+                    html += `<div class="divider"></div>
+                    <div class="card-title" style="margin:0 0 8px">Online Status Display</div>
+                    <div class="status-control">
+                        <select id="status-pref-sel">
+                            <option value="real" ${statusPref==='real'?'selected':''}>Show Real Status</option>
+                            <option value="always_online" ${statusPref==='always_online'?'selected':''}>Always Show Online</option>
+                            <option value="always_offline" ${statusPref==='always_offline'?'selected':''}>Always Show Offline</option>
+                            <option value="hidden" ${statusPref==='hidden'?'selected':''}>Hide Status</option>
+                        </select>
+                        <button onclick="app.saveStatusPref()" style="width:auto;padding:8px 14px;font-size:10px">Save</button>
+                    </div>
+                    <div class="alert-box alert-info" style="margin-top:8px;font-size:11px">ℹ Only Owner can see your real online status regardless of this setting.</div>`;
+                }
+                html += `</div>`;
+                break;
+            }
+
+            // ─── RULES ───
+            case 'rules': {
                 html = `<div class="page-title">📜 App Rules</div>`;
                 if (perms.rules_edit) {
-                    html += `<div class="card"><div class="card-title">Edit Rules</div><textarea id="rule-input" rows="8" placeholder="Write rules here...">${this.data.appRules || ""}</textarea><button onclick="app.updateRules()">Post Rules</button></div>`;
+                    html += `<div class="card"><div class="card-title">Edit Rules</div><textarea id="rule-input" rows="8" placeholder="Write rules here...">${this.data.appRules||""}</textarea><button onclick="app.updateRules()">Post Rules</button></div>`;
                 }
                 const meta = this.data.ruleAuthor ? `<div class="rule-meta">Posted by: ${this.data.ruleAuthor} &nbsp;|&nbsp; ${this.data.ruleDate}</div>` : '';
-                html += `<div class="rule-box">${meta}${this.data.appRules || "Rules will appear here."}</div>`;
+                html += `<div class="rule-box">${meta}${this.data.appRules||"Rules will appear here."}</div>`;
                 break;
+            }
 
-            case 'curr-admins':
+            // ─── CURRENT ADMINS ───
+            case 'curr-admins': {
                 html = `<div class="page-title">👥 Admin List</div>`;
-                const isOwner = role === 'owner';
-                const isHC = role === 'high_command';
+                const isOwner = role==='owner';
+                const isHC    = role==='high_command';
 
-                let oInfo = this.data.ownerInfo || {tag:'OWNER',tagColor:'#d4af37',boxColor:'#fff8dc'};
-                html += `<div class="card" style="background:${oInfo.boxColor}; border:1px solid ${oInfo.tagColor}; color:#000">
+                let oInfo = this.data.ownerInfo||{tag:'OWNER',tagColor:'#d4af37',boxColor:'#fff8dc'};
+                html += `<div class="card" style="background:${oInfo.boxColor};border:1px solid ${oInfo.tagColor};color:#000">
                     <div style="display:flex;justify-content:space-between;align-items:center">
-                        <div><b style="font-family:'Rajdhani',sans-serif;font-size:16px">Shafin_Mirza</b> <span class="tag-span" style="background:${oInfo.tagColor}">${oInfo.tag}</span></div>
+                        <div style="display:flex;align-items:center;gap:8px">
+                            <span id="owner-online-dot" class="online-dot off"></span>
+                            <b style="font-family:'Orbitron',monospace;font-size:14px">Shafin_Mirza</b>
+                            <span class="tag-span" style="background:${oInfo.tagColor}">${oInfo.tag}</span>
+                        </div>
                         <span style="font-size:11px;opacity:0.7">Server Director / Chief Developer</span>
                     </div>`;
                 if (isOwner) {
@@ -587,132 +967,149 @@ const app = {
                         <label>Tag:</label><input type="text" id="ow-t" value="${oInfo.tag}" style="color:#000;background:rgba(0,0,0,0.1)">
                         <label>Tag Color:</label><input type="color" id="ow-tc" value="${oInfo.tagColor}">
                         <label>Box:</label><input type="color" id="ow-bc" value="${oInfo.boxColor}">
-                        <button class="btn-sm" onclick="app.setOwnerStyle()" style="background:var(--dark-gold);color:black">Save</button>
+                        <button class="btn-sm" onclick="app.setOwnerStyle()" style="background:var(--gold-3);color:black">Save</button>
                     </div></div>`;
                 }
                 html += `</div>`;
 
-                if (isOwner) {
-                    html += `<div class="drag-hint">⠿ Drag the handle on each card to reorder admins — order saves automatically for everyone.</div>`;
-                }
-
+                if (isOwner) html += `<div class="drag-hint">⠿ Drag handle to reorder admins — saves automatically.</div>`;
                 html += `<div id="admins-list-container">`;
 
                 adminsList.forEach((a, i) => {
                     const aTag = a.tag ? `<span class="tag-span" style="background:${a.tagColor||'#555'}">${a.tag}</span>` : '';
-                    const textColor = a.boxColor && a.boxColor !== '#1a1d29' ? '#000' : 'var(--text-white)';
-                    const targetIsHCOrAbove = (a.role === 'high_command' || a.role === 'owner');
-                    const hcCanActOnThis = isHC && !targetIsHCOrAbove;
+                    const textColor = a.boxColor && a.boxColor !== '#1a1d29' ? '#000' : 'var(--text-primary)';
                     const draggableAttrs = isOwner
                         ? `draggable="true" data-idx="${i}" class="card admin-card-draggable"`
                         : `data-idx="${i}" class="card"`;
 
-                    html += `<div ${draggableAttrs} style="background:${a.boxColor || 'var(--card-bg)'}; color:${textColor}">
+                    html += `<div ${draggableAttrs} style="background:${a.boxColor||'var(--bg-card)'};color:${textColor}">
                         <div class="admin-card-header">
                             <div class="admin-card-header-left">
-                                ${isOwner ? `<span class="drag-handle" title="Drag to reorder">⠿</span>` : ''}
+                                ${isOwner?`<span class="drag-handle" title="Drag to reorder">⠿</span>`:''}
+                                <span class="online-dot off" id="dot-${a.name.replace(/\s/g,'_')}"></span>
                                 <div>
-                                    <b style="font-family:'Rajdhani',sans-serif;font-size:15px">${a.name}</b> ${aTag}
+                                    <b style="font-family:'Orbitron',monospace;font-size:13px">${a.name}</b> ${aTag}
+                                    <span id="role-label-${i}" class="role-confirm-badge" style="display:none"></span>
                                     <br><small style="opacity:0.7">${a.lvl}</small>
                                 </div>
                             </div>
                         </div>`;
 
+                    // View profile button
                     const canView = isOwner || (isHC && ['admin','editor','view','hr'].includes(a.role));
-                    if (canView) html += `<button class="btn-sm" style="background:var(--dark-gold);color:black;margin-top:8px" onclick="app.viewAdminProfile(${i})">👁 View Profile</button>`;
+                    if (canView) html += `<button class="btn-sm" style="background:var(--gold-3);color:black;margin-top:8px" onclick="app.viewAdminProfile(${i})">👁 View Profile</button>`;
 
-                    const canManage = isOwner || (isHC && hcCanActOnThis && (perms.set_role || perms.kick));
-                    if (canManage) {
+                    // Management actions
+                    const actorCanActOnTarget = this.canActOn(role, a.role);
+                    const canManageBasic = isOwner || ((perms.set_role || perms.kick || perms.set_role_mg) && actorCanActOnTarget);
+
+                    if (canManageBasic) {
                         html += `<div class="admin-card-actions">`;
-                        if (isOwner) html += `<div style="display:flex;gap:6px;margin-bottom:8px"><input id="lvl-up-${i}" placeholder="New Level" style="margin:0;padding:7px;color:#000;background:rgba(255,255,255,0.85)"><button class="btn-sm" onclick="app.changeLvl(${i})" style="background:var(--info-blue);color:#000">Set</button></div>`;
-                        html += `<div style="display:flex;flex-wrap:wrap;gap:4px">`;
-                        if (perms.set_role) {
-                            html += `<button class="btn-sm ${a.role==='admin'?'active-role':''}" onclick="app.setRole(${i},'admin')">Admin</button>
-                                     <button class="btn-sm ${a.role==='view'?'active-role':''}" onclick="app.setRole(${i},'view')">View</button>
-                                     <button class="btn-sm ${a.role==='hr'?'active-role':''}" onclick="app.setRole(${i},'hr')">HR</button>`;
-                            if (isOwner) html += `<button class="btn-sm ${a.role==='editor'?'active-role':''}" onclick="app.setRole(${i},'editor')">Editor</button>
-                                     <button class="btn-sm ${a.role==='high_command'?'active-role':''}" style="background:var(--primary-gold);color:black" onclick="app.setRole(${i},'high_command')">High Command</button>`;
+                        if (isOwner) {
+                            html += `<div style="display:flex;gap:6px;margin-bottom:8px">
+                                <input id="lvl-up-${i}" placeholder="New Level" style="margin:0;padding:7px;color:#000;background:rgba(255,255,255,0.85)">
+                                <button class="btn-sm" onclick="app.changeLvl(${i})" style="background:var(--blue);color:#000">Set</button>
+                            </div>`;
                         }
-                        if (perms.kick) html += `<button class="btn-sm btn-danger" onclick="app.kick(${i})">Kick</button>`;
+                        html += `<div style="display:flex;flex-wrap:wrap;gap:4px">`;
+
+                        // Determine which roles can be assigned
+                        if (perms.set_role || perms.set_role_mg) {
+                            const canAssignAdmin  = isOwner || (actorCanActOnTarget && this.canSetRole(role, a.role, 'admin'));
+                            const canAssignView   = isOwner || (actorCanActOnTarget && this.canSetRole(role, a.role, 'view'));
+                            const canAssignHR     = isOwner || (actorCanActOnTarget && this.canSetRole(role, a.role, 'hr'));
+                            const canAssignEditor = isOwner || (perms.set_role_mg && actorCanActOnTarget && this.canSetRole(role, a.role, 'editor'));
+                            const canAssignHC     = isOwner || (perms.set_role_mg && actorCanActOnTarget && this.canSetRole(role, a.role, 'high_command'));
+
+                            if (canAssignAdmin)  html += `<button class="btn-sm ${a.role==='admin'?'active-role':''}" onclick="app.setRole(${i},'admin')">Admin</button>`;
+                            if (canAssignView)   html += `<button class="btn-sm ${a.role==='view'?'active-role':''}" onclick="app.setRole(${i},'view')">View</button>`;
+                            if (canAssignHR)     html += `<button class="btn-sm ${a.role==='hr'?'active-role':''}" onclick="app.setRole(${i},'hr')">HR</button>`;
+                            if (canAssignEditor) html += `<button class="btn-sm ${a.role==='editor'?'active-role':''}" onclick="app.setRole(${i},'editor')">Editor</button>`;
+                            if (canAssignHC)     html += `<button class="btn-sm ${a.role==='high_command'?'active-role':''}" style="background:var(--gold-1);color:black" onclick="app.setRole(${i},'high_command')">High Command</button>`;
+                        }
+                        if ((perms.kick || perms.set_role_mg) && actorCanActOnTarget) {
+                            html += `<button class="btn-sm btn-danger" onclick="app.kick(${i})">Kick</button>`;
+                        }
                         html += `</div></div>`;
                     }
 
+                    // Individual perms — owner only
                     if (isOwner) {
-                        const indiv = this.getIndividualPerms(a.name);
-                        const roleP = this.getRolePerms(a.role);
+                        const indiv   = this.getIndividualPerms(a.name);
+                        const roleP   = this.getRolePerms(a.role);
                         html += `<div class="indiv-perms-section">
                             <div class="indiv-perms-title">Manual Extra Permissions <span class="manual-badge">INDIVIDUAL</span></div>
                             <div class="indiv-perm-grid">`;
                         Object.keys(PERM_LABELS).forEach(pk => {
-                            const fromRole = !!roleP[pk];
+                            const fromRole  = !!roleP[pk];
                             const fromIndiv = !!indiv[pk];
-                            const isOn = fromIndiv;
                             if (fromRole) {
-                                html += `<div class="indiv-perm-toggle" style="opacity:0.4;cursor:default" title="Already granted by role">
+                                html += `<div class="indiv-perm-toggle" style="opacity:0.38;cursor:default" title="Granted by role">
                                     <span>${PERM_LABELS[pk]}</span>
-                                    <div class="indiv-toggle-dot" style="background:rgba(0,230,118,0.4)"><div style="position:absolute;left:12px;top:2px;width:10px;height:10px;border-radius:50%;background:var(--success-green)"></div></div>
+                                    <div class="indiv-toggle-dot" style="background:rgba(0,229,160,0.35)"><div style="position:absolute;left:12px;top:1.5px;width:10px;height:10px;border-radius:50%;background:var(--green)"></div></div>
                                 </div>`;
                             } else {
-                                html += `<div class="indiv-perm-toggle ${isOn?'active':''}" onclick="app.toggleIndividualPerm('${a.name}','${pk}',this)">
+                                html += `<div class="indiv-perm-toggle ${fromIndiv?'active':''}" onclick="app.toggleIndividualPerm('${a.name}','${pk}',this)">
                                     <span>${PERM_LABELS[pk]}</span>
                                     <div class="indiv-toggle-dot"></div>
                                 </div>`;
                             }
                         });
                         html += `</div></div>`;
-                    }
-
-                    if (isOwner) {
                         html += `<div class="admin-style-section"><div class="style-row">
                             <label>Tag:</label><input type="text" id="tag-n-${i}" value="${a.tag||''}" style="color:#000;background:rgba(255,255,255,0.85)">
                             <label>Tag Color:</label><input type="color" id="tag-c-${i}" value="${a.tagColor||'#555555'}">
-                            <label>Box:</label><input type="color" id="box-c-${i}" value="${a.boxColor||'#1a1d29'}">
-                            <button class="btn-sm" style="background:var(--success-green);color:#000" onclick="app.saveAdminStyle(${i})">Save Style</button>
+                            <label>Box:</label><input type="color" id="box-c-${i}" value="${a.boxColor||'#0c0d18'}">
+                            <button class="btn-sm" style="background:var(--green);color:#000" onclick="app.saveAdminStyle(${i})">Save Style</button>
                         </div></div>`;
                     }
                     html += `</div>`;
                 });
-
                 html += `</div>`;
                 break;
+            }
 
-            case 'weekly':
-                if (!perms.weekly) { html = `<div class="alert-box alert-danger">⚠ You don't have permission to access Weekly Reports.</div>`; break; }
+            // ─── WEEKLY REPORTS ───
+            case 'weekly': {
+                const canWeekly = perms.weekly || perms.weekly_mg;
+                if (!canWeekly) { html = `<div class="alert-box alert-danger">⚠ You don't have permission to access Weekly Reports.</div>`; break; }
                 html = `<div class="page-title">📝 Weekly Reports</div>`;
-                if (perms.rules_edit || role === 'high_command' || role === 'owner') {
+                const canEdit = perms.weekly_mg || role==='owner' || role==='high_command';
+                if (canEdit) {
                     if (!this.data.activeWeek) {
                         html += `<div class="card"><div class="card-title">Start New Week</div><input id="wt" placeholder="Week Title / Period"><button onclick="app.startW()">Start Week</button></div>`;
                     } else {
                         html += `<div class="card">
                             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
                                 <div><span class="live-dot"></span><small style="color:var(--text-muted)">Active Week</small></div>
-                                <b style="color:var(--primary-gold)">${this.data.activeWeek.title}</b>
+                                <b style="color:var(--gold-1)">${this.data.activeWeek.title}</b>
                             </div>
                             <label>Staff Member</label><select id="sel-n">${adminsList.map(a=>`<option>${a.name}</option>`).join('')}</select>
                             <label>Date</label><input type="TEXT" id="fd">
                             <label>Tournaments (×5 pts each)</label><input type="number" id="ft" value="0" min="0">
-                            <label>Other Points (Invited Team etc.)</label><input type="number" id="fo" value="0" min="0">
-                            <label>Extra Points (Good Job)</label><input type="number" id="fe" value="0" min="0">
+                            <label>Other Points</label><input type="number" id="fo" value="0" min="0">
+                            <label>Extra Points</label><input type="number" id="fe" value="0" min="0">
                             <label>Warning (V1, W2 or None)</label><input type="text" id="fw" value="None">
-                            <button class="btn-success" onclick="app.addLog()">Save Entry</button>
+                            <button class="btn-success" onclick="app.addLog_entry()">Save Entry</button>
                             <button class="btn-danger" onclick="app.finishW()">Finish & Store Week</button>
-                        </div><div id="live-view"></div>`;
+                        </div>`;
                     }
-                } else {
-                    html += `<div id="live-view"></div>`;
                 }
+                html += `<div id="live-view"></div>`;
                 break;
+            }
 
-            case 'promo':
+            // ─── LEADERBOARD ───
+            case 'promo': {
                 html = `<div class="page-title">🎖️ Leader Board</div>`;
                 if (perms.leaderboard_manage) {
-                    const history = this.data.history || [];
+                    const history = this.data.history||[];
                     html += `<div class="card">
                         <div class="card-title">Publish Settings</div>
                         <label>Select Report File</label>
                         <select id="lb-file-select" style="margin-bottom:10px">${history.map((h,idx)=>`<option value="${idx}">${h.title}</option>`).join('')}</select>
                         <div style="display:flex;gap:6px">
-                            <button class="btn-sm" style="background:var(--dark-gold);color:#000;flex:1" onclick="app.setLBStatus('published_hc')">👁 HC Only</button>
+                            <button class="btn-sm" style="background:var(--gold-3);color:#000;flex:1" onclick="app.setLBStatus('published_hc')">👁 HC Only</button>
                             <button class="btn-sm btn-success" style="flex:1" onclick="app.setLBStatus('published_public')">🌍 Public</button>
                             <button class="btn-sm btn-danger" style="flex:1" onclick="app.setLBStatus('closed')">🔒 Close</button>
                         </div>
@@ -720,51 +1117,58 @@ const app = {
                 }
                 html += `<div id="promo-res"></div>`;
                 break;
+            }
 
-            case 'stored':
-                if (!perms.stored) { html = `<div class="alert-box alert-danger">⚠ No permission to view Stored Files.</div>`; break; }
+            // ─── STORED FILES ───
+            case 'stored': {
+                const canStored = perms.stored || perms.stored_mg;
+                if (!canStored) { html = `<div class="alert-box alert-danger">⚠ No permission to view Stored Files.</div>`; break; }
                 html = `<div class="page-title">📁 Stored Files</div>`;
-                (this.data.history || []).forEach((h, i) => {
+                (this.data.history||[]).forEach((h,i) => {
                     html += `<div class="card" style="cursor:pointer" onclick="app.viewF(${i})">
                         <div style="display:flex;justify-content:space-between;align-items:center">
                             <div>📂 <b>${h.title}</b></div>
                             <small style="color:var(--text-muted)">${(h.logs||[]).length} entries</small>
                         </div>
                     </div>`;
-                    if (role === 'owner') html += `<button class="btn-del" onclick="app.delF(${i})">Delete</button>`;
+                    if (role==='owner' || perms.stored_mg) html += `<button class="btn-del" onclick="app.delF(${i})">Delete</button>`;
                 });
                 break;
+            }
 
-            case 'access':
+            // ─── MANAGE REQUESTS ───
+            case 'access': {
                 if (!perms.access) { html = `<div class="alert-box alert-danger">⚠ No permission to manage requests.</div>`; break; }
                 html = `<div class="page-title">🔐 Applications</div>`;
-                const pending = this.data.requests || [];
+                const pending = this.data.requests||[];
                 if (!pending.length) {
                     html += `<div class="alert-box alert-info">ℹ No pending applications.</div>`;
                 } else {
                     html += `<div class="alert-box alert-success" style="margin-bottom:8px">📋 ${pending.length} pending application${pending.length>1?'s':''}</div>`;
                 }
-                pending.forEach((r, i) => {
+                pending.forEach((r,i) => {
                     html += `<div class="card" id="req-card-${i}">
                         <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
                             <div style="flex:1">
-                                <b style="font-size:15px;font-family:'Rajdhani',sans-serif">${r.name}</b>
+                                <b style="font-size:15px;font-family:'Orbitron',monospace">${r.name}</b>
                                 <br><small style="color:var(--text-muted)">Level: ${r.lvl}</small>
-                                ${r.submitted ? `<br><small style="color:var(--text-muted);font-size:10px">Applied: ${r.submitted}</small>` : ''}
+                                ${r.submitted?`<br><small style="color:var(--text-muted);font-size:10px;font-family:'JetBrains Mono',monospace">Applied: ${r.submitted}</small>`:''}
                             </div>
                             <div style="display:flex;flex-direction:column;gap:6px">
                                 <button class="btn-sm btn-success" id="approve-btn-${i}" onclick="app.approve(${i})">✔ Approve</button>
-                                <button class="btn-sm btn-danger" id="reject-btn-${i}" onclick="app.reject(${i})">✖ Reject</button>
+                                <button class="btn-sm btn-danger"  id="reject-btn-${i}"  onclick="app.reject(${i})">✖ Reject</button>
                             </div>
                         </div>
                     </div>`;
                 });
                 break;
+            }
 
-            case 'permissions':
-                if (role !== 'owner') { html = `<div class="alert-box alert-danger">⚠ Owner only.</div>`; break; }
+            // ─── PERMISSIONS ───
+            case 'permissions': {
+                if (role!=='owner') { html=`<div class="alert-box alert-danger">⚠ Owner only.</div>`; break; }
                 html = `<div class="page-title">⚙️ Permission Manager</div>`;
-                html += `<div class="card-title" style="padding:0 0 8px;color:var(--primary-gold)">Role-Level Permissions</div>`;
+                html += `<div style="color:var(--gold-1);font-family:'Orbitron',monospace;font-size:11px;margin-bottom:10px">ROLE-LEVEL PERMISSIONS</div>`;
                 const roles = ['high_command','editor','hr','view','admin'];
                 const roleLabels = { high_command:'High Command', editor:'Editor', hr:'HR', view:'View', admin:'Admin' };
                 roles.forEach(r => {
@@ -773,16 +1177,34 @@ const app = {
                     Object.keys(PERM_LABELS).forEach(pk => {
                         const on = !!current[pk];
                         html += `<div class="perm-toggle ${on?'active':''}" data-role="${r}" data-perm="${pk}" onclick="app.toggleRolePerm('${r}','${pk}',this)">
-                            <span>${PERM_LABELS[pk]}</span>
+                            <span style="font-size:9px">${PERM_LABELS[pk]}</span>
                             <div class="toggle-dot"></div>
                         </div>`;
                     });
                     html += `</div></div>`;
                 });
-                html += `<div class="alert-box alert-info" style="margin-top:4px;margin-bottom:12px">ℹ Role permissions apply to everyone with that role. Individual extra permissions can be set per-admin in the Admin List page.</div>`;
+                html += `<div class="alert-box alert-info">ℹ Role perms apply to all with that role. Individual perms are set per-admin in Admin List.</div>`;
                 break;
+            }
 
-            case 'chat':
+            // ─── ACTIVITY LOGS ───
+            case 'logs': {
+                const canView   = perms.view_logs || perms.delete_logs_one || perms.delete_logs_all;
+                if (!canView) { html=`<div class="alert-box alert-danger">⚠ No permission to view logs.</div>`; break; }
+                html = `<div class="page-title">📋 Activity Logs</div>`;
+                if (role==='owner' || perms.delete_logs_all) {
+                    html += `<div style="display:flex;gap:8px;margin-bottom:12px">
+                        <button class="btn-danger btn-sm" onclick="app.deleteAllLogs()">🗑 Delete All Logs</button>
+                    </div>`;
+                }
+                html += `<div id="logs-container"><div class="loading-overlay"><span class="spinner"></span>Loading logs...</div></div>`;
+                area.innerHTML = html;
+                this.loadLogs();
+                return;
+            }
+
+            // ─── CHAT ───
+            case 'chat': {
                 html = `<div class="page-title">💬 Staff Chat</div>
                 <div class="chat-container">
                     <div id="chat-box" class="chat-messages"><div style="text-align:center;color:var(--text-muted);margin:auto">Loading messages...</div></div>
@@ -794,200 +1216,201 @@ const app = {
                 area.innerHTML = html;
                 this.initChat();
                 return;
+            }
         }
 
         area.innerHTML = html;
-        if (page === 'promo') this.renderLB();
-        if (page === 'weekly') this.renderLive();
-        if (page === 'curr-admins' && this.user.role === 'owner') this.initDragDrop();
+        if (page==='promo')       this.renderLB();
+        if (page==='weekly')      this.renderLive();
+        if (page==='curr-admins') {
+            this.watchOnlineStatus();
+            if (this.user.role==='owner') this.initDragDrop();
+        }
     },
 
-    // ─────────────────────────────────────────────
-    // DRAG AND DROP
-    // ─────────────────────────────────────────────
-    initDragDrop() {
-        const container = document.getElementById('admins-list-container');
-        if (!container) return;
+    // ─── ONLINE STATUS WATCHER ───
+    watchOnlineStatus() {
+        const adminsList = this.data.admins || [];
+        const isOwner = this.user.role === 'owner';
 
-        const cards = Array.from(container.querySelectorAll('.admin-card-draggable'));
-        let dragSrcIdx = null;
-        let dragOverIdx = null;
-        let touchCard = null;
-        let touchClone = null;
-        let touchStartY = 0;
+        // Owner dot
+        db.ref('admin_status/Shafin_Mirza').on('value', (snap) => {
+            const el = document.getElementById('owner-online-dot');
+            if (!el) return;
+            const s = snap.val();
+            const pref = (this.data.statusPrefs && this.data.statusPrefs['Shafin_Mirza']) || 'real';
+            this._applyStatusDot(el, s, pref, isOwner);
+        });
 
-        cards.forEach((card, idx) => {
-            const handle = card.querySelector('.drag-handle');
-
-            card.addEventListener('dragstart', (e) => {
-                dragSrcIdx = parseInt(card.dataset.idx);
-                card.classList.add('dragging');
-                e.dataTransfer.effectAllowed = 'move';
-                e.dataTransfer.setData('text/plain', dragSrcIdx);
+        adminsList.forEach(a => {
+            const elId = `dot-${a.name.replace(/\s/g,'_')}`;
+            db.ref(`admin_status/${a.name}`).on('value', (snap) => {
+                const el = document.getElementById(elId);
+                if (!el) return;
+                const s = snap.val();
+                const pref = (this.data.statusPrefs && this.data.statusPrefs[a.name]) || 'real';
+                this._applyStatusDot(el, s, pref, isOwner);
             });
-
-            card.addEventListener('dragend', () => {
-                card.classList.remove('dragging');
-                cards.forEach(c => c.classList.remove('drag-over'));
-                if (dragSrcIdx !== null && dragOverIdx !== null && dragSrcIdx !== dragOverIdx) {
-                    this._reorderAdmins(dragSrcIdx, dragOverIdx);
-                }
-                dragSrcIdx = null;
-                dragOverIdx = null;
-            });
-
-            card.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                e.dataTransfer.dropEffect = 'move';
-                const overIdx = parseInt(card.dataset.idx);
-                if (overIdx !== dragSrcIdx) {
-                    cards.forEach(c => c.classList.remove('drag-over'));
-                    card.classList.add('drag-over');
-                    dragOverIdx = overIdx;
-                }
-            });
-
-            card.addEventListener('dragleave', () => { card.classList.remove('drag-over'); });
-            card.addEventListener('drop', (e) => { e.preventDefault(); card.classList.remove('drag-over'); });
-
-            if (handle) {
-                handle.addEventListener('touchstart', (e) => {
-                    e.preventDefault();
-                    touchCard = card;
-                    dragSrcIdx = parseInt(card.dataset.idx);
-                    touchStartY = e.touches[0].clientY;
-                    touchClone = card.cloneNode(true);
-                    touchClone.style.cssText = `position:fixed;left:15px;right:15px;top:${card.getBoundingClientRect().top}px;opacity:0.85;z-index:9999;pointer-events:none;border:2px solid var(--primary-gold);box-shadow:0 12px 40px rgba(0,0,0,0.8);border-radius:16px;background:var(--card-bg);transition:none;`;
-                    document.body.appendChild(touchClone);
-                    card.classList.add('dragging');
-                }, { passive: false });
-
-                handle.addEventListener('touchmove', (e) => {
-                    e.preventDefault();
-                    const touch = e.touches[0];
-                    if (touchClone) { const dy = touch.clientY - touchStartY; touchClone.style.top = `${card.getBoundingClientRect().top + dy}px`; }
-                    const el = document.elementFromPoint(touch.clientX, touch.clientY);
-                    const overCard = el ? el.closest('.admin-card-draggable') : null;
-                    cards.forEach(c => c.classList.remove('drag-over'));
-                    if (overCard && overCard !== touchCard) { overCard.classList.add('drag-over'); dragOverIdx = parseInt(overCard.dataset.idx); }
-                }, { passive: false });
-
-                handle.addEventListener('touchend', (e) => {
-                    e.preventDefault();
-                    cards.forEach(c => c.classList.remove('drag-over', 'dragging'));
-                    if (touchClone) { document.body.removeChild(touchClone); touchClone = null; }
-                    if (dragSrcIdx !== null && dragOverIdx !== null && dragSrcIdx !== dragOverIdx) { this._reorderAdmins(dragSrcIdx, dragOverIdx); }
-                    dragSrcIdx = null; dragOverIdx = null; touchCard = null;
-                }, { passive: false });
-            }
         });
     },
 
-    _reorderAdmins(fromIdx, toIdx) {
-        const admins = this.data.admins;
-        if (!admins || fromIdx < 0 || toIdx < 0 || fromIdx >= admins.length || toIdx >= admins.length) return;
-        const item = admins.splice(fromIdx, 1)[0];
-        admins.splice(toIdx, 0, item);
-        this.save();
-        this.nav('curr-admins');
+    _applyStatusDot(el, statusData, pref, isOwner) {
+        const realOnline = statusData && statusData.online;
+        if (isOwner) {
+            // Owner always sees real status
+            el.className = `online-dot ${realOnline ? 'on' : 'off'}`;
+            el.title = realOnline ? 'Online' : 'Offline';
+        } else {
+            if (pref === 'hidden') {
+                el.style.display = 'none';
+            } else if (pref === 'always_online') {
+                el.className = 'online-dot on';
+                el.title = 'Online';
+            } else if (pref === 'always_offline') {
+                el.className = 'online-dot off';
+                el.title = 'Offline';
+            } else {
+                el.className = `online-dot ${realOnline ? 'on' : 'off'}`;
+                el.title = realOnline ? 'Online' : 'Offline';
+            }
+        }
     },
 
-    toggleRolePerm(role, perm, el) {
-        if (!this.data.permissions) this.data.permissions = {};
-        if (!this.data.permissions[role]) this.data.permissions[role] = {};
-        const newValue = !el.classList.contains('active');
-        this.data.permissions[role][perm] = newValue;
-        el.classList.toggle('active', newValue);
-        this.save();
-        this.showDash();
+    saveStatusPref() {
+        if (!this.data.statusPrefs) this.data.statusPrefs = {};
+        const val = document.getElementById('status-pref-sel').value;
+        this.data.statusPrefs[this.user.name] = val;
+        this.save().then(() => alert('Status preference saved!'));
     },
 
-    toggleIndividualPerm(adminName, perm, el) {
-        if (!this.data.individualPerms) this.data.individualPerms = {};
-        if (!this.data.individualPerms[adminName]) this.data.individualPerms[adminName] = {};
-        const newValue = !el.classList.contains('active');
-        this.data.individualPerms[adminName][perm] = newValue;
-        el.classList.toggle('active', newValue);
-        this.save();
-        if (this.user && this.user.name === adminName) this.showDash();
+    // ─── LOGS ───
+    loadLogs() {
+        const perms = this.getPerms(this.user.role, this.user.name);
+        const canDeleteOne = this.user.role==='owner' || perms.delete_logs_one;
+        const canDeleteAll = this.user.role==='owner' || perms.delete_logs_all;
+
+        db.ref('ahypar_logs').orderByKey().limitToLast(200).once('value', (snap) => {
+            const container = document.getElementById('logs-container');
+            if (!container) return;
+            const val = snap.val();
+            if (!val) {
+                container.innerHTML = `<div class="alert-box alert-info">ℹ No activity logs yet.</div>`;
+                return;
+            }
+            const entries = Object.entries(val).reverse();
+            container.innerHTML = entries.map(([key, log]) => `
+                <div class="log-entry ${log.type==='security'?'security':''}">
+                    <span class="log-icon">${log.icon||'📌'}</span>
+                    <div class="log-body">
+                        <span class="log-actor">${log.actor||'System'}</span>
+                        <span class="log-action"> ${log.action}</span>
+                        <div class="log-time">${log.time}</div>
+                    </div>
+                    ${canDeleteOne ? `<button class="log-del-btn" onclick="app.deleteOneLog('${key}')">Del</button>` : ''}
+                </div>
+            `).join('');
+        });
     },
 
+    deleteOneLog(key) {
+        if (!confirm('Delete this log entry?')) return;
+        db.ref(`ahypar_logs/${key}`).remove()
+            .then(() => { this.addLog('🗑', this.user.name, 'deleted a log entry'); this.nav('logs'); })
+            .catch(e => alert('Error: ' + e.message));
+    },
+
+    deleteAllLogs() {
+        if (!confirm('⚠ Delete ALL activity logs permanently? This cannot be undone.')) return;
+        db.ref('ahypar_logs').remove()
+            .then(() => { this.addLog('🗑', this.user.name, 'deleted ALL activity logs'); this.nav('logs'); })
+            .catch(e => alert('Error: ' + e.message));
+    },
+
+    // ─── LEADERBOARD ───
     renderLB() {
         const div = document.getElementById('promo-res'); if (!div) return;
         const isAuth = ['owner','high_command'].includes(this.user.role);
-        if (this.data.lbStatus === 'closed' || this.data.lbFileIndex === -1) {
-            div.innerHTML = `<div class="alert-box" style="background:rgba(255,255,255,0.04);border:1px solid var(--glass-border);color:var(--text-muted);justify-content:center">🔒 Leader Board is currently closed</div>`;
+        if (this.data.lbStatus==='closed' || this.data.lbFileIndex===-1) {
+            div.innerHTML = `<div class="alert-box" style="background:rgba(255,255,255,0.03);border:1px solid var(--border-dim);color:var(--text-muted);justify-content:center">🔒 Leader Board is currently closed</div>`;
             return;
         }
-        if (this.data.lbStatus === 'published_hc' && !isAuth) {
-            div.innerHTML = `<div class="alert-box alert-danger">🔒 This result is only visible to High Command and above.</div>`;
+        if (this.data.lbStatus==='published_hc' && !isAuth) {
+            div.innerHTML = `<div class="alert-box alert-danger">🔒 Visible to High Command and above only.</div>`;
             return;
         }
         const file = this.data.history[this.data.lbFileIndex]; if (!file) return;
         const stats = {};
         file.logs.forEach(l => {
             if (!stats[l.n]) stats[l.n] = { n:l.n, pts:0, hasWarn:false, lastWarn:'' };
-            stats[l.n].pts += (parseFloat(l.pts) || 0);
-            if (l.w && l.w.toLowerCase() !== 'none' && l.w.trim() !== '') { stats[l.n].hasWarn = true; stats[l.n].lastWarn = l.w; }
+            stats[l.n].pts += (parseFloat(l.pts)||0);
+            if (l.w && l.w.toLowerCase()!=='none' && l.w.trim()!=='') { stats[l.n].hasWarn=true; stats[l.n].lastWarn=l.w; }
         });
         const sorted = Object.values(stats).sort((a,b) => b.pts - a.pts);
-        const rankClass = ['gold','silver','bronze'];
-        div.innerHTML = `<div style="margin-bottom:12px;display:flex;justify-content:space-between;align-items:center"><b style="font-family:'Rajdhani',sans-serif;font-size:18px">${file.title}</b>${this.data.lbStatus==='published_hc'?'<span class="hc-tag">HC ONLY</span>':''}</div>`
+        const rankCls = ['gold','silver','bronze'];
+        div.innerHTML = `<div style="margin-bottom:12px;display:flex;justify-content:space-between;align-items:center"><b style="font-family:'Orbitron',monospace;font-size:16px">${file.title}</b>${this.data.lbStatus==='published_hc'?'<span class="hc-tag">HC ONLY</span>':''}</div>`
             + sorted.map((s,i) => `
-            <div class="lb-card" style="border-left:3px solid ${i===0?'var(--primary-gold)':i===1?'#C0C0C0':i===2?'#CD7F32':'var(--glass-border)'}">
-                <div class="lb-rank ${rankClass[i]||''}">#${i+1}</div>
-                <div class="lb-info"><div class="lb-name">${s.n}</div>${s.hasWarn ? `<span class="warn-alert">⚠ Cancelled · Warning (${s.lastWarn})</span>` : ''}</div>
+            <div class="lb-card" style="border-left:3px solid ${i===0?'var(--gold-1)':i===1?'#C0C0C0':i===2?'#CD7F32':'var(--border-dim)'}">
+                <div class="lb-rank ${rankCls[i]||''}">#${i+1}</div>
+                <div class="lb-info">
+                    <div class="lb-name">${s.n}</div>
+                    ${s.hasWarn?`<span class="warn-alert">⚠ Cancelled · Warning (${s.lastWarn})</span>`:''}
+                </div>
                 <div style="display:flex;align-items:center;gap:8px">
-                    <div class="lb-pts">${s.pts} <small style="font-size:11px;color:var(--text-muted)">pts</small></div>
-                    ${this.user.role==='owner'?`<button class="btn-sm" style="background:var(--dark-gold);color:#000" onclick="app.editLBPoints('${s.n}')">Edit</button>`:''}
+                    <div class="lb-pts">${s.pts} <small style="font-size:10px;color:var(--text-muted)">pts</small></div>
+                    ${this.user.role==='owner'?`<button class="btn-sm" style="background:var(--gold-3);color:#000" onclick="app.editLBPoints('${s.n}')">Edit</button>`:''}
                 </div>
             </div>`).join('');
     },
 
     editLBPoints(name) {
         const file = this.data.history[this.data.lbFileIndex];
-        const cur = file.logs.filter(l => l.n === name).reduce((s,l) => s + (parseFloat(l.pts)||0), 0);
-        const nv = prompt(`${name} — current total: ${cur}\nEnter new total:`, cur);
-        if (nv !== null) {
+        const cur = file.logs.filter(l=>l.n===name).reduce((s,l)=>s+(parseFloat(l.pts)||0),0);
+        const nv = prompt(`${name} — current: ${cur}\nEnter new total:`, cur);
+        if (nv!==null) {
             const diff = (parseFloat(nv)||0) - cur;
             file.logs.push({ n:name, d:new Date().toISOString().split('T')[0], t:'0', pts:diff, w:'Manual Correction' });
             this.save(); this.renderLB();
+            this.addLog('✏️', this.user.name, `manually adjusted points for ${name} to ${nv}`);
         }
     },
 
     renderLive() {
-        const div = document.getElementById('live-view'); if (!div || !this.data.activeWeek || !this.data.activeWeek.logs) return;
-        div.innerHTML = `<div class="card-title" style="margin-top:8px">Live Entries</div>` + this.data.activeWeek.logs.slice().reverse().map((l, ri) => {
-            const idx = this.data.activeWeek.logs.length - 1 - ri;
-            return `<div class="card" style="border-left:3px solid var(--primary-gold);padding:12px 14px">
-                ${this.user.role==='owner'?`<button class="btn-del" onclick="app.deleteLog(${idx})">Del</button>`:''}
-                <b>${l.n}</b> <span style="color:var(--primary-gold);font-family:'Rajdhani',sans-serif;font-size:16px">${l.pts} pts</span>
-                <br><small style="color:var(--text-muted)">${l.d} · T:${l.t} O:${l.o} E:${l.e}</small>
-                <br><small style="color:${l.w&&l.w!=='None'?'var(--danger-red)':'var(--text-muted)'}">Warning: ${l.w||'None'}</small>
-            </div>`;
-        }).join('');
+        const div = document.getElementById('live-view');
+        if (!div || !this.data.activeWeek || !this.data.activeWeek.logs) return;
+        div.innerHTML = `<div class="card-title" style="margin-top:8px">Live Entries</div>`
+            + this.data.activeWeek.logs.slice().reverse().map((l,ri) => {
+                const idx = this.data.activeWeek.logs.length - 1 - ri;
+                return `<div class="card" style="border-left:3px solid var(--gold-1);padding:12px 14px">
+                    ${this.user.role==='owner'?`<button class="btn-del" onclick="app.deleteLog(${idx})">Del</button>`:''}
+                    <b>${l.n}</b> <span style="color:var(--gold-1);font-family:'Orbitron',monospace;font-size:15px">${l.pts} pts</span>
+                    <br><small style="color:var(--text-muted)">${l.d} · T:${l.t} O:${l.o} E:${l.e}</small>
+                    <br><small style="color:${l.w&&l.w!=='None'?'var(--red)':'var(--text-muted)'}">Warning: ${l.w||'None'}</small>
+                </div>`;
+            }).join('');
     },
 
-    addLog() {
-        const n = document.getElementById('sel-n').value, d = document.getElementById('fd').value;
-        if (!d) return alert("Please select a date!");
-        const t = parseFloat(document.getElementById('ft').value)||0;
-        const o = parseFloat(document.getElementById('fo').value)||0;
-        const e = parseFloat(document.getElementById('fe').value)||0;
-        const w = document.getElementById('fw').value || 'None';
-        const pts = (t * 5) + o + e;
-        if (!this.data.activeWeek.logs) this.data.activeWeek.logs = [];
-        this.data.activeWeek.logs.push({ n, d, t, o, e, w, pts });
+    addLog_entry() {
+        const n=document.getElementById('sel-n').value, d=document.getElementById('fd').value;
+        if (!d) return alert('Please enter a date!');
+        const t=parseFloat(document.getElementById('ft').value)||0;
+        const o=parseFloat(document.getElementById('fo').value)||0;
+        const e=parseFloat(document.getElementById('fe').value)||0;
+        const w=document.getElementById('fw').value||'None';
+        const pts=(t*5)+o+e;
+        if (!this.data.activeWeek.logs) this.data.activeWeek.logs=[];
+        this.data.activeWeek.logs.push({n,d,t,o,e,w,pts});
         this.save(); this.renderLive();
-        ['ft','fo','fe'].forEach(id => document.getElementById(id).value = '0');
-        document.getElementById('fw').value = 'None';
+        this.addLog('📝', this.user.name, `added weekly entry for ${n}: ${pts} pts`);
+        ['ft','fo','fe'].forEach(id=>document.getElementById(id).value='0');
+        document.getElementById('fw').value='None';
     },
 
+    // ─── CHAT ───
     initChat() {
         db.ref('staff_chat').limitToLast(50).on('value', (snap) => {
             const box = document.getElementById('chat-box'); if (!box) return;
             const msgs = snap.val();
-            if (!msgs) { box.innerHTML = `<div style="text-align:center;color:var(--text-muted);margin:auto">No messages yet</div>`; return; }
+            if (!msgs) { box.innerHTML=`<div style="text-align:center;color:var(--text-muted);margin:auto">No messages yet</div>`; return; }
             box.innerHTML = Object.values(msgs).map(m =>
                 `<div class="msg ${m.user===this.user.name?'msg-self':'msg-other'}"><span class="msg-meta">${m.user}</span>${m.text}</div>`
             ).join('');
@@ -998,21 +1421,22 @@ const app = {
     sendChat() {
         const input = document.getElementById('chat-input');
         const txt = input.value.trim(); if (!txt) return;
-        db.ref('staff_chat').push({ user: this.user.name, text: txt, time: new Date().toLocaleTimeString() });
+        db.ref('staff_chat').push({ user:this.user.name, text:txt, time:new Date().toLocaleTimeString() });
         input.value = '';
     },
 
+    // ─── ADMIN STYLE ───
     saveAdminStyle(i) {
         const a = this.data.admins[i];
-        a.tag = document.getElementById(`tag-n-${i}`).value;
+        a.tag      = document.getElementById(`tag-n-${i}`).value;
         a.tagColor = document.getElementById(`tag-c-${i}`).value;
         a.boxColor = document.getElementById(`box-c-${i}`).value;
-        this.save(); alert("Style saved!"); this.nav('curr-admins');
+        this.save(); alert('Style saved!'); this.nav('curr-admins');
     },
 
     setOwnerStyle() {
-        if (!this.data.ownerInfo) this.data.ownerInfo = {};
-        this.data.ownerInfo.tag = document.getElementById('ow-t').value;
+        if (!this.data.ownerInfo) this.data.ownerInfo={};
+        this.data.ownerInfo.tag      = document.getElementById('ow-t').value;
         this.data.ownerInfo.tagColor = document.getElementById('ow-tc').value;
         this.data.ownerInfo.boxColor = document.getElementById('ow-bc').value;
         this.save(); this.nav('curr-admins');
@@ -1020,31 +1444,43 @@ const app = {
 
     updateRules() {
         const text = document.getElementById('rule-input').value;
-        this.data.appRules = text; this.data.ruleAuthor = this.user.name; this.data.ruleDate = new Date().toLocaleString();
-        this.save(); alert("Rules posted!"); this.nav('rules');
+        this.data.appRules = text;
+        this.data.ruleAuthor = this.user.name;
+        this.data.ruleDate = new Date().toLocaleString();
+        this.save();
+        this.addLog('📜', this.user.name, 'updated App Rules');
+        alert('Rules posted!'); this.nav('rules');
     },
 
     startW() {
         const t = document.getElementById('wt').value.trim();
-        if (t) { this.data.activeWeek = {title:t, logs:[]}; this.save(); this.nav('weekly'); }
+        if (t) {
+            this.data.activeWeek = {title:t, logs:[]};
+            this.save();
+            this.addLog('📅', this.user.name, `started new week: "${t}"`);
+            this.nav('weekly');
+        }
     },
 
     finishW() {
-        if (!confirm("Finalize week and update staff banks?")) return;
+        if (!confirm('Finalize week and update staff banks?')) return;
         if (!this.data.activeWeek) return;
         this.data.activeWeek.logs.forEach(l => {
-            const a = this.data.admins.find(x => x.name === l.n);
-            if (a) { a.bank = (parseFloat(a.bank)||0) + (parseFloat(l.pts)||0); a.warnings = l.w; }
+            const a = this.data.admins.find(x => x.name===l.n);
+            if (a) { a.bank=(parseFloat(a.bank)||0)+(parseFloat(l.pts)||0); a.warnings=l.w; }
         });
-        if (!this.data.history) this.data.history = [];
+        if (!this.data.history) this.data.history=[];
         this.data.history.push(JSON.parse(JSON.stringify(this.data.activeWeek)));
+        const title = this.data.activeWeek.title;
         this.data.activeWeek = null;
-        this.save(); this.nav('stored');
+        this.save();
+        this.addLog('✅', this.user.name, `finished and stored week: "${title}"`);
+        this.nav('stored');
     },
 
     viewAdminProfile(i) {
         const a = this.data.admins[i];
-        const isOwner = this.user.role === 'owner';
+        const isOwner = this.user.role==='owner';
         document.getElementById('screen').innerHTML = `
         <div class="page-title">Staff Profile</div>
         <div class="card">
@@ -1063,95 +1499,173 @@ const app = {
 
     updateAdmin(i) {
         const a = this.data.admins[i];
-        if (this.user.role === 'owner') a.name = document.getElementById('ed-n').value;
-        a.lvl = document.getElementById('ed-l').value;
-        a.bank = document.getElementById('ed-b').value;
+        if (this.user.role==='owner') a.name = document.getElementById('ed-n').value;
+        a.lvl      = document.getElementById('ed-l').value;
+        a.bank     = document.getElementById('ed-b').value;
         a.warnings = document.getElementById('ed-w').value;
         a.passcode = document.getElementById('ed-p').value;
-        this.save(); alert("Profile updated!"); this.nav('curr-admins');
+        this.save();
+        this.addLog('✏️', this.user.name, `updated profile of ${a.name}`);
+        alert('Profile updated!'); this.nav('curr-admins');
     },
 
     setLBStatus(status) {
         const el = document.getElementById('lb-file-select'); if (!el) return;
-        const idx = el.value; if (idx === "") return;
-        this.data.lbStatus = status; this.data.lbFileIndex = parseInt(idx);
-        this.save(); this.renderLB();
+        const idx = el.value; if (idx==='') return;
+        this.data.lbStatus = status;
+        this.data.lbFileIndex = parseInt(idx);
+        this.save();
+        const statusLabel = {published_hc:'HC Only',published_public:'Public',closed:'Closed'}[status]||status;
+        this.addLog('🎖️', this.user.name, `set Leaderboard to "${statusLabel}" for file index ${idx}`);
+        this.renderLB();
     },
 
     viewF(i) {
         const f = this.data.history[i];
         let h = `<div class="page-title">📂 ${f.title}</div><button class="btn-ghost" onclick="app.nav('stored')">← Back</button><br><br>`;
-        f.logs.forEach(l => { h += `<div class="card"><b>${l.n}</b> <span style="color:var(--primary-gold);font-family:'Rajdhani',sans-serif">${l.pts} pts</span><br><small style="color:var(--text-muted)">${l.d}</small></div>`; });
+        f.logs.forEach(l => {
+            h += `<div class="card"><b>${l.n}</b> <span style="color:var(--gold-1);font-family:'Orbitron',monospace">${l.pts} pts</span><br><small style="color:var(--text-muted)">${l.d}</small></div>`;
+        });
         document.getElementById('screen').innerHTML = h;
     },
 
-    deleteLog(idx) { if (confirm("Delete this entry?")) { this.data.activeWeek.logs.splice(idx,1); this.save(); this.renderLive(); } },
-    changeLvl(i) { this.data.admins[i].lvl = document.getElementById(`lvl-up-${i}`).value; this.save(); this.nav('curr-admins'); },
-    setRole(i, r) { this.data.admins[i].role = r; this.save(); this.nav('curr-admins'); },
-    kick(i) { if (confirm("Remove this admin?")) { this.data.admins.splice(i,1); this.save(); this.nav('curr-admins'); } },
-    delF(i) { if (confirm("Delete this file permanently?")) { this.data.history.splice(i,1); this.save(); this.nav('stored'); } },
+    deleteLog(idx) {
+        if (confirm('Delete this entry?')) {
+            this.data.activeWeek.logs.splice(idx,1);
+            this.save(); this.renderLive();
+        }
+    },
 
-    // ─────────────────────────────────────────────
-    // APPROVE — FIXED: uses Firebase transactions
-    // to safely add to admins and remove from requests
-    // ─────────────────────────────────────────────
+    changeLvl(i) {
+        const newLvl = document.getElementById(`lvl-up-${i}`).value;
+        const name = this.data.admins[i].name;
+        this.data.admins[i].lvl = newLvl;
+        this.save();
+        this.addLog('📋', this.user.name, `changed level of ${name} to "${newLvl}"`);
+        this.nav('curr-admins');
+    },
+
+    setRole(i, r) {
+        const a = this.data.admins[i];
+        const oldRole = a.role;
+
+        // Prevent changing own role
+        if (a.name === this.user.name) {
+            alert("⚠ You cannot change your own role.");
+            return;
+        }
+
+        // Prevent acting on equal or senior roles unless owner
+        if (this.user.role !== 'owner' && !this.canActOn(this.user.role, oldRole)) {
+            alert("⚠ You cannot change the role of someone with equal or higher rank.");
+            return;
+        }
+
+        // set_role_mg check for HC role assignment
+        if (r === 'owner') { alert("⚠ Owner role cannot be assigned."); return; }
+
+        a.role = r;
+        this.save();
+        this.addLog('🔄', this.user.name, `changed role of ${a.name} from "${oldRole}" to "${r}"`);
+
+        // Show confirmation badge next to the name
+        const badge = document.getElementById(`role-label-${i}`);
+        if (badge) {
+            badge.textContent = `✓ ${r.toUpperCase()}`;
+            badge.style.display = 'inline-flex';
+            setTimeout(() => { if (badge) badge.style.display='none'; }, 3000);
+        }
+
+        // Re-render after short delay so badge shows
+        setTimeout(() => this.nav('curr-admins'), 800);
+    },
+
+    kick(i) {
+        const a = this.data.admins[i];
+        if (a.name === this.user.name) { alert("⚠ You cannot kick yourself."); return; }
+        if (this.user.role !== 'owner' && !this.canActOn(this.user.role, a.role)) {
+            alert("⚠ You cannot kick someone with equal or higher rank.");
+            return;
+        }
+        if (confirm(`Remove ${a.name} from the admin list?`)) {
+            this.data.admins.splice(i,1);
+            this.save();
+            this.addLog('🚫', this.user.name, `kicked admin: ${a.name} (was ${a.role})`);
+            this.nav('curr-admins');
+        }
+    },
+
+    delF(i) {
+        if (confirm('Delete this stored file permanently?')) {
+            const title = this.data.history[i].title;
+            this.data.history.splice(i,1);
+            this.save();
+            this.addLog('🗑', this.user.name, `deleted stored file: "${title}"`);
+            this.nav('stored');
+        }
+    },
+
+    // ─── PERMISSION TOGGLES ───
+    toggleRolePerm(role, perm, el) {
+        if (!this.data.permissions) this.data.permissions={};
+        if (!this.data.permissions[role]) this.data.permissions[role]={};
+        const newVal = !el.classList.contains('active');
+        this.data.permissions[role][perm] = newVal;
+        el.classList.toggle('active', newVal);
+        this.save();
+        this.addLog('⚙️', this.user.name, `${newVal?'enabled':'disabled'} permission "${PERM_LABELS[perm]}" for role "${role}"`);
+        this.showDash();
+    },
+
+    toggleIndividualPerm(adminName, perm, el) {
+        if (!this.data.individualPerms) this.data.individualPerms={};
+        if (!this.data.individualPerms[adminName]) this.data.individualPerms[adminName]={};
+        const newVal = !el.classList.contains('active');
+        this.data.individualPerms[adminName][perm] = newVal;
+        el.classList.toggle('active', newVal);
+        this.save();
+        this.addLog('⚡', this.user.name, `${newVal?'granted':'revoked'} individual perm "${PERM_LABELS[perm]}" for ${adminName}`);
+        if (this.user && this.user.name===adminName) this.showDash();
+    },
+
+    // ─── APPROVE / REJECT ───
     async approve(i) {
-        const requests = this.data.requests || [];
+        const requests = this.data.requests||[];
         const r = requests[i];
-        if (!r) { alert("Request not found."); return; }
+        if (!r) { alert('Request not found.'); return; }
 
-        // Disable buttons to prevent double-click
         const approveBtn = document.getElementById(`approve-btn-${i}`);
         const rejectBtn  = document.getElementById(`reject-btn-${i}`);
-        if (approveBtn) { approveBtn.disabled = true; approveBtn.textContent = '⏳ Approving...'; }
-        if (rejectBtn)  { rejectBtn.disabled = true; }
+        if (approveBtn) { approveBtn.disabled=true; approveBtn.textContent='⏳ Approving...'; }
+        if (rejectBtn)  { rejectBtn.disabled=true; }
 
-        const code = Math.floor(1000 + Math.random() * 8999).toString();
-        const newAdmin = {
-            name:     r.name,
-            lvl:      r.lvl,
-            bank:     "0",
-            warnings: 'None',
-            passcode: code,
-            role:     'admin'
-        };
+        const code = Math.floor(1000+Math.random()*8999).toString();
+        const newAdmin = { name:r.name, lvl:r.lvl, bank:'0', warnings:'None', passcode:code, role:'admin' };
 
         try {
-            // Read fresh data from Firebase, apply changes, write back atomically
             await db.ref('ahypar_new_data').transaction((currentData) => {
                 if (!currentData) return currentData;
-
-                // Ensure arrays exist
-                if (!currentData.admins)   currentData.admins   = [];
-                if (!currentData.requests) currentData.requests = [];
-
-                // Add new admin
+                if (!currentData.admins)   currentData.admins=[];
+                if (!currentData.requests) currentData.requests=[];
                 currentData.admins.push(newAdmin);
-
-                // Remove this request by name (safer than index in concurrent env)
-                currentData.requests = currentData.requests.filter(
-                    req => !(req.name === r.name && req.lvl === r.lvl)
-                );
-
+                currentData.requests = currentData.requests.filter(req => !(req.name===r.name && req.lvl===r.lvl));
                 return currentData;
             });
 
-            // Update local data to stay in sync
-            if (!this.data.admins)   this.data.admins   = [];
-            if (!this.data.requests) this.data.requests = [];
+            if (!this.data.admins)   this.data.admins=[];
+            if (!this.data.requests) this.data.requests=[];
             this.data.admins.push(newAdmin);
-            this.data.requests = this.data.requests.filter(
-                req => !(req.name === r.name && req.lvl === r.lvl)
-            );
+            this.data.requests = this.data.requests.filter(req => !(req.name===r.name && req.lvl===r.lvl));
 
-            alert(`✅ Approved!\n\nStaff: ${r.name}\nPasscode: ${code}\n\nShare this passcode with them to login.`);
+            this.addLog('✅', this.user.name, `approved application from ${r.name} (Level: ${r.lvl}) — passcode assigned`);
+            alert(`✅ Approved!\n\nStaff: ${r.name}\nPasscode: ${code}\n\nShare this passcode with them.`);
             this.nav('access');
 
         } catch(err) {
-            console.error("Approve failed:", err);
-            alert("❌ Failed to approve. Please try again.\n" + err.message);
-            if (approveBtn) { approveBtn.disabled = false; approveBtn.textContent = '✔ Approve'; }
-            if (rejectBtn)  { rejectBtn.disabled = false; }
+            console.error('Approve failed:', err);
+            alert('❌ Failed to approve. Please try again.\n' + err.message);
+            if (approveBtn) { approveBtn.disabled=false; approveBtn.textContent='✔ Approve'; }
+            if (rejectBtn)  { rejectBtn.disabled=false; }
         }
     },
 
@@ -1159,50 +1673,103 @@ const app = {
         const r = this.data.requests[i];
         if (!r) return;
         if (confirm(`Reject application from ${r.name}?`)) {
-            this.data.requests.splice(i, 1);
-            // Write only requests to DB for safety
+            this.data.requests.splice(i,1);
             db.ref('ahypar_new_data/requests').set(this.data.requests)
-                .then(() => this.nav('access'))
-                .catch(err => { console.error(err); alert("Error rejecting request."); });
+                .then(() => {
+                    this.addLog('✖', this.user.name, `rejected application from ${r.name}`);
+                    this.nav('access');
+                })
+                .catch(err => { console.error(err); alert('Error rejecting request.'); });
         }
     },
 
+    // ─── APPLY REQUEST ───
     requestAccess() {
         const n = document.getElementById('req-n').value.trim();
         const l = document.getElementById('req-lvl').value.trim();
         const msgEl = document.getElementById('app-msg');
-
         if (!n || !l) {
-            msgEl.className = 'alert-box alert-danger';
-            msgEl.textContent = '⚠ Please fill in your name and level.';
-            msgEl.classList.remove('hidden');
-            return;
+            msgEl.className='alert-box alert-danger'; msgEl.textContent='⚠ Please fill in your name and level.';
+            msgEl.classList.remove('hidden'); return;
         }
-
-        if (!this.data.requests) this.data.requests = [];
-
-        const already = this.data.requests.find(x => x.name.toLowerCase() === n.toLowerCase());
+        if (!this.data.requests) this.data.requests=[];
+        const already = this.data.requests.find(x => x.name.toLowerCase()===n.toLowerCase());
         if (already) {
-            msgEl.className = 'alert-box alert-danger';
-            msgEl.textContent = '⚠ An application with this name is already pending.';
-            msgEl.classList.remove('hidden');
-            return;
+            msgEl.className='alert-box alert-danger'; msgEl.textContent='⚠ An application with this name is already pending.';
+            msgEl.classList.remove('hidden'); return;
         }
-
-        this.data.requests.push({
-            name: n,
-            lvl: l,
-            submitted: new Date().toLocaleString()
-        });
-
+        this.data.requests.push({ name:n, lvl:l, submitted:new Date().toLocaleString() });
         db.ref('ahypar_new_data/requests').set(this.data.requests);
-
-        msgEl.className = 'app-success';
-        msgEl.innerHTML = `✅ Application submitted!<br><small>Wait for an admin to review your request.</small>`;
+        this.addLog('📨', 'Applicant', `new staff application from "${n}" (Level: ${l})`);
+        msgEl.className='app-success'; msgEl.innerHTML=`✅ Application submitted!<br><small>Wait for an admin to review your request.</small>`;
         msgEl.classList.remove('hidden');
+        document.getElementById('req-n').value='';
+        document.getElementById('req-lvl').value='';
+    },
 
-        document.getElementById('req-n').value = '';
-        document.getElementById('req-lvl').value = '';
+    // ─── DRAG & DROP ───
+    initDragDrop() {
+        const container = document.getElementById('admins-list-container');
+        if (!container) return;
+        const cards = Array.from(container.querySelectorAll('.admin-card-draggable'));
+        let dragSrcIdx = null, dragOverIdx = null, touchCard = null, touchClone = null, touchStartY = 0;
+
+        cards.forEach((card) => {
+            const handle = card.querySelector('.drag-handle');
+            card.addEventListener('dragstart', (e) => {
+                dragSrcIdx = parseInt(card.dataset.idx);
+                card.classList.add('dragging');
+                e.dataTransfer.effectAllowed = 'move';
+            });
+            card.addEventListener('dragend', () => {
+                card.classList.remove('dragging');
+                cards.forEach(c => c.classList.remove('drag-over'));
+                if (dragSrcIdx!==null && dragOverIdx!==null && dragSrcIdx!==dragOverIdx) this._reorderAdmins(dragSrcIdx, dragOverIdx);
+                dragSrcIdx=null; dragOverIdx=null;
+            });
+            card.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                const oi = parseInt(card.dataset.idx);
+                if (oi!==dragSrcIdx) { cards.forEach(c=>c.classList.remove('drag-over')); card.classList.add('drag-over'); dragOverIdx=oi; }
+            });
+            card.addEventListener('dragleave', () => card.classList.remove('drag-over'));
+            card.addEventListener('drop', (e) => { e.preventDefault(); card.classList.remove('drag-over'); });
+
+            if (handle) {
+                handle.addEventListener('touchstart', (e) => {
+                    e.preventDefault(); touchCard=card; dragSrcIdx=parseInt(card.dataset.idx); touchStartY=e.touches[0].clientY;
+                    touchClone=card.cloneNode(true);
+                    touchClone.style.cssText=`position:fixed;left:15px;right:15px;top:${card.getBoundingClientRect().top}px;opacity:0.85;z-index:9999;pointer-events:none;border:2px solid var(--gold-1);border-radius:14px;background:var(--bg-card);transition:none;`;
+                    document.body.appendChild(touchClone); card.classList.add('dragging');
+                }, {passive:false});
+                handle.addEventListener('touchmove', (e) => {
+                    e.preventDefault();
+                    const touch=e.touches[0];
+                    if (touchClone) { const dy=touch.clientY-touchStartY; touchClone.style.top=`${card.getBoundingClientRect().top+dy}px`; }
+                    const el=document.elementFromPoint(touch.clientX,touch.clientY);
+                    const oc=el?el.closest('.admin-card-draggable'):null;
+                    cards.forEach(c=>c.classList.remove('drag-over'));
+                    if (oc&&oc!==touchCard) { oc.classList.add('drag-over'); dragOverIdx=parseInt(oc.dataset.idx); }
+                }, {passive:false});
+                handle.addEventListener('touchend', (e) => {
+                    e.preventDefault();
+                    cards.forEach(c=>c.classList.remove('drag-over','dragging'));
+                    if (touchClone) { document.body.removeChild(touchClone); touchClone=null; }
+                    if (dragSrcIdx!==null && dragOverIdx!==null && dragSrcIdx!==dragOverIdx) this._reorderAdmins(dragSrcIdx, dragOverIdx);
+                    dragSrcIdx=null; dragOverIdx=null; touchCard=null;
+                }, {passive:false});
+            }
+        });
+    },
+
+    _reorderAdmins(fromIdx, toIdx) {
+        const admins = this.data.admins;
+        if (!admins || fromIdx<0 || toIdx<0 || fromIdx>=admins.length || toIdx>=admins.length) return;
+        const item = admins.splice(fromIdx,1)[0];
+        admins.splice(toIdx,0,item);
+        this.save();
+        this.addLog('↕️', this.user.name, `reordered admin list`);
+        this.nav('curr-admins');
     },
 
     toggleMenu(s) {
@@ -1211,8 +1778,13 @@ const app = {
     },
 
     logout() {
+        if (this.user) {
+            // Set offline status
+            db.ref(`admin_status/${this.user.name}`).update({ online: false, lastSeen: firebase.database.ServerValue.TIMESTAMP });
+            this.addLog('🚪', this.user.name, 'logged out');
+        }
         auth.signOut().catch(()=>{});
-        location.reload();
+        setTimeout(() => location.reload(), 300);
     }
 };
 
