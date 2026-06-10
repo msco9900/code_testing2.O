@@ -1,1 +1,2691 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AHYPAR Administration</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
 
+    <!-- Firebase Compat SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-analytics-compat.js"></script>
+
+    <style>
+    /* ════════════════════════════════════════════
+       DESIGN TOKENS
+    ════════════════════════════════════════════ */
+    :root {
+        /* Core palette */
+        --void:      #05060E;
+        --base:      #080B14;
+        --surface:   #0D1120;
+        --raised:    #121829;
+        --overlay:   rgba(13,17,32,0.96);
+
+        /* Accent system */
+        --violet:    #7B4FFF;
+        --violet-2:  #9B78FF;
+        --violet-glow: rgba(123,79,255,0.18);
+        --violet-border: rgba(123,79,255,0.35);
+        --amber:     #F5A623;
+        --amber-2:   #FFD166;
+        --amber-glow: rgba(245,166,35,0.15);
+        --amber-border: rgba(245,166,35,0.35);
+        --crimson:   #FF3366;
+        --crimson-soft: rgba(255,51,102,0.12);
+        --teal:      #00E5C0;
+        --teal-soft: rgba(0,229,192,0.10);
+        --sky:       #38B6FF;
+        --sky-soft:  rgba(56,182,255,0.10);
+
+        /* Text */
+        --t1: #E8ECFF;
+        --t2: #8A93B8;
+        --t3: #464D6A;
+
+        /* Border */
+        --bd1: rgba(255,255,255,0.06);
+        --bd2: rgba(123,79,255,0.25);
+        --bd3: rgba(245,166,35,0.30);
+
+        /* Fonts */
+        --font-display: 'Space Grotesk', sans-serif;
+        --font-body:    'Inter', sans-serif;
+        --font-mono:    'JetBrains Mono', monospace;
+
+        /* Radii */
+        --r-xs: 6px;
+        --r-sm: 10px;
+        --r-md: 16px;
+        --r-lg: 22px;
+        --r-xl: 30px;
+
+        /* Shadows */
+        --shadow-card: 0 4px 32px rgba(0,0,0,0.6), 0 1px 0 rgba(255,255,255,0.04) inset;
+        --shadow-violet: 0 0 0 1px var(--violet-border), 0 8px 40px rgba(123,79,255,0.15);
+        --shadow-amber:  0 0 0 1px var(--amber-border),  0 8px 40px rgba(245,166,35,0.12);
+        --glow-violet: 0 0 24px rgba(123,79,255,0.4);
+        --glow-amber:  0 0 24px rgba(245,166,35,0.35);
+    }
+
+    /* ════════════════════════════════════════════
+       RESET & BASE
+    ════════════════════════════════════════════ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+        font-family: var(--font-body);
+        background: var(--void);
+        color: var(--t1);
+        min-height: 100vh;
+        overflow-x: hidden;
+        line-height: 1.5;
+    }
+
+    /* Animated mesh background */
+    body::before {
+        content: '';
+        position: fixed; inset: 0; z-index: 0;
+        background:
+            radial-gradient(ellipse 80% 60% at 10% 0%,   rgba(123,79,255,0.08) 0%, transparent 60%),
+            radial-gradient(ellipse 60% 50% at 90% 100%, rgba(245,166,35,0.06) 0%, transparent 60%),
+            radial-gradient(ellipse 40% 40% at 50% 50%,  rgba(56,182,255,0.03) 0%, transparent 70%);
+        pointer-events: none;
+        animation: meshShift 12s ease-in-out infinite alternate;
+    }
+    @keyframes meshShift {
+        0%   { opacity: 1; transform: scale(1); }
+        100% { opacity: 0.7; transform: scale(1.04); }
+    }
+
+    /* Fine grid */
+    body::after {
+        content: '';
+        position: fixed; inset: 0; z-index: 0;
+        background-image:
+            linear-gradient(rgba(123,79,255,0.025) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(123,79,255,0.025) 1px, transparent 1px);
+        background-size: 48px 48px;
+        pointer-events: none;
+    }
+
+    .hidden { display: none !important; }
+
+    /* Scanlines overlay */
+    .scanlines {
+        position: fixed; inset: 0; z-index: 9999; pointer-events: none;
+        background: repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,0,0,0.015) 3px, rgba(0,0,0,0.015) 4px);
+    }
+
+    /* ════════════════════════════════════════════
+       SCROLLBAR
+    ════════════════════════════════════════════ */
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(123,79,255,0.35); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(123,79,255,0.6); }
+
+    /* ════════════════════════════════════════════
+       TYPOGRAPHY HELPERS
+    ════════════════════════════════════════════ */
+    .label-xs {
+        font-family: var(--font-mono);
+        font-size: 9px; font-weight: 500;
+        letter-spacing: 2px; text-transform: uppercase;
+        color: var(--t3);
+    }
+    .label-sm {
+        font-family: var(--font-mono);
+        font-size: 10px; font-weight: 600;
+        letter-spacing: 1.5px; text-transform: uppercase;
+    }
+
+    /* ════════════════════════════════════════════
+       LOGIN SCREEN
+    ════════════════════════════════════════════ */
+    #login-view {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        padding: 24px 20px;
+        position: relative; z-index: 1;
+    }
+
+    .login-logo {
+        text-align: center;
+        margin-bottom: 40px;
+    }
+    .login-logo .logo-ring {
+        width: 72px; height: 72px;
+        border-radius: 50%;
+        background: conic-gradient(from 180deg, var(--violet), var(--amber), var(--violet));
+        display: flex; align-items: center; justify-content: center;
+        margin: 0 auto 16px;
+        box-shadow: var(--glow-violet);
+        animation: rotateSlow 8s linear infinite;
+    }
+    .login-logo .logo-ring-inner {
+        width: 58px; height: 58px;
+        border-radius: 50%;
+        background: var(--void);
+        display: flex; align-items: center; justify-content: center;
+        font-family: var(--font-display);
+        font-size: 22px; font-weight: 700;
+        background-clip: text;
+        color: transparent;
+        background-image: linear-gradient(135deg, var(--amber), var(--amber-2));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+    /* Reset inner for non-webkit */
+    .logo-ring-inner-text {
+        font-family: var(--font-display);
+        font-size: 22px; font-weight: 700;
+        background: linear-gradient(135deg, var(--amber), var(--amber-2));
+        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    @keyframes rotateSlow { to { transform: rotate(360deg); } }
+
+    .login-logo .logo-main {
+        font-family: var(--font-display);
+        font-size: 36px; font-weight: 700;
+        letter-spacing: 6px;
+        background: linear-gradient(135deg, var(--t1) 40%, var(--violet-2));
+        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .login-logo .logo-sub {
+        font-family: var(--font-mono);
+        font-size: 10px; color: var(--t3);
+        letter-spacing: 3px; text-transform: uppercase;
+        margin-top: 6px;
+    }
+
+    .login-card {
+        width: 100%; max-width: 420px;
+        background: var(--surface);
+        border: 1px solid var(--bd1);
+        border-radius: var(--r-lg);
+        padding: 28px 24px;
+        box-shadow: var(--shadow-card);
+        position: relative; overflow: hidden;
+    }
+    .login-card::before {
+        content: '';
+        position: absolute; top: 0; left: 0; right: 0; height: 1px;
+        background: linear-gradient(90deg, transparent, var(--violet), var(--amber), transparent);
+        opacity: 0.6;
+    }
+
+    /* ════════════════════════════════════════════
+       HEADER
+    ════════════════════════════════════════════ */
+    header {
+        position: sticky; top: 0; z-index: 1000;
+        background: rgba(8,11,20,0.92);
+        backdrop-filter: blur(20px) saturate(1.4);
+        border-bottom: 1px solid var(--bd1);
+        height: 60px;
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 0 20px;
+        box-shadow: 0 1px 0 rgba(123,79,255,0.1), 0 8px 32px rgba(0,0,0,0.7);
+    }
+    header::after {
+        content: '';
+        position: absolute; bottom: 0; left: 0; right: 0; height: 1px;
+        background: linear-gradient(90deg, transparent 0%, var(--violet) 30%, var(--amber) 70%, transparent 100%);
+        opacity: 0.3;
+        animation: headerSweep 6s ease-in-out infinite alternate;
+    }
+    @keyframes headerSweep {
+        0%   { opacity: 0.2; transform: scaleX(0.7); }
+        100% { opacity: 0.5; transform: scaleX(1); }
+    }
+
+    .header-brand { display: flex; flex-direction: column; gap: 1px; }
+    .brand-name {
+        font-family: var(--font-display);
+        font-size: 13px; font-weight: 700;
+        background: linear-gradient(90deg, var(--amber), var(--amber-2));
+        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        letter-spacing: 1.5px;
+    }
+    .brand-sub {
+        font-family: var(--font-mono);
+        font-size: 9px; color: var(--t3); letter-spacing: 1.5px; text-transform: uppercase;
+    }
+    .brand-user {
+        font-family: var(--font-mono);
+        font-size: 10px; color: var(--t2); margin-top: 1px;
+    }
+    .brand-user b { color: var(--violet-2); }
+
+    .menu-btn {
+        width: 40px; height: 40px;
+        background: rgba(123,79,255,0.08);
+        border: 1px solid var(--violet-border);
+        border-radius: var(--r-sm);
+        color: var(--violet-2);
+        font-size: 17px; cursor: pointer;
+        display: flex; align-items: center; justify-content: center;
+        transition: all 0.2s;
+    }
+    .menu-btn:hover {
+        background: rgba(123,79,255,0.18);
+        box-shadow: var(--glow-violet);
+    }
+
+    /* ════════════════════════════════════════════
+       SIDE MENU OVERLAY
+    ════════════════════════════════════════════ */
+    .menu-backdrop {
+        position: fixed; inset: 0;
+        background: rgba(5,6,14,0.75);
+        backdrop-filter: blur(4px);
+        z-index: 1999; opacity: 0; pointer-events: none; transition: 0.3s;
+    }
+    .menu-backdrop.active { opacity: 1; pointer-events: all; }
+
+    .menu-overlay {
+        position: fixed; top: 0; right: 0;
+        width: min(78%, 290px); height: 100%;
+        background: var(--surface);
+        border-left: 1px solid var(--bd2);
+        z-index: 2000;
+        transform: translateX(100%);
+        transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+        padding: 16px 14px; overflow-y: auto;
+        box-shadow: -24px 0 80px rgba(0,0,0,0.8), inset 1px 0 0 rgba(123,79,255,0.15);
+    }
+    .menu-overlay.active { transform: translateX(0); }
+
+    .menu-overlay::before {
+        content: 'AHYPAR';
+        display: block;
+        font-family: var(--font-display);
+        font-size: 18px; font-weight: 700;
+        background: linear-gradient(90deg, var(--violet-2), var(--amber));
+        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        letter-spacing: 4px; text-align: center;
+        padding: 10px 0 20px; margin-bottom: 4px;
+        border-bottom: 1px solid var(--bd2);
+    }
+
+    .menu-section-label {
+        font-family: var(--font-mono);
+        font-size: 8px; color: var(--violet-2); opacity: 0.6;
+        letter-spacing: 2.5px; text-transform: uppercase;
+        padding: 16px 10px 5px;
+    }
+    .menu-item {
+        padding: 10px 14px;
+        border-radius: var(--r-sm);
+        font-weight: 500; cursor: pointer;
+        color: var(--t2); font-size: 13px;
+        display: flex; align-items: center; gap: 10px;
+        margin: 2px 0; transition: all 0.15s;
+        font-family: var(--font-body);
+    }
+    .menu-item:hover {
+        background: rgba(123,79,255,0.1);
+        color: var(--t1);
+        padding-left: 18px;
+    }
+    .menu-item .mi-icon {
+        width: 28px; height: 28px;
+        background: rgba(255,255,255,0.04);
+        border: 1px solid var(--bd1);
+        border-radius: var(--r-xs);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 13px; flex-shrink: 0;
+        transition: 0.15s;
+    }
+    .menu-item:hover .mi-icon {
+        background: rgba(123,79,255,0.15);
+        border-color: var(--violet-border);
+    }
+    .menu-item.danger { color: var(--crimson); }
+    .menu-item.danger:hover { background: var(--crimson-soft); color: var(--crimson); }
+    .menu-item.chat-item {
+        color: var(--violet-2);
+        border-top: 1px solid var(--bd1);
+        margin-top: 10px; padding-top: 14px;
+    }
+    .menu-item.chat-item:hover { background: rgba(123,79,255,0.12); }
+
+    /* ════════════════════════════════════════════
+       MAIN CONTAINER
+    ════════════════════════════════════════════ */
+    .container {
+        padding: 20px 16px;
+        max-width: 560px;
+        margin: 0 auto;
+        position: relative; z-index: 1;
+    }
+
+    /* ════════════════════════════════════════════
+       CARDS
+    ════════════════════════════════════════════ */
+    .card {
+        background: var(--surface);
+        border: 1px solid var(--bd1);
+        border-radius: var(--r-md);
+        padding: 20px;
+        margin-bottom: 14px;
+        box-shadow: var(--shadow-card);
+        position: relative; overflow: hidden;
+        transition: border-color 0.25s, box-shadow 0.25s;
+    }
+    .card::before {
+        content: '';
+        position: absolute; top: 0; left: 0; right: 0; height: 1px;
+        background: linear-gradient(90deg, transparent 20%, rgba(123,79,255,0.4) 50%, transparent 80%);
+        opacity: 0; transition: opacity 0.25s;
+    }
+    .card:hover::before { opacity: 1; }
+    .card:hover {
+        border-color: rgba(123,79,255,0.2);
+        box-shadow: var(--shadow-card), var(--violet-glow) 0 0 0 1px;
+    }
+
+    .card-title {
+        font-family: var(--font-mono);
+        font-size: 9px; font-weight: 600;
+        color: var(--violet-2); opacity: 0.7;
+        text-transform: uppercase; letter-spacing: 2.5px;
+        margin-bottom: 16px;
+        display: flex; align-items: center; gap: 6px;
+    }
+    .card-title::before {
+        content: '';
+        display: inline-block; width: 12px; height: 1px;
+        background: var(--violet);
+    }
+
+    /* Glass card variant */
+    .card-glass {
+        background: rgba(13,17,32,0.7);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(123,79,255,0.2);
+    }
+
+    /* ════════════════════════════════════════════
+       PAGE TITLE
+    ════════════════════════════════════════════ */
+    .page-title {
+        font-family: var(--font-display);
+        font-size: 18px; font-weight: 700;
+        color: var(--t1);
+        letter-spacing: 0.5px;
+        margin-bottom: 20px;
+        display: flex; align-items: center; gap: 10px;
+    }
+    .page-title::after {
+        content: '';
+        flex: 1; height: 1px;
+        background: linear-gradient(90deg, rgba(123,79,255,0.5), transparent);
+    }
+    .page-title .pt-icon {
+        width: 34px; height: 34px;
+        background: var(--violet-glow);
+        border: 1px solid var(--violet-border);
+        border-radius: var(--r-sm);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 15px;
+        box-shadow: var(--glow-violet);
+    }
+
+    /* ════════════════════════════════════════════
+       INPUTS & FORMS
+    ════════════════════════════════════════════ */
+    input, select, textarea {
+        width: 100%;
+        background: rgba(255,255,255,0.04);
+        border: 1px solid var(--bd1);
+        border-radius: var(--r-sm);
+        color: var(--t1);
+        padding: 11px 14px;
+        margin: 5px 0;
+        font-size: 13px;
+        font-family: var(--font-body);
+        transition: all 0.2s;
+        outline: none;
+    }
+    input::placeholder { color: var(--t3); }
+    input:focus, select:focus, textarea:focus {
+        border-color: var(--violet-border);
+        background: rgba(123,79,255,0.05);
+        box-shadow: 0 0 0 3px rgba(123,79,255,0.1);
+    }
+    select option { background: var(--surface); color: var(--t1); }
+
+    label {
+        font-family: var(--font-mono);
+        font-size: 10px; color: var(--t3); font-weight: 600;
+        text-transform: uppercase; letter-spacing: 1.5px;
+        display: block; margin-top: 12px;
+    }
+
+    textarea { resize: vertical; min-height: 100px; }
+
+    /* ════════════════════════════════════════════
+       BUTTONS
+    ════════════════════════════════════════════ */
+    button {
+        width: 100%;
+        background: linear-gradient(135deg, #5B35CC, var(--violet), #9B78FF);
+        color: #fff;
+        font-family: var(--font-display);
+        font-weight: 600; font-size: 12px;
+        letter-spacing: 1px; text-transform: uppercase;
+        border: none; border-radius: var(--r-sm);
+        padding: 12px 18px;
+        cursor: pointer;
+        transition: all 0.2s;
+        margin: 5px 0;
+        position: relative; overflow: hidden;
+    }
+    button::after {
+        content: '';
+        position: absolute; inset: 0;
+        background: linear-gradient(135deg, transparent, rgba(255,255,255,0.08), transparent);
+        transform: translateX(-100%);
+        transition: transform 0.4s;
+    }
+    button:hover { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(123,79,255,0.4); }
+    button:hover::after { transform: translateX(100%); }
+    button:active { transform: translateY(0); }
+
+    .btn-danger {
+        background: linear-gradient(135deg, #b02040, var(--crimson)) !important;
+        color: #fff !important;
+        box-shadow: none;
+    }
+    .btn-danger:hover { box-shadow: 0 6px 24px rgba(255,51,102,0.35) !important; }
+
+    .btn-success {
+        background: linear-gradient(135deg, #009970, var(--teal)) !important;
+        color: #040E0B !important;
+    }
+    .btn-success:hover { box-shadow: 0 6px 24px rgba(0,229,192,0.3) !important; }
+
+    .btn-amber {
+        background: linear-gradient(135deg, #c07810, var(--amber)) !important;
+        color: #060400 !important;
+    }
+    .btn-amber:hover { box-shadow: 0 6px 24px rgba(245,166,35,0.35) !important; }
+
+    .btn-ghost {
+        background: rgba(255,255,255,0.04) !important;
+        color: var(--t2) !important;
+        border: 1px solid var(--bd1) !important;
+        box-shadow: none !important;
+    }
+    .btn-ghost:hover {
+        background: rgba(255,255,255,0.08) !important;
+        box-shadow: none !important;
+        transform: none !important;
+    }
+    .btn-info {
+        background: linear-gradient(135deg, #006fa0, var(--sky)) !important;
+        color: #fff !important;
+    }
+
+    .btn-sm {
+        width: auto; padding: 5px 12px;
+        font-size: 9px; letter-spacing: 0.8px;
+        margin: 2px; border-radius: var(--r-xs);
+        font-family: var(--font-display);
+    }
+    .btn-del {
+        background: var(--crimson) !important;
+        color: white !important;
+        width: auto; float: right;
+        padding: 4px 10px; font-size: 9px;
+        margin-top: -28px; border-radius: var(--r-xs);
+    }
+    .active-role {
+        background: var(--amber) !important;
+        color: #060400 !important;
+        box-shadow: 0 0 12px rgba(245,166,35,0.45) !important;
+    }
+
+    /* ════════════════════════════════════════════
+       ALERTS & ALERT BOXES
+    ════════════════════════════════════════════ */
+    .alert-box {
+        border-radius: var(--r-sm);
+        padding: 12px 16px;
+        font-size: 12px; font-family: var(--font-body);
+        margin: 8px 0;
+        display: flex; align-items: center; gap: 10px;
+        font-weight: 500;
+    }
+    .alert-danger {
+        background: var(--crimson-soft);
+        border: 1px solid rgba(255,51,102,0.3);
+        color: var(--crimson);
+    }
+    .alert-success {
+        background: var(--teal-soft);
+        border: 1px solid rgba(0,229,192,0.3);
+        color: var(--teal);
+    }
+    .alert-info {
+        background: var(--sky-soft);
+        border: 1px solid rgba(56,182,255,0.3);
+        color: var(--sky);
+    }
+    .alert-amber {
+        background: var(--amber-glow);
+        border: 1px solid var(--amber-border);
+        color: var(--amber);
+    }
+    .warn-alert {
+        color: var(--crimson); font-size: 11px;
+        font-weight: 600; display: block; margin-top: 4px;
+    }
+
+    /* ════════════════════════════════════════════
+       STAT CARDS
+    ════════════════════════════════════════════ */
+    .stat-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
+    .stat-box {
+        background: var(--raised);
+        border: 1px solid var(--bd1);
+        border-radius: var(--r-md);
+        padding: 18px 14px;
+        text-align: center;
+        position: relative; overflow: hidden;
+        transition: all 0.2s;
+    }
+    .stat-box::before {
+        content: '';
+        position: absolute; bottom: 0; left: 0; right: 0; height: 2px;
+        background: linear-gradient(90deg, transparent, var(--violet), transparent);
+        opacity: 0.5;
+    }
+    .stat-box:hover { border-color: var(--violet-border); }
+    .stat-box .val {
+        font-family: var(--font-display);
+        font-size: 28px; font-weight: 700;
+        background: linear-gradient(135deg, var(--amber), var(--amber-2));
+        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        line-height: 1;
+    }
+    .stat-box .lbl {
+        font-family: var(--font-mono);
+        font-size: 9px; color: var(--t3);
+        text-transform: uppercase; letter-spacing: 1.5px; margin-top: 6px;
+    }
+
+    /* ════════════════════════════════════════════
+       BADGES & TAGS
+    ════════════════════════════════════════════ */
+    .tag-span {
+        color: #000; padding: 2px 8px; border-radius: 4px;
+        font-size: 9px; margin-left: 6px; vertical-align: middle;
+        font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase;
+        font-family: var(--font-mono);
+    }
+    .role-badge {
+        display: inline-flex; align-items: center;
+        padding: 3px 10px; border-radius: 20px;
+        font-size: 9px; font-weight: 700; letter-spacing: 1px;
+        text-transform: uppercase; border: 1px solid;
+        font-family: var(--font-mono);
+    }
+    .badge-owner  { background: rgba(245,166,35,0.12);  color: var(--amber);   border-color: var(--amber-border); }
+    .badge-hc     { background: rgba(123,79,255,0.12);  color: var(--violet-2); border-color: var(--violet-border); }
+    .badge-editor { background: rgba(56,182,255,0.10);  color: var(--sky);      border-color: rgba(56,182,255,0.3); }
+    .badge-admin  { background: rgba(255,255,255,0.04); color: var(--t2);       border-color: var(--bd1); }
+
+    /* Professor badge */
+    .badge-prof {
+        display: inline-flex; align-items: center; gap: 4px;
+        padding: 3px 10px; border-radius: 20px;
+        font-size: 9px; font-weight: 700; letter-spacing: 1px;
+        text-transform: uppercase; border: 1px solid;
+        font-family: var(--font-mono);
+        background: rgba(255,51,102,0.1);
+        color: var(--crimson);
+        border-color: rgba(255,51,102,0.35);
+        animation: profPulse 2s ease-in-out infinite;
+    }
+    @keyframes profPulse {
+        0%,100% { box-shadow: 0 0 0 0 rgba(255,51,102,0); }
+        50%      { box-shadow: 0 0 0 4px rgba(255,51,102,0.1); }
+    }
+
+    .hc-tag {
+        font-size: 9px;
+        background: rgba(255,51,102,0.12); color: var(--crimson);
+        border: 1px solid rgba(255,51,102,0.3);
+        border-radius: 4px; padding: 2px 7px;
+        margin-left: 6px; font-family: var(--font-mono);
+    }
+
+    /* Role confirm badge */
+    .role-confirm-badge {
+        display: inline-flex; align-items: center; gap: 4px;
+        padding: 3px 9px; border-radius: 6px;
+        font-size: 10px; font-weight: 700;
+        font-family: var(--font-mono);
+        background: var(--teal-soft);
+        border: 1px solid rgba(0,229,192,0.35);
+        color: var(--teal);
+        margin-left: 8px;
+        animation: fadeInBadge 0.3s ease;
+    }
+    @keyframes fadeInBadge { from { opacity:0; transform:scale(0.8); } to { opacity:1; transform:scale(1); } }
+
+    /* ════════════════════════════════════════════
+       ONLINE STATUS
+    ════════════════════════════════════════════ */
+    .online-dot {
+        width: 8px; height: 8px;
+        border-radius: 50%;
+        display: inline-block; flex-shrink: 0;
+        transition: 0.3s;
+    }
+    .online-dot.on  { background: var(--teal); box-shadow: 0 0 6px var(--teal); animation: pulse 2s ease-in-out infinite; }
+    .online-dot.off { background: var(--t3); }
+    .online-dot.hidden-status { background: var(--amber); }
+
+    .live-dot {
+        width: 7px; height: 7px;
+        background: var(--teal); border-radius: 50%;
+        display: inline-block; margin-right: 5px;
+        animation: pulse 1.8s ease-in-out infinite;
+    }
+    @keyframes pulse {
+        0%,100% { opacity:1; transform:scale(1); }
+        50%      { opacity:0.35; transform:scale(0.7); }
+    }
+
+    /* ════════════════════════════════════════════
+       DIVIDER
+    ════════════════════════════════════════════ */
+    .divider {
+        height: 1px;
+        background: linear-gradient(90deg, transparent, var(--bd2), transparent);
+        margin: 16px 0;
+    }
+
+    /* ════════════════════════════════════════════
+       PERMISSION TOGGLES (Role Level)
+    ════════════════════════════════════════════ */
+    .perm-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin-top: 10px; }
+    .perm-toggle {
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 9px 11px;
+        background: rgba(255,255,255,0.02);
+        border: 1px solid var(--bd1);
+        border-radius: var(--r-sm);
+        font-size: 10px; color: var(--t3); cursor: pointer;
+        transition: all 0.2s; user-select: none;
+    }
+    .perm-toggle:hover { border-color: var(--violet-border); color: var(--t2); }
+    .perm-toggle.active {
+        background: rgba(123,79,255,0.08);
+        border-color: var(--violet-border);
+        color: var(--violet-2);
+    }
+    .toggle-dot {
+        width: 30px; height: 16px;
+        border-radius: 20px; background: rgba(255,255,255,0.07);
+        position: relative; transition: 0.25s; flex-shrink: 0;
+    }
+    .toggle-dot::after {
+        content: ''; position: absolute;
+        left: 2px; top: 2px; width: 12px; height: 12px;
+        border-radius: 50%; background: var(--t3); transition: 0.25s;
+    }
+    .perm-toggle.active .toggle-dot { background: rgba(123,79,255,0.4); }
+    .perm-toggle.active .toggle-dot::after { left: 16px; background: var(--violet-2); }
+
+    /* ════════════════════════════════════════════
+       INDIVIDUAL PERMS
+    ════════════════════════════════════════════ */
+    .indiv-perms-section {
+        margin-top: 14px; padding-top: 14px;
+        border-top: 1px dashed rgba(56,182,255,0.2);
+    }
+    .indiv-perms-title {
+        font-family: var(--font-mono);
+        font-size: 9px; color: var(--sky);
+        text-transform: uppercase; letter-spacing: 1.5px; font-weight: 600;
+        margin-bottom: 10px; display: flex; align-items: center; gap: 6px;
+    }
+    .indiv-perm-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
+    .indiv-perm-toggle {
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 7px 10px;
+        background: rgba(255,255,255,0.02);
+        border: 1px solid var(--bd1);
+        border-radius: var(--r-xs);
+        font-size: 9px; color: var(--t3); cursor: pointer;
+        transition: all 0.2s; user-select: none;
+    }
+    .indiv-perm-toggle:hover { border-color: rgba(56,182,255,0.3); color: var(--t2); }
+    .indiv-perm-toggle.active {
+        background: rgba(56,182,255,0.07);
+        border-color: rgba(56,182,255,0.4);
+        color: var(--sky);
+    }
+    .indiv-toggle-dot {
+        width: 26px; height: 14px; border-radius: 20px;
+        background: rgba(255,255,255,0.07);
+        position: relative; transition: 0.25s; flex-shrink: 0;
+    }
+    .indiv-toggle-dot::after {
+        content: ''; position: absolute;
+        left: 2px; top: 2px; width: 10px; height: 10px;
+        border-radius: 50%; background: var(--t3); transition: 0.25s;
+    }
+    .indiv-perm-toggle.active .indiv-toggle-dot { background: rgba(56,182,255,0.35); }
+    .indiv-perm-toggle.active .indiv-toggle-dot::after { left: 14px; background: var(--sky); }
+    .manual-badge {
+        font-size: 8px; background: var(--sky-soft); color: var(--sky);
+        border: 1px solid rgba(56,182,255,0.35); border-radius: 4px;
+        padding: 1px 5px; font-family: var(--font-mono);
+    }
+
+    /* ════════════════════════════════════════════
+       PROFESSOR / BOSS PERMISSION PANEL
+    ════════════════════════════════════════════ */
+    .prof-section {
+        margin-top: 14px; padding-top: 14px;
+        border-top: 1px dashed rgba(255,51,102,0.25);
+    }
+    .prof-section-title {
+        font-family: var(--font-mono);
+        font-size: 9px; color: var(--crimson);
+        text-transform: uppercase; letter-spacing: 1.5px; font-weight: 700;
+        margin-bottom: 10px; display: flex; align-items: center; gap: 6px;
+    }
+    .prof-toggle {
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 12px 14px;
+        background: rgba(255,51,102,0.04);
+        border: 1px solid rgba(255,51,102,0.2);
+        border-radius: var(--r-sm);
+        cursor: pointer; transition: all 0.2s; user-select: none;
+    }
+    .prof-toggle:hover { border-color: rgba(255,51,102,0.4); background: rgba(255,51,102,0.08); }
+    .prof-toggle.active {
+        background: rgba(255,51,102,0.1);
+        border-color: rgba(255,51,102,0.45);
+        box-shadow: 0 0 16px rgba(255,51,102,0.12);
+    }
+    .prof-toggle-label { flex: 1; padding: 0 12px; }
+    .prof-toggle-label .ptl-name {
+        font-family: var(--font-display);
+        font-size: 13px; font-weight: 600; color: var(--t1);
+    }
+    .prof-toggle-label .ptl-desc {
+        font-size: 10px; color: var(--t3); margin-top: 2px; line-height: 1.4;
+    }
+    .prof-toggle-label .ptl-desc.active-desc { color: var(--crimson); opacity: 0.8; }
+    .prof-toggle-dot {
+        width: 36px; height: 20px; border-radius: 20px;
+        background: rgba(255,255,255,0.07);
+        position: relative; transition: 0.25s; flex-shrink: 0;
+    }
+    .prof-toggle-dot::after {
+        content: ''; position: absolute;
+        left: 3px; top: 3px; width: 14px; height: 14px;
+        border-radius: 50%; background: var(--t3); transition: 0.25s;
+    }
+    .prof-toggle.active .prof-toggle-dot {
+        background: rgba(255,51,102,0.4);
+        box-shadow: 0 0 10px rgba(255,51,102,0.3);
+    }
+    .prof-toggle.active .prof-toggle-dot::after {
+        left: 19px; background: var(--crimson);
+    }
+    .prof-warning {
+        font-family: var(--font-mono);
+        font-size: 9px; color: var(--crimson); opacity: 0.7;
+        margin-top: 8px; padding: 8px 10px;
+        background: rgba(255,51,102,0.05);
+        border: 1px dashed rgba(255,51,102,0.2);
+        border-radius: var(--r-xs); line-height: 1.5;
+    }
+    /* Minimum role check notice */
+    .prof-role-warning {
+        font-family: var(--font-mono);
+        font-size: 9px; color: var(--amber); opacity: 0.85;
+        padding: 7px 10px;
+        background: rgba(245,166,35,0.06);
+        border: 1px dashed rgba(245,166,35,0.25);
+        border-radius: var(--r-xs); margin-top: 8px;
+    }
+
+    /* ════════════════════════════════════════════
+       LEADERBOARD
+    ════════════════════════════════════════════ */
+    .lb-card {
+        border-radius: var(--r-md); padding: 14px 16px; margin-bottom: 10px;
+        display: flex; align-items: center; gap: 12px;
+        border: 1px solid var(--bd1);
+        background: var(--surface);
+        transition: all 0.2s;
+    }
+    .lb-card:hover { border-color: var(--violet-border); transform: translateX(3px); }
+    .lb-rank {
+        font-family: var(--font-display);
+        font-size: 20px; font-weight: 800;
+        color: var(--t3); width: 38px; text-align: center;
+    }
+    .lb-rank.gold   { color: var(--amber); text-shadow: var(--glow-amber); }
+    .lb-rank.silver { color: #C0C0C0; }
+    .lb-rank.bronze { color: #CD7F32; }
+    .lb-info { flex: 1; }
+    .lb-name { font-family: var(--font-display); font-weight: 700; font-size: 14px; }
+    .lb-pts  {
+        font-family: var(--font-display);
+        font-size: 20px; font-weight: 800;
+        background: linear-gradient(135deg, var(--amber), var(--amber-2));
+        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+
+    /* ════════════════════════════════════════════
+       CHAT
+    ════════════════════════════════════════════ */
+    .chat-container {
+        display: flex; flex-direction: column;
+        height: calc(100vh - 170px);
+    }
+    .chat-messages {
+        flex-grow: 1; overflow-y: auto;
+        padding: 14px;
+        background: rgba(0,0,0,0.3);
+        border: 1px solid var(--bd1);
+        border-radius: var(--r-md);
+        margin-bottom: 12px;
+        display: flex; flex-direction: column; gap: 8px;
+    }
+    .msg {
+        padding: 10px 14px; border-radius: 14px;
+        max-width: 84%; font-size: 13px; line-height: 1.45;
+        font-family: var(--font-body);
+    }
+    .msg-self {
+        align-self: flex-end;
+        background: linear-gradient(135deg, #5B35CC, var(--violet));
+        color: #fff; border-bottom-right-radius: 4px;
+        box-shadow: 0 4px 16px rgba(123,79,255,0.25);
+    }
+    .msg-other {
+        align-self: flex-start;
+        background: var(--raised); color: var(--t1);
+        border-bottom-left-radius: 4px;
+        border: 1px solid var(--bd1);
+    }
+    .msg-meta {
+        font-size: 9px; font-weight: 700;
+        display: block; margin-bottom: 4px;
+        opacity: 0.7; font-family: var(--font-mono);
+    }
+    .chat-input-area { display: flex; gap: 8px; }
+    .chat-input-area input { flex-grow: 1; margin: 0; }
+    .chat-input-area button { width: auto; margin: 0; padding: 0 20px; }
+
+    /* ════════════════════════════════════════════
+       RULES
+    ════════════════════════════════════════════ */
+    .rule-box {
+        background: rgba(255,255,255,0.02);
+        padding: 18px; border-radius: var(--r-sm);
+        border: 1px solid var(--bd1);
+        white-space: pre-wrap; margin-top: 12px;
+        font-size: 13px; line-height: 1.8;
+        color: var(--t1); font-family: var(--font-body);
+    }
+    .rule-meta {
+        font-family: var(--font-mono);
+        font-size: 10px; color: var(--t3); margin-bottom: 12px;
+        border-bottom: 1px solid var(--bd1); padding-bottom: 10px;
+    }
+
+    /* ════════════════════════════════════════════
+       ADMIN CARD STYLES
+    ════════════════════════════════════════════ */
+    .admin-card-actions {
+        margin-top: 14px; padding-top: 14px;
+        border-top: 1px solid rgba(255,255,255,0.05);
+    }
+    .admin-style-section {
+        margin-top: 12px; padding-top: 12px;
+        border-top: 1px dashed rgba(245,166,35,0.15);
+    }
+    .style-row {
+        display: flex; align-items: center; gap: 8px;
+        flex-wrap: wrap; margin-top: 8px;
+    }
+    .style-row label { margin: 0; white-space: nowrap; }
+    .style-row input[type="color"] {
+        width: 36px; height: 30px; padding: 2px;
+        border-radius: var(--r-xs); cursor: pointer; flex-shrink: 0;
+    }
+    .style-row input[type="text"] { flex: 1; min-width: 80px; padding: 6px 8px; margin: 0; }
+
+    /* ════════════════════════════════════════════
+       DRAG & DROP
+    ════════════════════════════════════════════ */
+    .drag-handle {
+        display: inline-flex; align-items: center; justify-content: center;
+        width: 28px; height: 28px; border-radius: var(--r-xs);
+        background: rgba(123,79,255,0.08);
+        border: 1px solid rgba(123,79,255,0.25);
+        color: var(--violet-2); cursor: grab; font-size: 14px;
+        flex-shrink: 0; transition: all 0.15s;
+        user-select: none; -webkit-user-select: none; touch-action: none;
+    }
+    .drag-handle:hover {
+        background: rgba(123,79,255,0.2);
+        border-color: var(--violet-border);
+    }
+    .drag-handle:active { cursor: grabbing; }
+    .admin-card-draggable { transition: opacity 0.15s, box-shadow 0.15s; }
+    .admin-card-draggable.dragging {
+        opacity: 0.45;
+        box-shadow: 0 0 0 2px var(--violet), 0 12px 40px rgba(0,0,0,0.7) !important;
+    }
+    .admin-card-draggable.drag-over {
+        border-color: var(--violet) !important;
+        box-shadow: 0 0 0 2px rgba(123,79,255,0.3) !important;
+    }
+    .drag-hint {
+        font-family: var(--font-mono);
+        font-size: 10px; color: var(--violet-2); opacity: 0.65;
+        display: flex; align-items: center; gap: 6px;
+        margin-bottom: 12px; padding: 8px 12px;
+        background: rgba(123,79,255,0.04);
+        border: 1px dashed rgba(123,79,255,0.2);
+        border-radius: var(--r-sm);
+    }
+    .admin-card-header {
+        display: flex; justify-content: space-between; align-items: center;
+    }
+    .admin-card-header-left {
+        display: flex; align-items: center; gap: 8px; flex: 1;
+    }
+
+    /* ════════════════════════════════════════════
+       LOGS
+    ════════════════════════════════════════════ */
+    .log-entry {
+        background: rgba(255,255,255,0.02);
+        border: 1px solid var(--bd1);
+        border-radius: var(--r-sm);
+        padding: 11px 14px; margin-bottom: 8px;
+        font-size: 11px; display: flex; align-items: flex-start; gap: 10px;
+        transition: border-color 0.2s;
+    }
+    .log-entry:hover { border-color: rgba(123,79,255,0.2); }
+    .log-icon { font-size: 14px; flex-shrink: 0; margin-top: 1px; }
+    .log-body { flex: 1; }
+    .log-actor { font-weight: 700; color: var(--amber); font-family: var(--font-mono); }
+    .log-action { color: var(--t1); }
+    .log-time { font-size: 9px; color: var(--t3); font-family: var(--font-mono); margin-top: 3px; }
+    .log-del-btn {
+        background: var(--crimson) !important; color: #fff !important;
+        width: auto; padding: 3px 8px; font-size: 9px;
+        border-radius: 5px; flex-shrink: 0; margin: 0;
+    }
+    .log-entry.security {
+        border-color: rgba(255,51,102,0.3);
+        background: rgba(255,51,102,0.04);
+    }
+    .log-entry.security .log-actor { color: var(--crimson); }
+
+    /* ════════════════════════════════════════════
+       LOADING & SPINNER
+    ════════════════════════════════════════════ */
+    .spinner {
+        width: 15px; height: 15px;
+        border: 2px solid rgba(123,79,255,0.2);
+        border-top-color: var(--violet-2);
+        border-radius: 50%; animation: spin 0.65s linear infinite;
+        display: inline-block; vertical-align: middle; margin-right: 6px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .loading-overlay {
+        display: flex; align-items: center; justify-content: center;
+        padding: 32px; color: var(--t3); gap: 10px;
+        font-size: 12px; font-family: var(--font-mono);
+    }
+
+    /* ════════════════════════════════════════════
+       PASSWORD STRENGTH
+    ════════════════════════════════════════════ */
+    .pw-strength {
+        height: 3px; border-radius: 2px; margin-top: 5px;
+        background: rgba(255,255,255,0.05); overflow: hidden;
+    }
+    .pw-strength-bar {
+        height: 100%; border-radius: 2px; transition: all 0.3s; width: 0%;
+    }
+    .pw-hint {
+        font-size: 10px; color: var(--t3); margin-top: 3px;
+        font-family: var(--font-mono);
+    }
+
+    /* ════════════════════════════════════════════
+       OWNER-ONLY FIELD
+    ════════════════════════════════════════════ */
+    .owner-only-field {
+        background: rgba(245,166,35,0.04);
+        border: 1px dashed rgba(245,166,35,0.25);
+        border-radius: var(--r-sm); padding: 12px 14px; margin-top: 10px;
+    }
+    .owner-only-label {
+        font-family: var(--font-mono);
+        font-size: 9px; color: var(--amber);
+        text-transform: uppercase; letter-spacing: 1.5px;
+        margin-bottom: 8px; display: flex; align-items: center; gap: 5px;
+    }
+
+    /* ════════════════════════════════════════════
+       STATUS PREFERENCE
+    ════════════════════════════════════════════ */
+    .status-control { display: flex; align-items: center; gap: 8px; margin-top: 12px; }
+    .status-control select { padding: 8px 10px; font-size: 11px; margin: 0; }
+
+    /* ════════════════════════════════════════════
+       APP SUCCESS
+    ════════════════════════════════════════════ */
+    .app-success {
+        background: var(--teal-soft);
+        border: 1px solid rgba(0,229,192,0.3);
+        color: var(--teal); border-radius: var(--r-sm);
+        padding: 12px 16px; font-size: 12px;
+        text-align: center; margin-top: 10px;
+    }
+
+    /* ════════════════════════════════════════════
+       SESSION BLOCKED
+    ════════════════════════════════════════════ */
+    .session-blocked {
+        position: fixed; inset: 0; z-index: 9000;
+        background: rgba(5,6,14,0.97);
+        display: flex; flex-direction: column;
+        align-items: center; justify-content: center;
+        padding: 32px; text-align: center;
+    }
+    .session-blocked h2 {
+        font-family: var(--font-display);
+        color: var(--crimson); font-size: 24px; margin-bottom: 16px;
+    }
+    .session-blocked p { color: var(--t2); font-size: 13px; line-height: 1.75; }
+
+    /* ════════════════════════════════════════════
+       PROFILE AVATAR
+    ════════════════════════════════════════════ */
+    .avatar-ring {
+        width: 72px; height: 72px; border-radius: 50%;
+        background: conic-gradient(from 180deg, var(--violet), var(--amber), var(--teal), var(--violet));
+        display: flex; align-items: center; justify-content: center;
+        margin: 0 auto 16px;
+        animation: rotateSlow 10s linear infinite;
+    }
+    .avatar-inner {
+        width: 62px; height: 62px; border-radius: 50%;
+        background: var(--surface);
+        display: flex; align-items: center; justify-content: center;
+        font-family: var(--font-display);
+        font-size: 26px; font-weight: 700;
+        background: linear-gradient(135deg, var(--amber), var(--amber-2));
+        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .avatar-wrap {
+        width: 72px; height: 72px; border-radius: 50%;
+        background: conic-gradient(from 180deg, var(--violet), var(--amber), var(--teal), var(--violet));
+        display: flex; align-items: center; justify-content: center;
+        margin: 0 auto 16px;
+        box-shadow: var(--glow-violet);
+    }
+    .avatar-bg {
+        width: 62px; height: 62px; border-radius: 50%;
+        background: var(--surface);
+        display: flex; align-items: center; justify-content: center;
+        font-family: var(--font-display);
+        font-size: 26px; font-weight: 700;
+    }
+    .avatar-letter {
+        background: linear-gradient(135deg, var(--amber), var(--amber-2));
+        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        display: block;
+    }
+    </style>
+</head>
+<body>
+<div class="scanlines"></div>
+
+<!-- ══════════════ LOGIN ══════════════ -->
+<div id="login-view">
+    <div class="login-logo">
+        <div class="login-logo-ring-wrap" style="width:72px;height:72px;border-radius:50%;background:conic-gradient(from 180deg,var(--violet),var(--amber),var(--teal),var(--violet));display:flex;align-items:center;justify-content:center;margin:0 auto 16px;box-shadow:var(--glow-violet);animation:rotateSlow 8s linear infinite">
+            <div style="width:60px;height:60px;border-radius:50%;background:var(--void);display:flex;align-items:center;justify-content:center">
+                <span style="font-family:var(--font-display);font-size:20px;font-weight:700;background:linear-gradient(135deg,var(--amber),var(--amber-2));-webkit-background-clip:text;-webkit-text-fill-color:transparent">A</span>
+            </div>
+        </div>
+        <div class="logo-main">AHYPAR</div>
+        <div class="logo-sub">Administration Portal</div>
+    </div>
+
+    <div class="card login-card">
+        <div class="card-title">Staff Login</div>
+        <label>Email (Developer Only)</label>
+        <input type="email" id="login-email" placeholder="developer@ahypar.com" autocomplete="off">
+        <label>Login Passcode</label>
+        <input type="password" id="login-pass" placeholder="••••••••" autocomplete="off">
+        <button onclick="app.login()" id="login-btn" style="margin-top:14px">Login to Portal</button>
+        <div id="login-err" class="hidden alert-box alert-danger" style="margin-top:8px"></div>
+
+        <div class="divider"></div>
+
+        <div class="card-title">New Staff Application</div>
+        <label>Full Name</label>
+        <input id="req-n" placeholder="Your Name">
+        <label>Rank / Position</label>
+        <input id="req-lvl" placeholder="e.g. Senior Moderator">
+        <label>Email Address</label>
+        <input type="email" id="req-email" placeholder="your@email.com">
+        <label>Security Password</label>
+        <input type="password" id="req-pw" placeholder="Min 8 chars: letters + numbers + symbols" oninput="app.checkPwStrength(this.value)">
+        <div class="pw-strength"><div class="pw-strength-bar" id="pw-strength-bar"></div></div>
+        <div class="pw-hint" id="pw-hint">Must contain: letters, numbers, and symbols (#,@,!,$ etc.)</div>
+        <button class="btn-ghost" onclick="app.requestAccess()" style="margin-top:8px">Submit Application</button>
+        <div id="app-msg" class="hidden"></div>
+    </div>
+</div>
+
+<!-- ══════════════ DASHBOARD ══════════════ -->
+<div id="dashboard-view" class="hidden">
+    <div id="menu-backdrop" class="menu-backdrop" onclick="app.toggleMenu(false)"></div>
+
+    <header>
+        <div class="header-brand">
+            <div class="brand-name">Server Director · Shafin_Mirza</div>
+            <div class="brand-sub">Chief Developer</div>
+            <div class="brand-user">Session: <b id="h-user"></b></div>
+        </div>
+        <button class="menu-btn" onclick="app.toggleMenu(true)">☰</button>
+    </header>
+
+    <!-- Side Menu -->
+    <div id="menu-overlay" class="menu-overlay">
+        <button class="btn-danger" onclick="app.toggleMenu(false)" style="margin-bottom:16px">✕ Close</button>
+
+        <div class="menu-section-label">General</div>
+        <div class="menu-item" onclick="app.nav('profile')">
+            <span class="mi-icon">👤</span> My Profile
+        </div>
+        <div class="menu-item" onclick="app.nav('rules')">
+            <span class="mi-icon">📜</span> App Rules
+        </div>
+        <div class="menu-item" onclick="app.nav('curr-admins')">
+            <span class="mi-icon">👥</span> Current Admins
+        </div>
+
+        <div class="menu-section-label">Operations</div>
+        <div class="menu-item weekly-menu-item hidden" onclick="app.nav('weekly')">
+            <span class="mi-icon">📝</span> Weekly Reports
+        </div>
+        <div class="menu-item" onclick="app.nav('promo')">
+            <span class="mi-icon">🎖️</span> Leader Board
+        </div>
+        <div class="menu-item stored-menu-item hidden" onclick="app.nav('stored')">
+            <span class="mi-icon">📁</span> Stored Files
+        </div>
+
+        <div class="menu-section-label">Management</div>
+        <div class="menu-item access-menu-item hidden" onclick="app.nav('access')">
+            <span class="mi-icon">🔐</span> Manage Requests
+        </div>
+        <div class="menu-item owner-only hidden" onclick="app.nav('permissions')">
+            <span class="mi-icon">⚙️</span> Permissions
+        </div>
+        <div class="menu-item logs-menu-item hidden" onclick="app.nav('logs')">
+            <span class="mi-icon">📋</span> Activity Logs
+        </div>
+        <div class="menu-item chat-item" onclick="app.nav('chat')">
+            <span class="mi-icon">💬</span> Staff Chat <span class="live-dot" style="margin-left:6px"></span>
+        </div>
+
+        <div class="menu-item danger" onclick="app.logout()" style="margin-top:10px">
+            <span class="mi-icon">⏻</span> Logout
+        </div>
+    </div>
+
+    <div class="container" id="screen"></div>
+</div>
+
+<script>
+// ─────────────────────────────────────────────
+// FIREBASE INITIALIZATION
+// ─────────────────────────────────────────────
+const firebaseConfig = {
+    apiKey: "AIzaSyDYuIeTuvUlffSrHNdk-opOOdgaxtcs1Gk",
+    authDomain: "ayhapar-adm.firebaseapp.com",
+    databaseURL: "https://ayhapar-adm-default-rtdb.firebaseio.com",
+    projectId: "ayhapar-adm",
+    storageBucket: "ayhapar-adm.firebasestorage.app",
+    messagingSenderId: "507012571591",
+    appId: "1:507012571591:web:aeb4f6d9c3a03671a6f9e2",
+    measurementId: "G-C09MPQ51C6"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db   = firebase.database();
+const auth = firebase.auth();
+
+// ─────────────────────────────────────────────
+// PERMISSION SCHEMA
+// ─────────────────────────────────────────────
+const DEFAULT_PERMS = {
+    owner:        { weekly:true, stored:true, access:true, rules_edit:true, kick:true, set_role:true, leaderboard_manage:true, permissions_manage:true, chat:true, view_admins:true, view_profile:true, weekly_mg:true, stored_mg:true, set_role_mg:true, view_logs:true, delete_logs_one:true, delete_logs_all:true },
+    high_command: { weekly:true, stored:true, access:true, rules_edit:true, kick:true, set_role:true, leaderboard_manage:true, permissions_manage:false, chat:true, view_admins:true, view_profile:true, weekly_mg:false, stored_mg:false, set_role_mg:false, view_logs:false, delete_logs_one:false, delete_logs_all:false },
+    editor:       { weekly:true, stored:true, access:false, rules_edit:true, kick:false, set_role:false, leaderboard_manage:false, permissions_manage:false, chat:true, view_admins:true, view_profile:false, weekly_mg:false, stored_mg:false, set_role_mg:false, view_logs:false, delete_logs_one:false, delete_logs_all:false },
+    hr:           { weekly:false, stored:false, access:true, rules_edit:false, kick:false, set_role:false, leaderboard_manage:false, permissions_manage:false, chat:true, view_admins:true, view_profile:false, weekly_mg:false, stored_mg:false, set_role_mg:false, view_logs:false, delete_logs_one:false, delete_logs_all:false },
+    view:         { weekly:true, stored:true, access:false, rules_edit:false, kick:false, set_role:false, leaderboard_manage:false, permissions_manage:false, chat:true, view_admins:true, view_profile:false, weekly_mg:false, stored_mg:false, set_role_mg:false, view_logs:false, delete_logs_one:false, delete_logs_all:false },
+    admin:        { weekly:false, stored:false, access:false, rules_edit:false, kick:false, set_role:false, leaderboard_manage:false, permissions_manage:false, chat:true, view_admins:true, view_profile:false, weekly_mg:false, stored_mg:false, set_role_mg:false, view_logs:false, delete_logs_one:false, delete_logs_all:false }
+};
+
+const PERM_LABELS = {
+    weekly: 'Weekly Reports (View)',
+    stored: 'Stored Files (View)',
+    access: 'Manage Requests',
+    rules_edit: 'Edit Rules',
+    kick: 'Kick Admins',
+    set_role: 'Set Roles (Basic)',
+    leaderboard_manage: 'Manage LB',
+    permissions_manage: 'Manage Perms',
+    chat: 'Staff Chat',
+    view_admins: 'View Admin List',
+    view_profile: 'View Profiles',
+    weekly_mg: 'Weekly MG (Edit)',
+    stored_mg: 'Stored MG (Edit)',
+    set_role_mg: 'Set Role MG (HC+)',
+    view_logs: 'View Logs',
+    delete_logs_one: 'Delete Log (One)',
+    delete_logs_all: 'Delete Logs (All)'
+};
+
+// Roles in hierarchy order (lower index = higher rank)
+const ROLE_HIERARCHY = ['owner','high_command','editor','hr','view','admin'];
+
+// Minimum role needed to receive Professor permission (editor = index 2)
+const PROF_MIN_ROLE_RANK = 2; // editor rank
+
+const app = {
+    data: { admins:[], requests:[], history:[], lbStatus:'closed', lbFileIndex:-1, activeWeek:null, appRules:"", ruleAuthor:"", ruleDate:"", ownerInfo:{tag:'OWNER',tagColor:'#d4af37',boxColor:'#fff8dc'}, permissions:{}, individualPerms:{}, professorPerms:{} },
+    user: null,
+    _sessionToken: null,
+
+    init() {
+        db.ref('ahypar_new_data').on('value', (snap) => {
+            const cloud = snap.val();
+            if (cloud) {
+                this.data = cloud;
+                if (!this.data.admins)          this.data.admins = [];
+                if (!this.data.history)         this.data.history = [];
+                if (!this.data.requests)        this.data.requests = [];
+                if (!this.data.permissions)     this.data.permissions = {};
+                if (!this.data.individualPerms) this.data.individualPerms = {};
+                if (!this.data.professorPerms)  this.data.professorPerms = {};
+            }
+            if (this.user) this.showDash();
+        });
+    },
+
+    save() { return db.ref('ahypar_new_data').set(this.data); },
+
+    // ─── PASSWORD VALIDATION ───
+    validateSecurityPassword(pw) {
+        if (!pw || pw.length < 8) return { ok: false, msg: 'At least 8 characters required' };
+        if (!/[a-zA-Z]/.test(pw)) return { ok: false, msg: 'Must contain letters' };
+        if (!/[0-9]/.test(pw))    return { ok: false, msg: 'Must contain numbers' };
+        if (!/[#@!$%^&*\-_+=?~]/.test(pw)) return { ok: false, msg: 'Must contain symbols (#,@,!,$,% etc.)' };
+        return { ok: true, msg: 'Strong password ✓' };
+    },
+
+    checkPwStrength(pw) {
+        const bar  = document.getElementById('pw-strength-bar');
+        const hint = document.getElementById('pw-hint');
+        if (!bar || !hint) return;
+        let score = 0;
+        if (pw.length >= 8) score++;
+        if (/[a-zA-Z]/.test(pw)) score++;
+        if (/[0-9]/.test(pw)) score++;
+        if (/[#@!$%^&*\-_+=?~]/.test(pw)) score++;
+        const colors = ['#FF3366','#FF6B35','#F5A623','#00E5C0'];
+        const widths = ['25%','50%','75%','100%'];
+        const hints  = ['Too weak','Needs numbers & symbols','Add symbols','Strong ✓'];
+        if (!pw) {
+            bar.style.width='0%';
+            hint.textContent='Must contain: letters, numbers, and symbols (#,@,!,$ etc.)';
+            hint.style.color = '';
+            return;
+        }
+        bar.style.width      = widths[score-1] || '10%';
+        bar.style.background = colors[score-1] || '#FF3366';
+        hint.textContent     = hints[score-1]  || 'Too weak';
+        hint.style.color     = colors[score-1] || '#FF3366';
+    },
+
+    // ─── PERMISSION HELPERS ───
+    getRolePerms(role) {
+        const base      = DEFAULT_PERMS[role] || DEFAULT_PERMS['admin'];
+        const overrides = (this.data.permissions && this.data.permissions[role]) || {};
+        return { ...base, ...overrides };
+    },
+    getIndividualPerms(name) {
+        return (this.data.individualPerms && this.data.individualPerms[name]) || {};
+    },
+    getPerms(role, name) {
+        const rolePerms  = this.getRolePerms(role);
+        const indivPerms = name ? this.getIndividualPerms(name) : {};
+        const result = {};
+        Object.keys(PERM_LABELS).forEach(pk => {
+            result[pk] = !!rolePerms[pk] || !!indivPerms[pk];
+        });
+        return result;
+    },
+    hasPerm(perm) {
+        if (!this.user) return false;
+        return !!this.getPerms(this.user.role, this.user.name)[perm];
+    },
+    getRoleRank(role) { return ROLE_HIERARCHY.indexOf(role); },
+    canActOn(actorRole, targetRole) {
+        return this.getRoleRank(actorRole) < this.getRoleRank(targetRole);
+    },
+
+    // ─── PROFESSOR / BOSS PERMISSION HELPERS ───
+    hasProfessorPerm(name) {
+        return !!(this.data.professorPerms && this.data.professorPerms[name]);
+    },
+    // Professor can act on a target only if target is strictly below professor's role rank
+    professorCanActOn(profName, targetRole) {
+        const profAdmin  = this.data.admins.find(a => a.name === profName);
+        if (!profAdmin) return false;
+        const profRank   = this.getRoleRank(profAdmin.role);
+        const targetRank = this.getRoleRank(targetRole);
+        return profRank < targetRank; // professor must be higher rank
+    },
+    // Check if the current user is a Professor/Boss with authority over target
+    isProfessorOverTarget(targetRole) {
+        if (!this.user) return false;
+        if (this.user.role === 'owner') return true;
+        if (!this.hasProfessorPerm(this.user.name)) return false;
+        return this.professorCanActOn(this.user.name, targetRole);
+    },
+
+    // ─── ROLE ASSIGNMENT RULES ───
+    canAssignRole(actorRole, targetCurrentRole, newRole) {
+        if (actorRole === 'owner') return true;
+        const actorRank  = this.getRoleRank(actorRole);
+        const targetRank = this.getRoleRank(targetCurrentRole);
+        const newRank    = this.getRoleRank(newRole);
+        if (actorRank >= targetRank) return false;
+        if (newRank === 0) return false;
+        if (newRank <= actorRank) return false;
+        return true;
+    },
+    canAssignRoleMG(actorRole, targetCurrentRole, newRole) {
+        if (actorRole === 'owner') return true;
+        const actorRank  = this.getRoleRank(actorRole);
+        const targetRank = this.getRoleRank(targetCurrentRole);
+        const newRank    = this.getRoleRank(newRole);
+        if (actorRank >= targetRank) return false;
+        if (newRank === 0) return false;
+        return true;
+    },
+
+    // ─── ACTIVITY LOGS ───
+    addLog(icon, actor, action, type='normal') {
+        const entry = { icon, actor, action, type, time: new Date().toLocaleString() };
+        db.ref('ahypar_logs').push(entry);
+    },
+
+    // ─── ONLINE STATUS ───
+    setOnlineStatus(name, role) {
+        const token = Date.now() + '-' + Math.random().toString(36).substr(2,9);
+        this._sessionToken = token;
+        const statusRef = db.ref(`admin_status/${name}`);
+        statusRef.once('value', (snap) => {
+            const existing = snap.val();
+            if (existing && existing.online && existing.token !== token) {
+                this.addLog('🔒', name, `logged in from a new device while already active`, 'security');
+            }
+        });
+        statusRef.set({ online: true, token: token, lastSeen: firebase.database.ServerValue.TIMESTAMP });
+        statusRef.onDisconnect().update({ online: false, lastSeen: firebase.database.ServerValue.TIMESTAMP });
+    },
+
+    enforceSession(name) {
+        if (name === 'Shafin_Mirza') return;
+        const statusRef = db.ref(`admin_status/${name}`);
+        statusRef.on('value', (snap) => {
+            const s = snap.val();
+            if (!s) return;
+            if (s.token && s.token !== this._sessionToken) {
+                this.addLog('⚠️', name, `session conflict detected — multiple device login attempted`, 'security');
+                this.showSessionBlocked();
+            }
+        });
+    },
+
+    showSessionBlocked() {
+        const el = document.createElement('div');
+        el.className = 'session-blocked';
+        el.innerHTML = `
+            <h2>⚠ Session Conflict</h2>
+            <p>Your account was logged in from another device.<br>
+            This event has been recorded in the system logs.<br><br>
+            Only one active session is allowed per account.</p>
+            <button onclick="location.reload()" style="width:auto;padding:12px 32px;margin-top:24px">Return to Login</button>
+        `;
+        document.body.appendChild(el);
+    },
+
+    // ─── LOGIN ───
+    async login() {
+        const email = document.getElementById('login-email').value.trim();
+        const pass  = document.getElementById('login-pass').value;
+        const btn   = document.getElementById('login-btn');
+        const err   = document.getElementById('login-err');
+        err.classList.add('hidden');
+        btn.innerHTML = '<span class="spinner"></span>Authenticating...';
+        btn.disabled = true;
+
+        try {
+            if (email === 'shafinmirza59@gmail.com' && pass) {
+                try {
+                    await auth.signInWithEmailAndPassword(email, pass);
+                    this.user = { name:"Shafin_Mirza", role:'owner', lvl:'Server Director / Chief Developer', email };
+                    btn.innerHTML = 'Login to Portal'; btn.disabled = false;
+                    this.setOnlineStatus('Shafin_Mirza', 'owner');
+                    this.addLog('🔑', 'Shafin_Mirza', 'logged in (Developer)');
+                    this.showDash(); this.nav('profile'); return;
+                } catch(authErr) { /* fall through */ }
+            }
+
+            if (this.data.ownerKey && pass === this.data.ownerKey && !email) {
+                this.user = { name:"Shafin_Mirza", role:'owner', lvl:'Server Director / Chief Developer' };
+                btn.innerHTML = 'Login to Portal'; btn.disabled = false;
+                this.setOnlineStatus('Shafin_Mirza', 'owner');
+                this.addLog('🔑', 'Shafin_Mirza', 'logged in via passcode');
+                this.showDash(); this.nav('profile'); return;
+            }
+
+            const a = (this.data.admins || []).find(x => x.passcode === pass);
+            if (!a) throw new Error('Invalid passcode. Please check your credentials.');
+
+            this.user = a;
+            const token = Date.now() + '-' + Math.random().toString(36).substr(2,9);
+            this._sessionToken = token;
+
+            btn.innerHTML = 'Login to Portal'; btn.disabled = false;
+            this.setOnlineStatus(a.name, a.role);
+            this.enforceSession(a.name);
+            this.addLog('🔑', a.name, `logged in (Role: ${a.role})`);
+            this.showDash(); this.nav('profile');
+
+        } catch(e) {
+            btn.innerHTML = 'Login to Portal'; btn.disabled = false;
+            err.textContent = '⚠ ' + (e.message || 'Invalid credentials');
+            err.classList.remove('hidden');
+        }
+    },
+
+    showDash() {
+        document.getElementById('login-view').classList.add('hidden');
+        document.getElementById('dashboard-view').classList.remove('hidden');
+        document.getElementById('h-user').innerText = this.user.name;
+
+        document.querySelectorAll('.weekly-menu-item,.stored-menu-item,.access-menu-item,.owner-only,.logs-menu-item').forEach(el => el.classList.add('hidden'));
+
+        const perms = this.getPerms(this.user.role, this.user.name);
+
+        if (perms.weekly || perms.weekly_mg) document.querySelectorAll('.weekly-menu-item').forEach(e => e.classList.remove('hidden'));
+        if (perms.stored || perms.stored_mg) document.querySelectorAll('.stored-menu-item').forEach(e => e.classList.remove('hidden'));
+        if (perms.access) document.querySelectorAll('.access-menu-item').forEach(e => e.classList.remove('hidden'));
+        if (this.user.role === 'owner') document.querySelectorAll('.owner-only').forEach(e => e.classList.remove('hidden'));
+        if (perms.view_logs || perms.delete_logs_one || perms.delete_logs_all) document.querySelectorAll('.logs-menu-item').forEach(e => e.classList.remove('hidden'));
+    },
+
+    // ─── NAVIGATION ───
+    nav(page) {
+        this.toggleMenu(false);
+        db.ref('staff_chat').off();
+        const area = document.getElementById('screen');
+        const adminsList = this.data.admins || [];
+        let html = '';
+        const role  = this.user.role;
+        const perms = this.getPerms(role, this.user.name);
+
+        switch(page) {
+
+            // ─── PROFILE ───
+            case 'profile': {
+                const me     = (role === 'owner') ? this.user : (adminsList.find(x => x.name === this.user.name) || this.user);
+                const rbCls  = role==='owner'?'badge-owner':role==='high_command'?'badge-hc':role==='editor'?'badge-editor':'badge-admin';
+                const statusPref = (this.data.statusPrefs && this.data.statusPrefs[this.user.name]) || 'real';
+                const isProfessor = this.hasProfessorPerm(this.user.name);
+                html = `
+                <div class="page-title"><span class="pt-icon">👤</span> My Profile</div>
+                <div class="card" style="text-align:center;padding:28px 20px">
+                    <div class="avatar-wrap" style="animation:rotateSlow 10s linear infinite">
+                        <div class="avatar-bg">
+                            <span class="avatar-letter">${(me.name||'?').charAt(0).toUpperCase()}</span>
+                        </div>
+                    </div>
+                    <h2 style="font-family:var(--font-display);font-size:22px;letter-spacing:0.5px;font-weight:700">${me.name}</h2>
+                    <div style="margin:8px 0;display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap">
+                        <span class="role-badge ${rbCls}">${me.lvl||role}</span>
+                        ${isProfessor ? `<span class="badge-prof">🎓 Professor</span>` : ''}
+                    </div>
+                    <div class="divider"></div>
+                    <div class="stat-row">
+                        <div class="stat-box"><div class="val">${me.bank||0}</div><div class="lbl">Bank Points</div></div>
+                        <div class="stat-box"><div class="val" style="font-size:16px;background:linear-gradient(135deg,${me.warnings&&me.warnings!=='None'?'var(--crimson),#ff6b8a':'var(--teal),#a0fff2'});-webkit-background-clip:text;-webkit-text-fill-color:transparent">${me.warnings||'None'}</div><div class="lbl">Warnings</div></div>
+                    </div>`;
+
+                if (['owner','high_command'].includes(role)) {
+                    html += `<div class="divider"></div>
+                    <div class="card-title" style="margin:0 0 10px">Online Status Display</div>
+                    <div class="status-control">
+                        <select id="status-pref-sel">
+                            <option value="real" ${statusPref==='real'?'selected':''}>Show Real Status</option>
+                            <option value="always_online" ${statusPref==='always_online'?'selected':''}>Always Show Online</option>
+                            <option value="always_offline" ${statusPref==='always_offline'?'selected':''}>Always Show Offline</option>
+                            <option value="hidden" ${statusPref==='hidden'?'selected':''}>Hide Status</option>
+                        </select>
+                        <button onclick="app.saveStatusPref()" style="width:auto;padding:9px 16px;font-size:10px">Save</button>
+                    </div>
+                    <div class="alert-box alert-info" style="margin-top:10px;font-size:11px">ℹ Only Owner can see your real online status regardless of this setting.</div>`;
+                }
+                html += `</div>`;
+                break;
+            }
+
+            // ─── RULES ───
+            case 'rules': {
+                html = `<div class="page-title"><span class="pt-icon">📜</span> App Rules</div>`;
+                if (perms.rules_edit) {
+                    html += `<div class="card"><div class="card-title">Edit Rules</div><textarea id="rule-input" rows="8" placeholder="Write rules here...">${this.data.appRules||""}</textarea><button onclick="app.updateRules()">Post Rules</button></div>`;
+                }
+                const meta = this.data.ruleAuthor
+                    ? `<div class="rule-meta">Posted by: ${this.data.ruleAuthor} &nbsp;|&nbsp; ${this.data.ruleDate}</div>` : '';
+                html += `<div class="rule-box">${meta}${this.data.appRules||"Rules will appear here."}</div>`;
+                break;
+            }
+
+            // ─── CURRENT ADMINS ───
+            case 'curr-admins': {
+                html = `<div class="page-title"><span class="pt-icon">👥</span> Admin List</div>`;
+                const isOwner = role==='owner';
+                const isHC    = role==='high_command';
+                const isProfSelf = this.hasProfessorPerm(this.user.name);
+
+                let oInfo = this.data.ownerInfo||{tag:'OWNER',tagColor:'#d4af37',boxColor:'#fff8dc'};
+                html += `<div class="card" style="background:${oInfo.boxColor};border-color:${oInfo.tagColor}80;color:#000">
+                    <div style="display:flex;justify-content:space-between;align-items:center">
+                        <div style="display:flex;align-items:center;gap:8px">
+                            <span id="owner-online-dot" class="online-dot off"></span>
+                            <b style="font-family:var(--font-display);font-size:14px;font-weight:800">Shafin_Mirza</b>
+                            <span class="tag-span" style="background:${oInfo.tagColor}">${oInfo.tag}</span>
+                        </div>
+                        <span style="font-size:11px;opacity:0.7">Server Director / Chief Developer</span>
+                    </div>`;
+                if (isOwner) {
+                    html += `<div class="admin-style-section"><div class="style-row">
+                        <label>Tag:</label><input type="text" id="ow-t" value="${oInfo.tag}" style="color:#000;background:rgba(0,0,0,0.1)">
+                        <label>Tag Color:</label><input type="color" id="ow-tc" value="${oInfo.tagColor}">
+                        <label>Box:</label><input type="color" id="ow-bc" value="${oInfo.boxColor}">
+                        <button class="btn-sm btn-amber" onclick="app.setOwnerStyle()">Save</button>
+                    </div></div>`;
+                }
+                html += `</div>`;
+
+                if (isOwner) html += `<div class="drag-hint">⠿ Drag handle to reorder admins — saves automatically.</div>`;
+                html += `<div id="admins-list-container">`;
+
+                adminsList.forEach((a, i) => {
+                    const aTag      = a.tag ? `<span class="tag-span" style="background:${a.tagColor||'#555'}">${a.tag}</span>` : '';
+                    const textColor = a.boxColor && a.boxColor !== '#0d1120' && a.boxColor !== '#0c0d18' && a.boxColor !== '#1a1d29' ? '#000' : 'var(--t1)';
+                    const isProf    = this.hasProfessorPerm(a.name);
+                    const draggableAttrs = isOwner
+                        ? `draggable="true" data-idx="${i}" class="card admin-card-draggable"`
+                        : `data-idx="${i}" class="card"`;
+
+                    html += `<div ${draggableAttrs} style="background:${a.boxColor||'var(--surface)'};color:${textColor}">
+                        <div class="admin-card-header">
+                            <div class="admin-card-header-left">
+                                ${isOwner?`<span class="drag-handle" title="Drag to reorder">⠿</span>`:''}
+                                <span class="online-dot off" id="dot-${a.name.replace(/\s/g,'_')}"></span>
+                                <div>
+                                    <b style="font-family:var(--font-display);font-size:13px;font-weight:700">${a.name}</b> ${aTag}
+                                    ${isProf ? `<span class="badge-prof" style="margin-left:6px">🎓 Prof</span>` : ''}
+                                    <span id="role-label-${i}" class="role-confirm-badge" style="display:none"></span>
+                                    <br><small style="opacity:0.65;font-size:11px">${a.lvl}</small>
+                                </div>
+                            </div>
+                        </div>`;
+
+                    const canView = isOwner
+                        || (isHC && ['admin','editor','view','hr'].includes(a.role))
+                        || (isProfSelf && this.professorCanActOn(this.user.name, a.role));
+                    if (canView) html += `<button class="btn-sm btn-amber" style="margin-top:10px" onclick="app.viewAdminProfile(${i})">👁 View Profile</button>`;
+
+                    // ── MANAGEMENT ACTIONS ──
+                    const actorCanActOnTarget = this.canActOn(role, a.role) || (isProfSelf && this.professorCanActOn(this.user.name, a.role));
+                    const hasSetRole   = perms.set_role;
+                    const hasSetRoleMG = perms.set_role_mg;
+                    const hasKick      = perms.kick;
+                    const canManageBasic = isOwner || ((hasSetRole || hasKick || hasSetRoleMG) && actorCanActOnTarget) || (isProfSelf && actorCanActOnTarget);
+
+                    if (canManageBasic) {
+                        html += `<div class="admin-card-actions">`;
+
+                        if (isOwner) {
+                            html += `<div style="display:flex;gap:6px;margin-bottom:10px">
+                                <input id="lvl-up-${i}" placeholder="New Level" style="margin:0;padding:7px;color:#000;background:rgba(255,255,255,0.85)">
+                                <button class="btn-sm btn-info" onclick="app.changeLvl(${i})">Set</button>
+                            </div>`;
+                        } else if (isProfSelf && this.professorCanActOn(this.user.name, a.role)) {
+                            // Professor can set level of subordinates
+                            html += `<div style="display:flex;gap:6px;margin-bottom:10px">
+                                <input id="lvl-up-${i}" placeholder="New Level" style="margin:0;padding:7px;">
+                                <button class="btn-sm btn-info" onclick="app.changeLvl(${i})">Set Level</button>
+                            </div>`;
+                        }
+
+                        html += `<div style="display:flex;flex-wrap:wrap;gap:5px">`;
+
+                        if (isOwner) {
+                            html += `<button class="btn-sm ${a.role==='admin'?'active-role':''}" onclick="app.setRole(${i},'admin')">Admin</button>`;
+                            html += `<button class="btn-sm ${a.role==='view'?'active-role':''}" onclick="app.setRole(${i},'view')">View</button>`;
+                            html += `<button class="btn-sm ${a.role==='hr'?'active-role':''}" onclick="app.setRole(${i},'hr')">HR</button>`;
+                            html += `<button class="btn-sm ${a.role==='editor'?'active-role':''}" onclick="app.setRole(${i},'editor')">Editor</button>`;
+                            html += `<button class="btn-sm ${a.role==='high_command'?'active-role':''}" style="background:var(--amber);color:#000" onclick="app.setRole(${i},'high_command')">High Command</button>`;
+                        } else if (isProfSelf && this.professorCanActOn(this.user.name, a.role)) {
+                            // Professor can assign any role strictly below their own rank (no owner)
+                            const profAdmin = this.data.admins.find(ad => ad.name === this.user.name);
+                            const myRank    = profAdmin ? this.getRoleRank(profAdmin.role) : 99;
+                            ROLE_HIERARCHY.forEach((r, rIdx) => {
+                                if (r !== 'owner' && rIdx > myRank) {
+                                    html += `<button class="btn-sm ${a.role===r?'active-role':''}" onclick="app.setRole(${i},'${r}')">${r.replace('_',' ').replace(/\b\w/g,c=>c.toUpperCase())}</button>`;
+                                }
+                            });
+                        } else {
+                            if (hasSetRole && actorCanActOnTarget) {
+                                if (this.canAssignRole(role, a.role, 'admin'))
+                                    html += `<button class="btn-sm ${a.role==='admin'?'active-role':''}" onclick="app.setRole(${i},'admin')">Admin</button>`;
+                                if (this.canAssignRole(role, a.role, 'view'))
+                                    html += `<button class="btn-sm ${a.role==='view'?'active-role':''}" onclick="app.setRole(${i},'view')">View</button>`;
+                                if (this.canAssignRole(role, a.role, 'hr'))
+                                    html += `<button class="btn-sm ${a.role==='hr'?'active-role':''}" onclick="app.setRole(${i},'hr')">HR</button>`;
+                            }
+                            if (hasSetRoleMG && actorCanActOnTarget) {
+                                if (this.canAssignRoleMG(role, a.role, 'editor'))
+                                    html += `<button class="btn-sm ${a.role==='editor'?'active-role':''}" onclick="app.setRole(${i},'editor')">Editor</button>`;
+                                if (this.canAssignRoleMG(role, a.role, 'high_command'))
+                                    html += `<button class="btn-sm ${a.role==='high_command'?'active-role':''}" style="background:var(--amber);color:#000" onclick="app.setRole(${i},'high_command')">High Command</button>`;
+                            }
+                        }
+
+                        const canKick = isOwner
+                            || ((hasKick || hasSetRoleMG) && actorCanActOnTarget)
+                            || (isProfSelf && this.professorCanActOn(this.user.name, a.role));
+                        if (canKick) {
+                            html += `<button class="btn-sm btn-danger" onclick="app.kick(${i})">Kick</button>`;
+                        }
+                        html += `</div></div>`;
+                    }
+
+                    // ── PROFESSOR TAG & STYLE (for professors acting on subordinates) ──
+                    if (isProfSelf && this.professorCanActOn(this.user.name, a.role)) {
+                        html += `<div class="admin-style-section"><div class="card-title" style="margin-bottom:8px">Tag & Style (Professor Control)</div><div class="style-row">
+                            <label>Tag:</label><input type="text" id="tag-n-${i}" value="${a.tag||''}">
+                            <label>Tag Color:</label><input type="color" id="tag-c-${i}" value="${a.tagColor||'#555555'}">
+                            <label>Box:</label><input type="color" id="box-c-${i}" value="${a.boxColor||'#0d1120'}">
+                            <button class="btn-sm btn-success" onclick="app.saveAdminStyle(${i})">Save Style</button>
+                        </div></div>`;
+                    }
+
+                    // ── INDIVIDUAL PERMS (owner only) ──
+                    if (isOwner) {
+                        const indiv = this.getIndividualPerms(a.name);
+                        const roleP = this.getRolePerms(a.role);
+                        html += `<div class="indiv-perms-section">
+                            <div class="indiv-perms-title">Manual Extra Permissions <span class="manual-badge">INDIVIDUAL</span></div>
+                            <div class="indiv-perm-grid">`;
+                        Object.keys(PERM_LABELS).forEach(pk => {
+                            const fromRole  = !!roleP[pk];
+                            const fromIndiv = !!indiv[pk];
+                            if (fromRole) {
+                                html += `<div class="indiv-perm-toggle" style="opacity:0.35;cursor:default" title="Granted by role">
+                                    <span>${PERM_LABELS[pk]}</span>
+                                    <div class="indiv-toggle-dot" style="background:rgba(0,229,192,0.35)"><div style="position:absolute;left:14px;top:2px;width:10px;height:10px;border-radius:50%;background:var(--teal)"></div></div>
+                                </div>`;
+                            } else {
+                                html += `<div class="indiv-perm-toggle ${fromIndiv?'active':''}" onclick="app.toggleIndividualPerm('${a.name}','${pk}',this)">
+                                    <span>${PERM_LABELS[pk]}</span>
+                                    <div class="indiv-toggle-dot"></div>
+                                </div>`;
+                            }
+                        });
+                        html += `</div></div>`;
+
+                        // ── PROFESSOR / BOSS PERMISSION (owner only) ──
+                        const roleRank   = this.getRoleRank(a.role);
+                        const hasMinRole = roleRank <= PROF_MIN_ROLE_RANK && roleRank > 0;
+                        const isCurrentlyProf = this.hasProfessorPerm(a.name);
+                        html += `<div class="prof-section">
+                            <div class="prof-section-title">🎓 Professor / Boss Permission <span style="background:rgba(255,51,102,0.15);border:1px solid rgba(255,51,102,0.35);border-radius:4px;padding:1px 6px;font-size:8px;letter-spacing:1px">OWNER ONLY</span></div>`;
+
+                        if (!hasMinRole) {
+                            html += `<div class="prof-role-warning">⚠ Minimum "Editor" role required to receive this permission. Current role: ${a.role}</div>`;
+                        } else {
+                            html += `<div class="prof-toggle ${isCurrentlyProf?'active':''}" onclick="app.toggleProfessorPerm('${a.name}',this)">
+                                <span style="font-size:18px">🎓</span>
+                                <div class="prof-toggle-label">
+                                    <div class="ptl-name">Professor / Boss Authority</div>
+                                    <div class="ptl-desc ${isCurrentlyProf?'active-desc':'}">${isCurrentlyProf ? '⚡ ACTIVE — Has absolute authority over all lower-ranking members' : 'Grant absolute authority over all subordinates (kick, role, tag, level, profile)'}</div>
+                                </div>
+                                <div class="prof-toggle-dot"></div>
+                            </div>
+                            <div class="prof-warning">⚠ This permission grants the admin complete control over all members ranked below them — use with extreme caution. Only assignable to Editor rank or above.</div>`;
+                        }
+                        html += `</div>`;
+
+                        // Owner style controls
+                        html += `<div class="admin-style-section"><div class="style-row">
+                            <label>Tag:</label><input type="text" id="tag-n-${i}" value="${a.tag||''}" style="color:#000;background:rgba(255,255,255,0.85)">
+                            <label>Tag Color:</label><input type="color" id="tag-c-${i}" value="${a.tagColor||'#555555'}">
+                            <label>Box:</label><input type="color" id="box-c-${i}" value="${a.boxColor||'#0d1120'}">
+                            <button class="btn-sm btn-success" onclick="app.saveAdminStyle(${i})">Save Style</button>
+                        </div></div>`;
+                    }
+
+                    html += `</div>`;
+                });
+                html += `</div>`;
+                break;
+            }
+
+            // ─── WEEKLY REPORTS ───
+            case 'weekly': {
+                const canWeekly = perms.weekly || perms.weekly_mg;
+                if (!canWeekly) { html = `<div class="alert-box alert-danger">⚠ You don't have permission to access Weekly Reports.</div>`; break; }
+                html = `<div class="page-title"><span class="pt-icon">📝</span> Weekly Reports</div>`;
+                const canEdit = perms.weekly_mg || role==='owner' || role==='high_command';
+                if (canEdit) {
+                    if (!this.data.activeWeek) {
+                        html += `<div class="card"><div class="card-title">Start New Week</div><label>Week Title</label><input id="wt" placeholder="e.g. Week 14 — June 2025"><button onclick="app.startW()">Start Week</button></div>`;
+                    } else {
+                        html += `<div class="card">
+                            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+                                <div style="display:flex;align-items:center;gap:6px"><span class="live-dot"></span><span style="font-family:var(--font-mono);font-size:10px;color:var(--t3)">Active Week</span></div>
+                                <b style="color:var(--amber);font-family:var(--font-display)">${this.data.activeWeek.title}</b>
+                            </div>
+                            <label>Staff Member</label><select id="sel-n">${adminsList.map(a=>`<option>${a.name}</option>`).join('')}</select>
+                            <label>Date</label><input type="text" id="fd" placeholder="DD/MM/YYYY">
+                            <label>Tournaments (×5 pts each)</label><input type="number" id="ft" value="0" min="0">
+                            <label>Other Points</label><input type="number" id="fo" value="0" min="0">
+                            <label>Extra Points</label><input type="number" id="fe" value="0" min="0">
+                            <label>Warning (V1, W2 or None)</label><input type="text" id="fw" value="None">
+                            <button class="btn-success" onclick="app.addLog_entry()" style="margin-top:12px">Save Entry</button>
+                            <button class="btn-danger" onclick="app.finishW()">Finish & Store Week</button>
+                        </div>`;
+                    }
+                }
+                html += `<div id="live-view"></div>`;
+                break;
+            }
+
+            // ─── LEADERBOARD ───
+            case 'promo': {
+                html = `<div class="page-title"><span class="pt-icon">🎖️</span> Leader Board</div>`;
+                if (perms.leaderboard_manage) {
+                    const history = this.data.history||[];
+                    html += `<div class="card">
+                        <div class="card-title">Publish Settings</div>
+                        <label>Select Report File</label>
+                        <select id="lb-file-select" style="margin-bottom:12px">${history.map((h,idx)=>`<option value="${idx}">${h.title}</option>`).join('')}</select>
+                        <div style="display:flex;gap:6px">
+                            <button class="btn-sm btn-amber" style="flex:1" onclick="app.setLBStatus('published_hc')">👁 HC Only</button>
+                            <button class="btn-sm btn-success" style="flex:1" onclick="app.setLBStatus('published_public')">🌍 Public</button>
+                            <button class="btn-sm btn-danger" style="flex:1" onclick="app.setLBStatus('closed')">🔒 Close</button>
+                        </div>
+                    </div>`;
+                }
+                html += `<div id="promo-res"></div>`;
+                break;
+            }
+
+            // ─── STORED FILES ───
+            case 'stored': {
+                const canStored = perms.stored || perms.stored_mg;
+                if (!canStored) { html = `<div class="alert-box alert-danger">⚠ No permission to view Stored Files.</div>`; break; }
+                html = `<div class="page-title"><span class="pt-icon">📁</span> Stored Files</div>`;
+                (this.data.history||[]).forEach((h,i) => {
+                    html += `<div class="card" style="cursor:pointer" onclick="app.viewF(${i})">
+                        <div style="display:flex;justify-content:space-between;align-items:center">
+                            <div style="display:flex;align-items:center;gap:8px">
+                                <span style="font-size:18px">📂</span>
+                                <div><b style="font-family:var(--font-display)">${h.title}</b><br><span style="font-size:11px;color:var(--t3)">${(h.logs||[]).length} entries</span></div>
+                            </div>
+                            <span style="color:var(--violet-2);font-size:18px">›</span>
+                        </div>
+                    </div>`;
+                    if (role==='owner' || perms.stored_mg) html += `<button class="btn-del" onclick="app.delF(${i})">Delete</button>`;
+                });
+                break;
+            }
+
+            // ─── MANAGE REQUESTS ───
+            case 'access': {
+                if (!perms.access) { html = `<div class="alert-box alert-danger">⚠ No permission to manage requests.</div>`; break; }
+                html = `<div class="page-title"><span class="pt-icon">🔐</span> Applications</div>`;
+                const pending = this.data.requests||[];
+                if (!pending.length) {
+                    html += `<div class="alert-box alert-info">ℹ No pending applications.</div>`;
+                } else {
+                    html += `<div class="alert-box alert-success" style="margin-bottom:10px">📋 ${pending.length} pending application${pending.length>1?'s':''}</div>`;
+                }
+                pending.forEach((r,i) => {
+                    html += `<div class="card" id="req-card-${i}">
+                        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
+                            <div style="flex:1">
+                                <b style="font-family:var(--font-display);font-size:16px;font-weight:700">${r.name}</b>
+                                <br><small style="color:var(--t3)">Rank: ${r.lvl}</small>
+                                ${r.submitted?`<br><small style="color:var(--t3);font-family:var(--font-mono);font-size:10px">Applied: ${r.submitted}</small>`:''}`;
+                    if (role === 'owner') {
+                        html += `<div class="owner-only-field" style="margin-top:10px">
+                            <div class="owner-only-label">🔐 Sensitive Info (Owner Only)</div>`;
+                        if (r.email)      html += `<small style="color:var(--t3);font-family:var(--font-mono)">Email: <b style="color:var(--amber)">${r.email}</b></small><br>`;
+                        if (r.securityPw) html += `<small style="color:var(--t3);font-family:var(--font-mono)">Security PW: <b style="color:var(--sky)">${r.securityPw}</b></small>`;
+                        html += `</div>`;
+                    }
+                    html += `</div>
+                            <div style="display:flex;flex-direction:column;gap:6px">
+                                <button class="btn-sm btn-success" id="approve-btn-${i}" onclick="app.approve(${i})">✔ Approve</button>
+                                <button class="btn-sm btn-danger"  id="reject-btn-${i}"  onclick="app.reject(${i})">✖ Reject</button>
+                            </div>
+                        </div>
+                    </div>`;
+                });
+                break;
+            }
+
+            // ─── PERMISSIONS ───
+            case 'permissions': {
+                if (role!=='owner') { html=`<div class="alert-box alert-danger">⚠ Owner only.</div>`; break; }
+                html = `<div class="page-title"><span class="pt-icon">⚙️</span> Permission Manager</div>`;
+                html += `<div class="alert-box alert-amber" style="margin-bottom:14px">🎓 Professor/Boss permissions are configured per-admin in the Admin List panel.</div>`;
+                const roles = ['high_command','editor','hr','view','admin'];
+                const roleLabels = { high_command:'High Command', editor:'Editor', hr:'HR', view:'View', admin:'Admin' };
+                roles.forEach(r => {
+                    const current = this.getRolePerms(r);
+                    html += `<div class="card"><div class="card-title">${roleLabels[r]}</div><div class="perm-grid">`;
+                    Object.keys(PERM_LABELS).forEach(pk => {
+                        const on = !!current[pk];
+                        html += `<div class="perm-toggle ${on?'active':''}" data-role="${r}" data-perm="${pk}" onclick="app.toggleRolePerm('${r}','${pk}',this)">
+                            <span style="font-size:9px">${PERM_LABELS[pk]}</span>
+                            <div class="toggle-dot"></div>
+                        </div>`;
+                    });
+                    html += `</div></div>`;
+                });
+                html += `<div class="alert-box alert-info" style="margin-top:4px">ℹ Role perms apply to all with that role. Individual perms are set per-admin in Admin List.</div>`;
+                break;
+            }
+
+            // ─── ACTIVITY LOGS ───
+            case 'logs': {
+                const canView = perms.view_logs || perms.delete_logs_one || perms.delete_logs_all;
+                if (!canView) { html=`<div class="alert-box alert-danger">⚠ No permission to view logs.</div>`; break; }
+                html = `<div class="page-title"><span class="pt-icon">📋</span> Activity Logs</div>`;
+                if (role==='owner' || perms.delete_logs_all) {
+                    html += `<div style="display:flex;gap:8px;margin-bottom:14px">
+                        <button class="btn-danger btn-sm" onclick="app.deleteAllLogs()">🗑 Delete All Logs</button>
+                    </div>`;
+                }
+                html += `<div id="logs-container"><div class="loading-overlay"><span class="spinner"></span>Loading logs...</div></div>`;
+                area.innerHTML = html;
+                this.loadLogs();
+                return;
+            }
+
+            // ─── CHAT ───
+            case 'chat': {
+                html = `<div class="page-title"><span class="pt-icon">💬</span> Staff Chat</div>
+                <div class="chat-container">
+                    <div id="chat-box" class="chat-messages"><div style="text-align:center;color:var(--t3);margin:auto;font-family:var(--font-mono);font-size:12px">Loading messages...</div></div>
+                    <div class="chat-input-area">
+                        <input type="text" id="chat-input" placeholder="Type a message..." onkeypress="if(event.key==='Enter') app.sendChat()">
+                        <button onclick="app.sendChat()">Send</button>
+                    </div>
+                </div>`;
+                area.innerHTML = html;
+                this.initChat();
+                return;
+            }
+        }
+
+        area.innerHTML = html;
+        if (page==='promo')       this.renderLB();
+        if (page==='weekly')      this.renderLive();
+        if (page==='curr-admins') {
+            this.watchOnlineStatus();
+            if (this.user.role==='owner') this.initDragDrop();
+        }
+    },
+
+    // ─── PROFESSOR PERM TOGGLE ───
+    toggleProfessorPerm(adminName, el) {
+        if (this.user.role !== 'owner') { alert('⚠ Only the Owner can assign Professor permissions.'); return; }
+        const admin = this.data.admins.find(a => a.name === adminName);
+        if (!admin) { alert('Admin not found.'); return; }
+        const roleRank = this.getRoleRank(admin.role);
+        if (roleRank > PROF_MIN_ROLE_RANK || roleRank === 0) {
+            alert('⚠ This admin does not meet the minimum rank (Editor) required for Professor permission.'); return;
+        }
+        if (!this.data.professorPerms) this.data.professorPerms = {};
+        const newVal = !el.classList.contains('active');
+        this.data.professorPerms[adminName] = newVal;
+        el.classList.toggle('active', newVal);
+        // Update description text live
+        const descEl = el.querySelector('.ptl-desc');
+        if (descEl) {
+            descEl.textContent = newVal
+                ? '⚡ ACTIVE — Has absolute authority over all lower-ranking members'
+                : 'Grant absolute authority over all subordinates (kick, role, tag, level, profile)';
+            descEl.className = `ptl-desc ${newVal ? 'active-desc' : ''}`;
+        }
+        this.save();
+        this.addLog(newVal ? '🎓' : '🚫', this.user.name, `${newVal ? 'granted' : 'revoked'} Professor/Boss permission for ${adminName}`);
+        this.showDash();
+    },
+
+    // ─── ONLINE STATUS WATCHER ───
+    watchOnlineStatus() {
+        const adminsList = this.data.admins || [];
+        const isOwner    = this.user.role === 'owner';
+
+        db.ref('admin_status/Shafin_Mirza').on('value', (snap) => {
+            const el = document.getElementById('owner-online-dot');
+            if (!el) return;
+            const s    = snap.val();
+            const pref = (this.data.statusPrefs && this.data.statusPrefs['Shafin_Mirza']) || 'real';
+            this._applyStatusDot(el, s, pref, isOwner);
+        });
+
+        adminsList.forEach(a => {
+            const elId = `dot-${a.name.replace(/\s/g,'_')}`;
+            db.ref(`admin_status/${a.name}`).on('value', (snap) => {
+                const el   = document.getElementById(elId);
+                if (!el) return;
+                const s    = snap.val();
+                const pref = (this.data.statusPrefs && this.data.statusPrefs[a.name]) || 'real';
+                this._applyStatusDot(el, s, pref, isOwner);
+            });
+        });
+    },
+
+    _applyStatusDot(el, statusData, pref, isOwner) {
+        const realOnline = statusData && statusData.online;
+        if (isOwner) {
+            el.className = `online-dot ${realOnline ? 'on' : 'off'}`;
+            el.title     = realOnline ? 'Online' : 'Offline';
+        } else {
+            if      (pref === 'hidden')        { el.style.display = 'none'; }
+            else if (pref === 'always_online') { el.className = 'online-dot on';  el.title = 'Online'; }
+            else if (pref === 'always_offline'){ el.className = 'online-dot off'; el.title = 'Offline'; }
+            else {
+                el.className = `online-dot ${realOnline ? 'on' : 'off'}`;
+                el.title     = realOnline ? 'Online' : 'Offline';
+            }
+        }
+    },
+
+    saveStatusPref() {
+        if (!this.data.statusPrefs) this.data.statusPrefs = {};
+        const val = document.getElementById('status-pref-sel').value;
+        this.data.statusPrefs[this.user.name] = val;
+        this.save().then(() => alert('Status preference saved!'));
+    },
+
+    // ─── LOGS ───
+    loadLogs() {
+        const perms         = this.getPerms(this.user.role, this.user.name);
+        const canDeleteOne  = this.user.role==='owner' || perms.delete_logs_one;
+
+        db.ref('ahypar_logs').orderByKey().limitToLast(200).once('value', (snap) => {
+            const container = document.getElementById('logs-container');
+            if (!container) return;
+            const val = snap.val();
+            if (!val) {
+                container.innerHTML = `<div class="alert-box alert-info">ℹ No activity logs yet.</div>`;
+                return;
+            }
+            const entries = Object.entries(val).reverse();
+            container.innerHTML = entries.map(([key, log]) => `
+                <div class="log-entry ${log.type==='security'?'security':''}">
+                    <span class="log-icon">${log.icon||'📌'}</span>
+                    <div class="log-body">
+                        <span class="log-actor">${log.actor||'System'}</span>
+                        <span class="log-action"> ${log.action}</span>
+                        <div class="log-time">${log.time}</div>
+                    </div>
+                    ${canDeleteOne ? `<button class="log-del-btn" onclick="app.deleteOneLog('${key}')">Del</button>` : ''}
+                </div>
+            `).join('');
+        });
+    },
+
+    deleteOneLog(key) {
+        if (!confirm('Delete this log entry?')) return;
+        db.ref(`ahypar_logs/${key}`).remove()
+            .then(() => { this.addLog('🗑', this.user.name, 'deleted a log entry'); this.nav('logs'); })
+            .catch(e => alert('Error: ' + e.message));
+    },
+
+    deleteAllLogs() {
+        if (!confirm('⚠ Delete ALL activity logs permanently? This cannot be undone.')) return;
+        db.ref('ahypar_logs').remove()
+            .then(() => { this.addLog('🗑', this.user.name, 'deleted ALL activity logs'); this.nav('logs'); })
+            .catch(e => alert('Error: ' + e.message));
+    },
+
+    // ─── LEADERBOARD ───
+    renderLB() {
+        const div    = document.getElementById('promo-res'); if (!div) return;
+        const isAuth = ['owner','high_command'].includes(this.user.role);
+        if (this.data.lbStatus==='closed' || this.data.lbFileIndex===-1) {
+            div.innerHTML = `<div class="alert-box" style="background:rgba(255,255,255,0.03);border:1px solid var(--bd1);color:var(--t3);justify-content:center">🔒 Leader Board is currently closed</div>`;
+            return;
+        }
+        if (this.data.lbStatus==='published_hc' && !isAuth) {
+            div.innerHTML = `<div class="alert-box alert-danger">🔒 Visible to High Command and above only.</div>`;
+            return;
+        }
+        const file = this.data.history[this.data.lbFileIndex]; if (!file) return;
+        const stats = {};
+        file.logs.forEach(l => {
+            if (!stats[l.n]) stats[l.n] = { n:l.n, pts:0, hasWarn:false, lastWarn:'' };
+            stats[l.n].pts += (parseFloat(l.pts)||0);
+            if (l.w && l.w.toLowerCase()!=='none' && l.w.trim()!=='') {
+                stats[l.n].hasWarn=true; stats[l.n].lastWarn=l.w;
+            }
+        });
+        const sorted  = Object.values(stats).sort((a,b) => b.pts - a.pts);
+        const rankCls = ['gold','silver','bronze'];
+        div.innerHTML = `<div style="margin-bottom:14px;display:flex;justify-content:space-between;align-items:center">
+            <b style="font-family:var(--font-display);font-size:16px;font-weight:700">${file.title}</b>
+            ${this.data.lbStatus==='published_hc'?'<span class="hc-tag">HC ONLY</span>':''}
+        </div>`
+        + sorted.map((s,i) => `
+            <div class="lb-card" style="border-left:3px solid ${i===0?'var(--amber)':i===1?'#C0C0C0':i===2?'#CD7F32':'var(--bd1)'}">
+                <div class="lb-rank ${rankCls[i]||''}">#${i+1}</div>
+                <div class="lb-info">
+                    <div class="lb-name">${s.n}</div>
+                    ${s.hasWarn?`<span class="warn-alert">⚠ Cancelled · Warning (${s.lastWarn})</span>`:''}
+                </div>
+                <div style="display:flex;align-items:center;gap:8px">
+                    <div class="lb-pts">${s.pts} <small style="font-size:10px;color:var(--t3)">pts</small></div>
+                    ${this.user.role==='owner'?`<button class="btn-sm btn-amber" onclick="app.editLBPoints('${s.n}')">Edit</button>`:''}
+                </div>
+            </div>`).join('');
+    },
+
+    editLBPoints(name) {
+        const file = this.data.history[this.data.lbFileIndex];
+        const cur  = file.logs.filter(l=>l.n===name).reduce((s,l)=>s+(parseFloat(l.pts)||0),0);
+        const nv   = prompt(`${name} — current: ${cur}\nEnter new total:`, cur);
+        if (nv!==null) {
+            const diff = (parseFloat(nv)||0) - cur;
+            file.logs.push({ n:name, d:new Date().toISOString().split('T')[0], t:'0', pts:diff, w:'Manual Correction' });
+            this.save(); this.renderLB();
+            this.addLog('✏️', this.user.name, `manually adjusted points for ${name} to ${nv}`);
+        }
+    },
+
+    renderLive() {
+        const div = document.getElementById('live-view');
+        if (!div || !this.data.activeWeek || !this.data.activeWeek.logs) return;
+        div.innerHTML = `<div class="card-title" style="margin:10px 0 8px">Live Entries</div>`
+            + this.data.activeWeek.logs.slice().reverse().map((l,ri) => {
+                const idx = this.data.activeWeek.logs.length - 1 - ri;
+                return `<div class="card" style="border-left:3px solid var(--violet);padding:13px 16px">
+                    ${this.user.role==='owner'?`<button class="btn-del" onclick="app.deleteLog(${idx})">Del</button>`:''}
+                    <b style="font-family:var(--font-display)">${l.n}</b>
+                    <span style="color:var(--amber);font-family:var(--font-display);font-size:15px;font-weight:700;margin-left:8px">${l.pts} pts</span>
+                    <br><small style="color:var(--t3)">${l.d} · T:${l.t} O:${l.o} E:${l.e}</small>
+                    <br><small style="color:${l.w&&l.w!=='None'?'var(--crimson)':'var(--t3)'}">Warning: ${l.w||'None'}</small>
+                </div>`;
+            }).join('');
+    },
+
+    addLog_entry() {
+        const n = document.getElementById('sel-n').value;
+        const d = document.getElementById('fd').value;
+        if (!d) return alert('Please enter a date!');
+        const t   = parseFloat(document.getElementById('ft').value)||0;
+        const o   = parseFloat(document.getElementById('fo').value)||0;
+        const e   = parseFloat(document.getElementById('fe').value)||0;
+        const w   = document.getElementById('fw').value||'None';
+        const pts = (t*5)+o+e;
+        if (!this.data.activeWeek.logs) this.data.activeWeek.logs = [];
+        this.data.activeWeek.logs.push({n,d,t,o,e,w,pts});
+        this.save(); this.renderLive();
+        this.addLog('📝', this.user.name, `added weekly entry for ${n}: ${pts} pts`);
+        ['ft','fo','fe'].forEach(id => document.getElementById(id).value='0');
+        document.getElementById('fw').value='None';
+    },
+
+    // ─── CHAT ───
+    initChat() {
+        db.ref('staff_chat').limitToLast(50).on('value', (snap) => {
+            const box  = document.getElementById('chat-box'); if (!box) return;
+            const msgs = snap.val();
+            if (!msgs) {
+                box.innerHTML=`<div style="text-align:center;color:var(--t3);margin:auto;font-family:var(--font-mono);font-size:12px">No messages yet</div>`;
+                return;
+            }
+            box.innerHTML = Object.values(msgs).map(m =>
+                `<div class="msg ${m.user===this.user.name?'msg-self':'msg-other'}">
+                    <span class="msg-meta">${m.user}</span>${m.text}
+                </div>`
+            ).join('');
+            box.scrollTop = box.scrollHeight;
+        });
+    },
+
+    sendChat() {
+        const input = document.getElementById('chat-input');
+        const txt   = input.value.trim(); if (!txt) return;
+        db.ref('staff_chat').push({ user:this.user.name, text:txt, time:new Date().toLocaleTimeString() });
+        input.value = '';
+    },
+
+    // ─── ADMIN STYLE ───
+    saveAdminStyle(i) {
+        const a    = this.data.admins[i];
+        a.tag      = document.getElementById(`tag-n-${i}`).value;
+        a.tagColor = document.getElementById(`tag-c-${i}`).value;
+        a.boxColor = document.getElementById(`box-c-${i}`).value;
+        this.save();
+        this.addLog('🎨', this.user.name, `updated style for ${a.name}`);
+        alert('Style saved!'); this.nav('curr-admins');
+    },
+
+    setOwnerStyle() {
+        if (!this.data.ownerInfo) this.data.ownerInfo = {};
+        this.data.ownerInfo.tag      = document.getElementById('ow-t').value;
+        this.data.ownerInfo.tagColor = document.getElementById('ow-tc').value;
+        this.data.ownerInfo.boxColor = document.getElementById('ow-bc').value;
+        this.save(); this.nav('curr-admins');
+    },
+
+    updateRules() {
+        const text             = document.getElementById('rule-input').value;
+        this.data.appRules     = text;
+        this.data.ruleAuthor   = this.user.name;
+        this.data.ruleDate     = new Date().toLocaleString();
+        this.save();
+        this.addLog('📜', this.user.name, 'updated App Rules');
+        alert('Rules posted!'); this.nav('rules');
+    },
+
+    startW() {
+        const t = document.getElementById('wt').value.trim();
+        if (t) {
+            this.data.activeWeek = {title:t, logs:[]};
+            this.save();
+            this.addLog('📅', this.user.name, `started new week: "${t}"`);
+            this.nav('weekly');
+        }
+    },
+
+    finishW() {
+        if (!confirm('Finalize week and update staff banks?')) return;
+        if (!this.data.activeWeek) return;
+        this.data.activeWeek.logs.forEach(l => {
+            const a = this.data.admins.find(x => x.name===l.n);
+            if (a) { a.bank=(parseFloat(a.bank)||0)+(parseFloat(l.pts)||0); a.warnings=l.w; }
+        });
+        if (!this.data.history) this.data.history = [];
+        this.data.history.push(JSON.parse(JSON.stringify(this.data.activeWeek)));
+        const title = this.data.activeWeek.title;
+        this.data.activeWeek = null;
+        this.save();
+        this.addLog('✅', this.user.name, `finished and stored week: "${title}"`);
+        this.nav('stored');
+    },
+
+    viewAdminProfile(i) {
+        const a       = this.data.admins[i];
+        const isOwner = this.user.role === 'owner';
+        const isProfSelf = this.hasProfessorPerm(this.user.name) && this.professorCanActOn(this.user.name, a.role);
+
+        let html = `
+        <div class="page-title"><span class="pt-icon">👤</span> Staff Profile</div>
+        <div class="card">
+            <div class="card-title">Edit Information</div>
+            <label>Name</label><input id="ed-n" value="${a.name}" ${(!isOwner && !isProfSelf)?'disabled':''}>
+            <label>Level / Position</label><input id="ed-l" value="${a.lvl}">
+            <label>Bank Points</label><input type="text" id="ed-b" value="${a.bank||0}">
+            <label>Warnings</label><input type="text" id="ed-w" value="${a.warnings||'None'}">
+            <label>Login Passcode</label><input type="text" id="ed-p" value="${a.passcode}">`;
+
+        if (isOwner) {
+            html += `<div class="owner-only-field" style="margin-top:14px">
+                <div class="owner-only-label">🔐 Sensitive Info (Owner Only)</div>`;
+            if (a.email)      html += `<label>Email</label><input type="text" id="ed-email" value="${a.email}">`;
+            if (a.securityPw) html += `<label>Security Password</label><input type="text" id="ed-spw" value="${a.securityPw}">`;
+            html += `</div>`;
+        }
+
+        html += `<div style="display:flex;gap:10px;margin-top:14px">
+                <button onclick="app.updateAdmin(${i})" style="flex:1">Save Changes</button>
+                <button class="btn-ghost" onclick="app.nav('curr-admins')" style="flex:1">Back</button>
+            </div>
+        </div>`;
+        document.getElementById('screen').innerHTML = html;
+    },
+
+    updateAdmin(i) {
+        const a       = this.data.admins[i];
+        const isOwner = this.user.role === 'owner';
+        const isProfSelf = this.hasProfessorPerm(this.user.name) && this.professorCanActOn(this.user.name, a.role);
+
+        if (isOwner || isProfSelf) {
+            const nameEl = document.getElementById('ed-n');
+            if (nameEl && !nameEl.disabled) a.name = nameEl.value;
+        }
+        a.lvl      = document.getElementById('ed-l').value;
+        a.bank     = document.getElementById('ed-b').value;
+        a.warnings = document.getElementById('ed-w').value;
+        a.passcode = document.getElementById('ed-p').value;
+        if (isOwner) {
+            const emailEl = document.getElementById('ed-email');
+            const spwEl   = document.getElementById('ed-spw');
+            if (emailEl) a.email = emailEl.value;
+            if (spwEl)   a.securityPw = spwEl.value;
+        }
+        this.save();
+        this.addLog('✏️', this.user.name, `updated profile of ${a.name}`);
+        alert('Profile updated!'); this.nav('curr-admins');
+    },
+
+    setLBStatus(status) {
+        const el  = document.getElementById('lb-file-select'); if (!el) return;
+        const idx = el.value; if (idx==='') return;
+        this.data.lbStatus     = status;
+        this.data.lbFileIndex  = parseInt(idx);
+        this.save();
+        const statusLabel = {published_hc:'HC Only',published_public:'Public',closed:'Closed'}[status]||status;
+        this.addLog('🎖️', this.user.name, `set Leaderboard to "${statusLabel}" for file index ${idx}`);
+        this.renderLB();
+    },
+
+    viewF(i) {
+        const f = this.data.history[i];
+        let h   = `<div class="page-title"><span class="pt-icon">📂</span> ${f.title}</div><button class="btn-ghost" onclick="app.nav('stored')" style="margin-bottom:14px">← Back</button>`;
+        f.logs.forEach(l => {
+            h += `<div class="card"><b style="font-family:var(--font-display)">${l.n}</b>
+                <span style="color:var(--amber);font-family:var(--font-display);font-weight:700;margin-left:8px">${l.pts} pts</span>
+                <br><small style="color:var(--t3)">${l.d}</small></div>`;
+        });
+        document.getElementById('screen').innerHTML = h;
+    },
+
+    deleteLog(idx) {
+        if (confirm('Delete this entry?')) {
+            this.data.activeWeek.logs.splice(idx,1);
+            this.save(); this.renderLive();
+        }
+    },
+
+    changeLvl(i) {
+        const newLvl = document.getElementById(`lvl-up-${i}`).value;
+        const name   = this.data.admins[i].name;
+        this.data.admins[i].lvl = newLvl;
+        this.save();
+        this.addLog('📋', this.user.name, `changed level of ${name} to "${newLvl}"`);
+        this.nav('curr-admins');
+    },
+
+    setRole(i, r) {
+        const a      = this.data.admins[i];
+        const oldRole= a.role;
+        const myRole = this.user.role;
+
+        if (a.name === this.user.name) { alert("⚠ You cannot change your own role."); return; }
+        if (r === 'owner') { alert("⚠ Owner role cannot be assigned."); return; }
+
+        // Check professor authority first
+        if (myRole !== 'owner' && this.hasProfessorPerm(this.user.name) && this.professorCanActOn(this.user.name, oldRole)) {
+            const profAdmin = this.data.admins.find(ad => ad.name === this.user.name);
+            const myRank    = profAdmin ? this.getRoleRank(profAdmin.role) : 99;
+            const newRank   = this.getRoleRank(r);
+            if (newRank === 0) { alert("⚠ Cannot assign Owner role."); return; }
+            if (newRank <= myRank) { alert("⚠ Cannot assign a role equal to or above your own."); return; }
+            a.role = r;
+            this.save();
+            this.addLog('🔄', this.user.name, `(Professor) changed role of ${a.name} from "${oldRole}" to "${r}"`);
+            const badge = document.getElementById(`role-label-${i}`);
+            if (badge) { badge.textContent=`✓ ${r.toUpperCase()}`; badge.style.display='inline-flex'; setTimeout(()=>{ if(badge)badge.style.display='none'; },3000); }
+            setTimeout(() => this.nav('curr-admins'), 800);
+            return;
+        }
+
+        if (myRole !== 'owner') {
+            const perms    = this.getPerms(myRole, this.user.name);
+            const hasMG    = perms.set_role_mg;
+            const hasBasic = perms.set_role;
+
+            if (!this.canActOn(myRole, oldRole)) {
+                alert("⚠ You cannot change the role of someone with equal or higher rank."); return;
+            }
+            if (['admin','view','hr'].includes(r)) {
+                if (!hasBasic && !hasMG) { alert("⚠ You don't have role assignment permission."); return; }
+                if (!this.canAssignRole(myRole, oldRole, r)) {
+                    alert(`⚠ You cannot assign the "${r}" role. You can only assign roles below your own rank.`); return;
+                }
+            }
+            if (['editor','high_command'].includes(r)) {
+                if (!hasMG) { alert("⚠ You need 'Set Role MG' permission to assign Editor or High Command."); return; }
+                if (!this.canAssignRoleMG(myRole, oldRole, r)) {
+                    alert(`⚠ You cannot assign the "${r}" role.`); return;
+                }
+            }
+        }
+
+        a.role = r;
+        this.save();
+        this.addLog('🔄', this.user.name, `changed role of ${a.name} from "${oldRole}" to "${r}"`);
+
+        const badge = document.getElementById(`role-label-${i}`);
+        if (badge) {
+            badge.textContent = `✓ ${r.toUpperCase()}`;
+            badge.style.display = 'inline-flex';
+            setTimeout(() => { if (badge) badge.style.display='none'; }, 3000);
+        }
+        setTimeout(() => this.nav('curr-admins'), 800);
+    },
+
+    kick(i) {
+        const a = this.data.admins[i];
+        if (a.name === this.user.name) { alert("⚠ You cannot kick yourself."); return; }
+
+        // Professor kick authority
+        const isProfSelf = this.hasProfessorPerm(this.user.name) && this.professorCanActOn(this.user.name, a.role);
+        if (this.user.role !== 'owner' && !isProfSelf && !this.canActOn(this.user.role, a.role)) {
+            alert("⚠ You cannot kick someone with equal or higher rank."); return;
+        }
+        if (confirm(`Remove ${a.name} from the admin list?`)) {
+            this.data.admins.splice(i,1);
+            // Remove professor perm if exists
+            if (this.data.professorPerms && this.data.professorPerms[a.name]) {
+                delete this.data.professorPerms[a.name];
+            }
+            this.save();
+            this.addLog('🚫', this.user.name, `kicked admin: ${a.name} (was ${a.role})`);
+            this.nav('curr-admins');
+        }
+    },
+
+    delF(i) {
+        if (confirm('Delete this stored file permanently?')) {
+            const title = this.data.history[i].title;
+            this.data.history.splice(i,1);
+            this.save();
+            this.addLog('🗑', this.user.name, `deleted stored file: "${title}"`);
+            this.nav('stored');
+        }
+    },
+
+    // ─── PERMISSION TOGGLES ───
+    toggleRolePerm(role, perm, el) {
+        if (!this.data.permissions) this.data.permissions = {};
+        if (!this.data.permissions[role]) this.data.permissions[role] = {};
+        const newVal = !el.classList.contains('active');
+        this.data.permissions[role][perm] = newVal;
+        el.classList.toggle('active', newVal);
+        this.save();
+        this.addLog('⚙️', this.user.name, `${newVal?'enabled':'disabled'} permission "${PERM_LABELS[perm]}" for role "${role}"`);
+        this.showDash();
+    },
+
+    toggleIndividualPerm(adminName, perm, el) {
+        if (!this.data.individualPerms) this.data.individualPerms = {};
+        if (!this.data.individualPerms[adminName]) this.data.individualPerms[adminName] = {};
+        const newVal = !el.classList.contains('active');
+        this.data.individualPerms[adminName][perm] = newVal;
+        el.classList.toggle('active', newVal);
+        this.save();
+        this.addLog('⚡', this.user.name, `${newVal?'granted':'revoked'} individual perm "${PERM_LABELS[perm]}" for ${adminName}`);
+        if (this.user && this.user.name===adminName) this.showDash();
+    },
+
+    // ─── APPROVE ───
+    async approve(i) {
+        const requests = this.data.requests||[];
+        const r = requests[i];
+        if (!r) { alert('Request not found.'); return; }
+
+        const approveBtn = document.getElementById(`approve-btn-${i}`);
+        const rejectBtn  = document.getElementById(`reject-btn-${i}`);
+        if (approveBtn) { approveBtn.disabled=true; approveBtn.textContent='⏳...'; }
+        if (rejectBtn)  { rejectBtn.disabled=true; }
+
+        const code = Math.floor(1000+Math.random()*8999).toString();
+
+        const newAdmin = {
+            name:       r.name,
+            lvl:        r.lvl,
+            bank:       '0',
+            warnings:   'None',
+            passcode:   code,
+            role:       'admin',
+            email:      r.email || '',
+            securityPw: r.securityPw || ''
+        };
+
+        try {
+            await db.ref('ahypar_new_data').transaction((currentData) => {
+                if (!currentData) return currentData;
+                if (!currentData.admins)   currentData.admins   = [];
+                if (!currentData.requests) currentData.requests = [];
+                const alreadyExists = currentData.admins.some(a => a.name === r.name);
+                if (!alreadyExists) { currentData.admins.push(newAdmin); }
+                currentData.requests = currentData.requests.filter(
+                    req => !(req.name === r.name && req.lvl === r.lvl)
+                );
+                return currentData;
+            });
+
+            if (!this.data.admins)   this.data.admins   = [];
+            if (!this.data.requests) this.data.requests = [];
+            const alreadyLocal = this.data.admins.some(a => a.name === r.name);
+            if (!alreadyLocal) this.data.admins.push(newAdmin);
+            this.data.requests = this.data.requests.filter(
+                req => !(req.name === r.name && req.lvl === r.lvl)
+            );
+
+            this.addLog('✅', this.user.name, `approved application from ${r.name} (Rank: ${r.lvl}) — passcode assigned`);
+            alert(`✅ Approved!\n\nStaff: ${r.name}\nLogin Passcode: ${code}\n\nShare this passcode with them.`);
+            this.nav('access');
+
+        } catch(err) {
+            console.error('Approve failed:', err);
+            alert('❌ Failed to approve. Please try again.\n' + err.message);
+            if (approveBtn) { approveBtn.disabled=false; approveBtn.textContent='✔ Approve'; }
+            if (rejectBtn)  { rejectBtn.disabled=false; }
+        }
+    },
+
+    reject(i) {
+        const r = this.data.requests[i];
+        if (!r) return;
+        if (confirm(`Reject application from ${r.name}?`)) {
+            this.data.requests.splice(i,1);
+            db.ref('ahypar_new_data/requests').set(this.data.requests)
+                .then(() => {
+                    this.addLog('✖', this.user.name, `rejected application from ${r.name}`);
+                    this.nav('access');
+                })
+                .catch(err => { console.error(err); alert('Error rejecting request.'); });
+        }
+    },
+
+    // ─── APPLY REQUEST ───
+    requestAccess() {
+        const n     = document.getElementById('req-n').value.trim();
+        const l     = document.getElementById('req-lvl').value.trim();
+        const em    = document.getElementById('req-email').value.trim();
+        const pw    = document.getElementById('req-pw').value;
+        const msgEl = document.getElementById('app-msg');
+
+        if (!n || !l || !em || !pw) {
+            msgEl.className='alert-box alert-danger';
+            msgEl.textContent='⚠ Please fill in all 4 fields: Name, Rank, Email, and Security Password.';
+            msgEl.classList.remove('hidden'); return;
+        }
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) {
+            msgEl.className='alert-box alert-danger';
+            msgEl.textContent='⚠ Please enter a valid email address.';
+            msgEl.classList.remove('hidden'); return;
+        }
+        const pwCheck = this.validateSecurityPassword(pw);
+        if (!pwCheck.ok) {
+            msgEl.className='alert-box alert-danger';
+            msgEl.textContent='⚠ Security Password: ' + pwCheck.msg;
+            msgEl.classList.remove('hidden'); return;
+        }
+        if (!this.data.requests) this.data.requests = [];
+        const already = this.data.requests.find(x => x.name.toLowerCase()===n.toLowerCase());
+        if (already) {
+            msgEl.className='alert-box alert-danger';
+            msgEl.textContent='⚠ An application with this name is already pending.';
+            msgEl.classList.remove('hidden'); return;
+        }
+        this.data.requests.push({ name:n, lvl:l, email:em, securityPw:pw, submitted:new Date().toLocaleString() });
+        db.ref('ahypar_new_data/requests').set(this.data.requests);
+        this.addLog('📨', 'Applicant', `new staff application from "${n}" (Rank: ${l})`);
+
+        msgEl.className='app-success';
+        msgEl.innerHTML=`✅ Application submitted!<br><small>Wait for an admin to review your request.</small>`;
+        msgEl.classList.remove('hidden');
+        document.getElementById('req-n').value='';
+        document.getElementById('req-lvl').value='';
+        document.getElementById('req-email').value='';
+        document.getElementById('req-pw').value='';
+        const bar  = document.getElementById('pw-strength-bar');
+        const hint = document.getElementById('pw-hint');
+        if (bar)  { bar.style.width='0%'; }
+        if (hint) { hint.textContent='Must contain: letters, numbers, and symbols (#,@,!,$ etc.)'; hint.style.color=''; }
+    },
+
+    // ─── DRAG & DROP ───
+    initDragDrop() {
+        const container = document.getElementById('admins-list-container');
+        if (!container) return;
+        const cards = Array.from(container.querySelectorAll('.admin-card-draggable'));
+        let dragSrcIdx = null, dragOverIdx = null, touchCard = null, touchClone = null, touchStartY = 0;
+
+        cards.forEach((card) => {
+            const handle = card.querySelector('.drag-handle');
+            card.addEventListener('dragstart', (e) => {
+                dragSrcIdx = parseInt(card.dataset.idx);
+                card.classList.add('dragging');
+                e.dataTransfer.effectAllowed = 'move';
+            });
+            card.addEventListener('dragend', () => {
+                card.classList.remove('dragging');
+                cards.forEach(c => c.classList.remove('drag-over'));
+                if (dragSrcIdx!==null && dragOverIdx!==null && dragSrcIdx!==dragOverIdx)
+                    this._reorderAdmins(dragSrcIdx, dragOverIdx);
+                dragSrcIdx=null; dragOverIdx=null;
+            });
+            card.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                const oi = parseInt(card.dataset.idx);
+                if (oi!==dragSrcIdx) {
+                    cards.forEach(c=>c.classList.remove('drag-over'));
+                    card.classList.add('drag-over');
+                    dragOverIdx=oi;
+                }
+            });
+            card.addEventListener('dragleave', () => card.classList.remove('drag-over'));
+            card.addEventListener('drop', (e) => { e.preventDefault(); card.classList.remove('drag-over'); });
+
+            if (handle) {
+                handle.addEventListener('touchstart', (e) => {
+                    e.preventDefault(); touchCard=card; dragSrcIdx=parseInt(card.dataset.idx); touchStartY=e.touches[0].clientY;
+                    touchClone=card.cloneNode(true);
+                    touchClone.style.cssText=`position:fixed;left:15px;right:15px;top:${card.getBoundingClientRect().top}px;opacity:0.85;z-index:9999;pointer-events:none;border:2px solid var(--violet);border-radius:16px;background:var(--surface);transition:none;`;
+                    document.body.appendChild(touchClone); card.classList.add('dragging');
+                }, {passive:false});
+                handle.addEventListener('touchmove', (e) => {
+                    e.preventDefault();
+                    const touch=e.touches[0];
+                    if (touchClone) { const dy=touch.clientY-touchStartY; touchClone.style.top=`${card.getBoundingClientRect().top+dy}px`; }
+                    const el=document.elementFromPoint(touch.clientX,touch.clientY);
+                    const oc=el?el.closest('.admin-card-draggable'):null;
+                    cards.forEach(c=>c.classList.remove('drag-over'));
+                    if (oc&&oc!==touchCard) { oc.classList.add('drag-over'); dragOverIdx=parseInt(oc.dataset.idx); }
+                }, {passive:false});
+                handle.addEventListener('touchend', (e) => {
+                    e.preventDefault();
+                    cards.forEach(c=>c.classList.remove('drag-over','dragging'));
+                    if (touchClone) { document.body.removeChild(touchClone); touchClone=null; }
+                    if (dragSrcIdx!==null && dragOverIdx!==null && dragSrcIdx!==dragOverIdx)
+                        this._reorderAdmins(dragSrcIdx, dragOverIdx);
+                    dragSrcIdx=null; dragOverIdx=null; touchCard=null;
+                }, {passive:false});
+            }
+        });
+    },
+
+    _reorderAdmins(fromIdx, toIdx) {
+        const admins = this.data.admins;
+        if (!admins || fromIdx<0 || toIdx<0 || fromIdx>=admins.length || toIdx>=admins.length) return;
+        const item = admins.splice(fromIdx,1)[0];
+        admins.splice(toIdx,0,item);
+        this.save();
+        this.addLog('↕️', this.user.name, `reordered admin list`);
+        this.nav('curr-admins');
+    },
+
+    toggleMenu(s) {
+        document.getElementById('menu-overlay').classList.toggle('active', s);
+        document.getElementById('menu-backdrop').classList.toggle('active', s);
+    },
+
+    logout() {
+        if (this.user) {
+            db.ref(`admin_status/${this.user.name}`).update({ online: false, lastSeen: firebase.database.ServerValue.TIMESTAMP });
+            this.addLog('🚪', this.user.name, 'logged out');
+        }
+        auth.signOut().catch(()=>{});
+        setTimeout(() => location.reload(), 300);
+    }
+};
+
+app.init();
+</script>
+</body>
+</html>
